@@ -1,19 +1,20 @@
-#include "smem/sbuffer.hpp"
+#include "smem/squeue.hpp"
 
 #include <iostream>
 #include <string>
 
 int main() {
-    SBuffer sbuffer(1, 1024);
+    SQueue squeue("/tmp", 5, 256);
+    char buffer[8];
 
     int i = 0;
     while (i < 10) {
-        std::string msg = sbuffer.read(10);
-        if (msg.empty()) {
-            continue;
+        if (!squeue.empty()) {
+            squeue.pop(buffer, 7);
+            buffer[7] = '\0';
+            std::cout << "Received: " << std::string(buffer) << std::endl;
+            i++;
         }
-        std::cout << "Received: " << msg << std::endl;
-        i++;
     }
 
     return 0;

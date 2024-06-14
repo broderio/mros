@@ -6,7 +6,7 @@
 
 class SMutex {
 public:
-    explicit SMutex(int id);
+    explicit SMutex(const std::string &name, int id);
 
     ~SMutex();
 

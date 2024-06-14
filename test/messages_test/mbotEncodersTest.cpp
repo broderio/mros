@@ -2,8 +2,6 @@
 #include "messages/msg_types/mbotEncoders.hpp"
 
 int main() {
-    Parser parser;
-
     MbotEncoders enc;
     enc.utime = 123456789;
     enc.ticks[0] = 1;
@@ -20,10 +18,10 @@ int main() {
     std::cout << "\tdelta_ticks: "<< enc.delta_ticks[0] << ", " << enc.delta_ticks[1] << ", " << enc.delta_ticks[2] << std::endl;
     std::cout << "\tdelta_time: " << enc.delta_time << std::endl;
 
-    std::string msg = parser.encode(enc, TOPIC_ID::MBOT_ENCODERS);
+    std::string msg = Parser::encode(enc, TOPIC_ID::MBOT_ENCODERS);
 
     MbotEncoders enc2;
-    bool res = parser.decode(msg, enc2);
+    bool res = Parser::decode(msg, enc2);
     if (!res) return 1;
 
     std::cout << "Values:" << std::endl;

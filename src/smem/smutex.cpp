@@ -1,21 +1,27 @@
 #include "smem/smutex.hpp"
 
-SMutex::SMutex(int id) {
-    key = ftok("/tmp", id);
+SMutex::SMutex(const std::string &name, int id) {
+
+    // Generate a key for the shared memory segment.
+    key = ftok(name.c_str(), id);
     if (key == -1) {
-        std::cerr << "ftok failed" << std::endl;
+        // std::cerr << "ftok failed" << std::endl;
+        perror("SMutex error: ftok failed");
         return;
     }
 
+    // Create a new segment with IPC_PRIVATE key.
     shmid = shmget(key, sizeof(pthread_mutex_t), IPC_CREAT | 0666);
     if (shmid == -1) {
-        std::cerr << "shmget failed" << std::endl;
+        // std::cerr << "shmget failed" << std::endl;
+        perror("SMutex error: shmget failed");
         return;
     }
 
     mutex = static_cast<pthread_mutex_t*>(shmat(shmid, nullptr, 0));
     if (mutex == reinterpret_cast<void*>(-1)) {
-        std::cerr << "shmat failed" << std::endl;
+        // std::cerr << "shmat failed" << std::endl;
+        perror("SMutex error: shmat failed");
         return;
     }
 

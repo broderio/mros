@@ -1,19 +1,18 @@
-#include "smem/sbuffer.hpp"
+#include "smem/squeue.hpp"
 #include "utils.hpp"
 
 #include <iostream>
 #include <string>
 
 int main() {
-    SBuffer sbuffer(1, 1024);
+    SQueue squeue("/tmp", 5, 256);
 
-    int i = 0;
-    while (i < 10) {
-        std::string msg = "Message #" + std::to_string(i);
-        sbuffer.write(msg);
+    std::string msg;
+    for (int i = 0; i < 10; i++) {
+        msg = "Hello " + std::to_string(i);
+        squeue.push(&msg[0], 7);
         std::cout << "Sent: " << msg << std::endl;
-        sleep(1);
+        sleep(1000);
     }
-
     return 0;
 }

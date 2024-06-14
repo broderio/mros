@@ -6,8 +6,9 @@ set(CMAKE_CXX_STANDARD 11)
 
 find_library(PTHREAD pthread)
 
-add_library(smemlib STATIC src/smem/sbuffer.cpp
-                           src/smem/smutex.cpp)
+add_library(smemlib STATIC src/smem/squeue.cpp
+                           src/smem/smutex.cpp
+                           src/smem/smem.cpp)
 target_include_directories(smemlib PUBLIC include)
 target_link_libraries(smemlib pthread)
 
@@ -56,6 +57,10 @@ target_link_libraries(smemReadTest smemlib)
 # Add smem write test
 add_executable(smemWriteTest test/smem_test/smemWriteTest.cpp)
 target_link_libraries(smemWriteTest smemlib)
+
+# Add smem mutex test
+add_executable(smemMutexTest test/smem_test/smemMutexTest.cpp)
+target_link_libraries(smemMutexTest smemlib)
 
 # Add pose2d messages test
 add_executable(pose2dTest test/messages_test/pose2dTest.cpp)

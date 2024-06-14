@@ -2,8 +2,6 @@
 #include "messages/msg_types/lidarScan.hpp"
 
 int main() {
-    Parser parser;
-
     LidarScan scan;
     scan.utime = 123456789;
     scan.num_ranges = 3;
@@ -20,10 +18,10 @@ int main() {
     std::cout << "\ttimes: " << scan.times[0] << ", " << scan.times[1] << ", " << scan.times[2] << std::endl;
     std::cout << "\tintensities: " << scan.intensities[0] << ", " << scan.intensities[1] << ", " << scan.intensities[2] << std::endl;
 
-    std::string msg = parser.encode(scan, TOPIC_ID::MBOT_LIDAR);
+    std::string msg = Parser::encode(scan, TOPIC_ID::MBOT_LIDAR);
 
     LidarScan scan2;
-    bool res = parser.decode(msg, scan2);
+    bool res = Parser::decode(msg, scan2);
     if (!res) return 1;
 
     std::cout << "Decoded values:" << std::endl;
