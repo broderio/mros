@@ -4,6 +4,13 @@ project(mros)
 
 set(CMAKE_CXX_STANDARD 11)
 
+find_library(PTHREAD pthread)
+
+add_library(smemlib STATIC src/smem/sbuffer.cpp
+                           src/smem/smutex.cpp)
+target_include_directories(smemlib PUBLIC include)
+target_link_libraries(smemlib pthread)
+
 add_library(socketlib STATIC src/socket/client.cpp
                              src/socket/server.cpp)
 target_include_directories(socketlib PUBLIC include)
@@ -12,7 +19,7 @@ add_library(mros STATIC src/mros/core.cpp
                         src/mros/publisher.cpp
                         src/mros/subscriber.cpp)
 target_include_directories(mros PUBLIC include)
-target_link_libraries(mros socketlib)
+target_link_libraries(mros socketlib smemlib)
 
 # Add core test
 add_executable(core_test test/mros_test/core_test.cpp)
@@ -41,6 +48,14 @@ target_link_libraries(client_noblock_test socketlib)
 # Add socket server test
 add_executable(server_noblock_test test/socket_test/server_noblock_test.cpp)
 target_link_libraries(server_noblock_test socketlib)
+
+# Add smem read test
+add_executable(smemReadTest test/smem_test/smemReadTest.cpp)
+target_link_libraries(smemReadTest smemlib)
+
+# Add smem write test
+add_executable(smemWriteTest test/smem_test/smemWriteTest.cpp)
+target_link_libraries(smemWriteTest smemlib)
 
 # Add pose2d messages test
 add_executable(pose2dTest test/messages_test/pose2dTest.cpp)
