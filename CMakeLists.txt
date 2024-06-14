@@ -41,3 +41,19 @@ target_link_libraries(client_noblock_test socketlib)
 # Add socket server test
 add_executable(server_noblock_test test/socket_test/server_noblock_test.cpp)
 target_link_libraries(server_noblock_test socketlib)
+
+# Add pose2d messages test
+add_executable(pose2dTest test/messages_test/pose2dTest.cpp)
+target_include_directories(pose2dTest PUBLIC include)
+
+# Add twist2d messages test
+add_executable(twist2dTest test/messages_test/twist2dTest.cpp)
+target_include_directories(twist2dTest PUBLIC include)
+
+# Add mbotEncoders messages test
+add_executable(mbotEncodersTest test/messages_test/mbotEncodersTest.cpp)
+target_include_directories(mbotEncodersTest PUBLIC include)
+
+# Add lidarScan messages test
+add_executable(lidarScanTest test/messages_test/lidarScanTest.cpp)
+target_include_directories(lidarScanTest PUBLIC include)

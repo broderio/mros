@@ -41,6 +41,7 @@ TCPClient::~TCPClient() {
     close();
 }
 
+// TODO: Add comments for this function
 int TCPClient::connect() {
     if (::connect(fd, (struct sockaddr *)&server, sizeof(server)) < 0) {
         if (errno == EINPROGRESS) {
