@@ -1,7 +1,7 @@
 #include "socket/server.hpp"
 
-TCPServer::TCPServer(const std::string &address, int port, int max_connections)
-: max_connections(max_connections), num_connections(0) {
+TCPServer::TCPServer(const std::string &address, int port, bool nonBlocking, int maxConnections)
+: nonBlocking(nonBlocking), maxConnections(maxConnections), numConnections(0) {
 
     // AF_INET specifies that we are using the IPv4 protocol
     server.sin_family = AF_INET;
@@ -25,28 +25,31 @@ TCPServer::TCPServer(const std::string &address, int port, int max_connections)
     }
 
     // Make the socket non-blocking
-    int flags = fcntl(fd, F_GETFL, 0);
-    if (flags < 0) {
-        std::cerr << "TCPServer error: failed to get flags" << std::endl;
-        ::close(fd);
-        return;
-    }
-    flags |= O_NONBLOCK;
-    if (fcntl(fd, F_SETFL, flags) < 0) {
-        std::cerr << "TCPServer error: failed to set flags" << std::endl;
-        ::close(fd);
-        return;
+    if (nonBlocking) {
+        int flags = fcntl(fd, F_GETFL, 0);
+        if (flags < 0) {
+            std::cerr << "TCPServer error: failed to get flags" << std::endl;
+            ::close(fd);
+            return;
+        }
+        flags |= O_NONBLOCK;
+        if (fcntl(fd, F_SETFL, flags) < 0) {
+            std::cerr << "TCPServer error: failed to set flags" << std::endl;
+            ::close(fd);
+            return;
+        }
     }
 
     // Bind the socket to the address and port
     if (::bind(fd, (struct sockaddr *)&server, sizeof(server)) < 0) {
-        std::cerr << "TCPServer error: bind failed" << std::endl;
+        // std::cerr << "TCPServer error: bind failed" << std::endl;
+        perror("TCPServer: bind failed");
         ::close(fd);
         return;
     }
 
     // Listen for incoming connections
-    if (::listen(fd, max_connections) < 0) {
+    if (::listen(fd, maxConnections) < 0) {
         std::cerr << "TCPServer error: listen failed" << std::endl;
         ::close(fd);
         return;
@@ -60,7 +63,7 @@ TCPServer::~TCPServer() {
 int TCPServer::accept(TCPConnection& connection) {
 
     // If maximum number of connections has been reached
-    if (num_connections >= max_connections) {
+    if (numConnections >= maxConnections) {
         std::cerr << "TCPServer error: maximum number of connections reached" << std::endl;
         return -1;
     }
@@ -88,27 +91,34 @@ int TCPServer::accept(TCPConnection& connection) {
     }
 
     // Make the socket non-blocking
-    int flags = fcntl(client_fd, F_GETFL, 0);
-    if (flags < 0) {
-        std::cerr << "TCPServer error: failed to get flags" << std::endl;
-        ::close(client_fd);
-        return -1;
-    }
-    flags |= O_NONBLOCK;
-    if (fcntl(client_fd, F_SETFL, flags) < 0) {
-        std::cerr << "TCPServer error: failed to set flags" << std::endl;
-        ::close(client_fd);
-        return -1;
+    if (nonBlocking) {
+        int flags = fcntl(client_fd, F_GETFL, 0);
+        if (flags < 0) {
+            std::cerr << "TCPServer error: failed to get flags" << std::endl;
+            ::close(client_fd);
+            return -1;
+        }
+        flags |= O_NONBLOCK;
+        if (fcntl(client_fd, F_SETFL, flags) < 0) {
+            std::cerr << "TCPServer error: failed to set flags" << std::endl;
+            ::close(client_fd);
+            return -1;
+        }
     }
 
     connection.fd = client_fd;
     connection.isOpen = true;
-    num_connections++;
+    connection.nonBlocking = nonBlocking;
+    numConnections++;
     return 0;
 }
 
 void TCPServer::close() {
     ::close(fd);
+}
+
+bool TCPServer::isNonBlocking() {
+    return nonBlocking;
 }
 
 TCPConnection::TCPConnection() {
@@ -165,4 +175,8 @@ int TCPConnection::receive(std::string& message, size_t bytes) {
 void TCPConnection::close() {
     ::close(fd);
     isOpen = false;
+}
+
+bool TCPConnection::isNonBlocking() {
+    return nonBlocking;
 }

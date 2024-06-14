@@ -1,6 +1,7 @@
 #include "socket/client.hpp"
 
-TCPClient::TCPClient(const std::string &address, int port) {
+TCPClient::TCPClient(const std::string &address, int port, bool nonBlocking)
+: nonBlocking(nonBlocking), isConnected(false) {
     // AF_INET specifies that we are using the IPv4 protocol
     server.sin_family = AF_INET;
 
@@ -20,20 +21,20 @@ TCPClient::TCPClient(const std::string &address, int port) {
     }
 
     // Make the socket non-blocking
-    int flags = fcntl(fd, F_GETFL, 0);
-    if (flags < 0) {
-        std::cerr << "TCPServer error: failed to get flags" << std::endl;
-        ::close(fd);
-        return;
+    if (nonBlocking) {
+        int flags = fcntl(fd, F_GETFL, 0);
+        if (flags < 0) {
+            std::cerr << "TCPServer error: failed to get flags" << std::endl;
+            ::close(fd);
+            return;
+        }
+        flags |= O_NONBLOCK;
+        if (fcntl(fd, F_SETFL, flags) < 0) {
+            std::cerr << "TCPServer error: failed to set flags" << std::endl;
+            ::close(fd);
+            return;
+        }
     }
-    flags |= O_NONBLOCK;
-    if (fcntl(fd, F_SETFL, flags) < 0) {
-        std::cerr << "TCPServer error: failed to set flags" << std::endl;
-        ::close(fd);
-        return;
-    }
-
-    isConnected = false;
 }
 
 TCPClient::~TCPClient() {
@@ -43,7 +44,7 @@ TCPClient::~TCPClient() {
 int TCPClient::connect() {
     if (::connect(fd, (struct sockaddr *)&server, sizeof(server)) < 0) {
         if (errno == EINPROGRESS) {
-            // Connection in progress
+            // Connection in progress (for nonblocking)
             fd_set writefds;
             FD_ZERO(&writefds);
             FD_SET(fd, &writefds);
@@ -112,4 +113,8 @@ int TCPClient::receive(std::string& message, size_t bytes) {
 
 void TCPClient::close() {
     ::close(fd);
+}
+
+bool TCPClient::isNonBlocking() {
+    return nonBlocking;
 }

@@ -23,18 +23,22 @@ public:
     
     void close();
 
+    bool isNonBlocking();
+
 private:
     
     int fd;
     
     bool isOpen;
-    
+
+    bool nonBlocking;
+
 };
 
 class TCPServer {
 public:
     
-    TCPServer(const std::string &address, int port, int max_connections = 10);
+    TCPServer(const std::string &address, int port, bool nonBlocking = 1, int maxConnections = 10);
     
     ~TCPServer();
 
@@ -42,13 +46,17 @@ public:
     
     void close();
 
+    bool isNonBlocking();
+
 private:
     
     int fd;
 
-    int max_connections;
+    int maxConnections;
 
-    int num_connections;
+    int numConnections;
+
+    bool nonBlocking;
     
     sockaddr_in server;
 

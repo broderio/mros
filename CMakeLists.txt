@@ -33,3 +33,11 @@ target_link_libraries(client_test socketlib)
 # Add socket server test
 add_executable(server_test test/socket_test/server_test.cpp)
 target_link_libraries(server_test socketlib)
+
+# Add socket client test
+add_executable(client_noblock_test test/socket_test/client_noblock_test.cpp)
+target_link_libraries(client_noblock_test socketlib)
+
+# Add socket server test
+add_executable(server_noblock_test test/socket_test/server_noblock_test.cpp)
+target_link_libraries(server_noblock_test socketlib)

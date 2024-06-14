@@ -13,7 +13,7 @@
 class TCPClient {
 public:
 
-    TCPClient(const std::string &address, int port);
+    TCPClient(const std::string &address, int port, bool nonBlocking = 1);
 
     ~TCPClient();
 
@@ -25,11 +25,15 @@ public:
 
     void close();
 
+    bool isNonBlocking();
+
 private:
 
     int fd;
 
     bool isConnected;
+
+    bool nonBlocking;
 
     sockaddr_in server;
 
