@@ -1,5 +1,5 @@
-#ifndef CLIENT_HPP
-#define CLIENT_HPP
+#ifndef TCP_CLIENT_HPP
+#define TCP_CLIENT_HPP
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -9,6 +9,8 @@
 
 #include <iostream>
 #include <string>
+
+#include "utils.hpp"
 
 class TCPClient {
 public:
@@ -27,6 +29,8 @@ public:
 
     bool isNonBlocking();
 
+    URI getServerURI();
+
 private:
 
     int fd;
@@ -39,4 +43,4 @@ private:
 
 };
 
-#endif // CLIENT_HPP
+#endif // TCP_CLIENT_HPP

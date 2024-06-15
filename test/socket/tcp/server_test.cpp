@@ -2,11 +2,10 @@
 #include <string>
 
 #include "utils.hpp"
-#include "socket/server.hpp"
+#include "socket/tcp/server.hpp"
 
 int main() {
-    std::string ipAddr = getIPAddr();
-    TCPServer server(ipAddr, 8080, 0);
+    TCPServer server(8080, 0);
     TCPConnection connection;
     int res = server.accept(connection);
     if (res < 0) {
@@ -20,7 +19,7 @@ int main() {
         if (res < 0) {
             return 1;
         }
-        std::cout << message << std::endl;
+        std::cout << "Received: \"" << message << "\" from " << connection.getClientURI() << std::endl;
         connection.send("Response #" + std::to_string(i));
     }
 

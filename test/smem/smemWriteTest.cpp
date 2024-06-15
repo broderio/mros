@@ -5,7 +5,7 @@
 #include <string>
 
 int main() {
-    SQueue squeue("/tmp", 5, 256);
+    SQueue squeue("/tmp", 3, 256);
 
     std::string msg;
     for (int i = 0; i < 10; i++) {

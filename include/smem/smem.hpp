@@ -1,3 +1,6 @@
+#ifndef SMEM_HPP
+#define SMEM_HPP
+
 #include <sys/shm.h>
 
 #include <iostream>
@@ -8,12 +11,10 @@ public:
     explicit SMem(const std::string &name, int id, size_t size);
     ~SMem();
 
-    void write(const void *data, size_t size);
-    void read(void *data, size_t size);
     void *get();
 
-    void attach();
     void detach();
+    void attach();
 
 private:
     std::string name;
@@ -26,3 +27,5 @@ private:
 
     bool isAttached;
 };
+
+#endif // SMEM_HPP

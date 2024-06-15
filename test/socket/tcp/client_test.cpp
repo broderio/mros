@@ -2,7 +2,7 @@
 #include <string>
 
 #include "utils.hpp"
-#include "socket/client.hpp"
+#include "socket/tcp/client.hpp"
 
 int main() {
     std::string ipAddr = getIPAddr();
@@ -20,7 +20,7 @@ int main() {
         if (res < 0) {
             return 1;
         }
-        std::cout << message << std::endl;
+        std::cout << "Received: \"" << message << "\" from " << client.getServerURI() << std::endl;
     }
     return 0;
 }

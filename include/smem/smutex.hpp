@@ -1,8 +1,13 @@
+#ifndef SMUTEX_HPP
+#define SMUTEX_HPP
+
 #include <sys/shm.h>
 
 #include <iostream>
 #include <string>
 #include <pthread.h>
+
+#include "smem/smem.hpp" 
 
 class SMutex {
 public:
@@ -15,7 +20,8 @@ public:
     void unlock();
 
 private:
-    key_t key;
-    int shmid;
+    SMem smem;
     pthread_mutex_t *mutex;
 };
+
+#endif // SMUTEX_HPP

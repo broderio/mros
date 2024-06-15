@@ -4,7 +4,7 @@
 #include <string>
 
 int main() {
-    SQueue squeue("/tmp", 5, 256);
+    SQueue squeue("/tmp", 3, 256);
     char buffer[8];
 
     int i = 0;

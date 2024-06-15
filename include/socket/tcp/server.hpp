@@ -1,5 +1,5 @@
-#ifndef SERVER_HPP
-#define SERVER_HPP
+#ifndef TCP_SERVER_HPP
+#define TCP_SERVER_HPP
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -9,6 +9,8 @@
 
 #include <iostream>
 #include <string>
+
+#include "utils.hpp"
 
 class TCPConnection {
     friend class TCPServer;
@@ -25,9 +27,13 @@ public:
 
     bool isNonBlocking();
 
+    URI getClientURI();
+
 private:
     
     int fd;
+
+    sockaddr_in client;
     
     bool isOpen;
 
@@ -38,7 +44,7 @@ private:
 class TCPServer {
 public:
     
-    TCPServer(const std::string &address, int port, bool nonBlocking = 1, int maxConnections = 10);
+    TCPServer(int port, bool nonBlocking = 1, int maxConnections = 10);
     
     ~TCPServer();
 
@@ -62,4 +68,4 @@ private:
 
 };
 
-#endif // SERVER_HPP
+#endif // TCP_SERVER_HPP

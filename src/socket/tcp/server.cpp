@@ -1,6 +1,6 @@
-#include "socket/server.hpp"
+#include "socket/tcp/server.hpp"
 
-TCPServer::TCPServer(const std::string &address, int port, bool nonBlocking, int maxConnections)
+TCPServer::TCPServer(int port, bool nonBlocking, int maxConnections)
 : nonBlocking(nonBlocking), maxConnections(maxConnections), numConnections(0) {
 
     // AF_INET specifies that we are using the IPv4 protocol
@@ -9,11 +9,8 @@ TCPServer::TCPServer(const std::string &address, int port, bool nonBlocking, int
     // htons() converts the port number from host byte order to network byte order
     server.sin_port = htons(port);
 
-    // inet_aton() converts the address from a string to a binary representation
-    if (inet_aton(address.c_str(), &server.sin_addr) == 0) {
-        std::cerr << "TCPServer error: invalid address" << std::endl;
-        return;
-    }
+    // INADDR_ANY specifies that the socket will be bound to all network interfaces
+    server.sin_addr.s_addr = INADDR_ANY;
 
     // Create a socket 
     // AF_INET specifies that we are using the IPv4 protocol
@@ -109,6 +106,7 @@ int TCPServer::accept(TCPConnection& connection) {
     connection.fd = client_fd;
     connection.isOpen = true;
     connection.nonBlocking = nonBlocking;
+    connection.client = client;
     numConnections++;
     return 0;
 }
@@ -179,4 +177,8 @@ void TCPConnection::close() {
 
 bool TCPConnection::isNonBlocking() {
     return nonBlocking;
+}
+
+URI TCPConnection::getClientURI() {
+    return URI(inet_ntoa(client.sin_addr), ntohs(client.sin_port));
 }

@@ -1,11 +1,10 @@
-#ifndef SARRAY_HPP
-#define SARRAY_HPP
+#ifndef SQUEUE_HPP
+#define SQUEUE_HPP
 
 #include <sys/shm.h>
 
 #include <iostream>
 #include <string>
-#include <deque>
 #include <pthread.h>
 
 #include "smem/smem.hpp"
@@ -72,9 +71,10 @@ private:
         size_t size;
         char data[];
     };
-    
+
+    SQueueData *queue;
     SMem smem;
     SMutex smutex;
 };
 
-#endif // SARRAY_HPP
+#endif // SQUEUE_HPP

@@ -2,14 +2,14 @@
 #include <string>
 
 #include "utils.hpp"
-#include "socket/client.hpp"
+#include "socket/tcp/server.hpp"
 
 int main() {
-    std::string ipAddr = getIPAddr();
-    TCPClient client(ipAddr, 8080);
+    TCPServer server(8081);
+    TCPConnection connection;
     int res;
     do {
-        res = client.connect();
+        res = server.accept(connection);
         if (res < 0) {
             return 1;
         }
@@ -17,16 +17,17 @@ int main() {
 
     std::string message;
     for (int i = 0; i < 10; i++) {
-        client.send("Message #" + std::to_string(i));
         sleep(1000);
         message.clear();
         while (message.empty()) {
-            res = client.receive(message, 25);
+            res = connection.receive(message, 25);
             if (res < 0) {
                 return 1;
             }
         }
-        std::cout << message << std::endl;
+        std::cout << "Received: \"" << message << "\" from " << connection.getClientURI() << std::endl;
+        connection.send("Response #" + std::to_string(i));
     }
+
     return 0;
 }

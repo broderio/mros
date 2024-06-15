@@ -17,6 +17,9 @@ SMem::SMem(const std::string &name, int id, size_t size)
         perror("SMem error: shmget failed");
         return;
     }
+
+    // Attach to the segment to get a pointer to it.
+    attach();
 }
 
 SMem::~SMem() {
@@ -26,23 +29,10 @@ SMem::~SMem() {
 
     // Deallocate the segment.
     if (shmctl(shmid, IPC_RMID, NULL) == -1) {
-        perror("SMem error: shmctl failed");
-        return;
+        if (errno != EINVAL) {
+            perror("SMem error: shmctl failed");
+        }
     }
-}
-
-void SMem::write(const void *data, size_t size) {
-    // Write data to the shared memory segment.
-    memcpy(shmp, data, size);
-}
-
-void SMem::read(void *data, size_t size) {
-    // Read data from the shared memory segment.
-    memcpy(data, shmp, size);
-}
-
-void *SMem::get() {
-    return shmp;
 }
 
 void SMem::attach() {
@@ -51,11 +41,12 @@ void SMem::attach() {
     }
 
     // Attach to the segment to get a pointer to it.
-    shmp = shmat(shmid, NULL, 0);
+    shmp = shmat(shmid, nullptr, 0);
     if (shmp == (void *) -1) {
         perror("SMem error: shmat failed");
         return;
     }
+    isAttached = true;
 }
 
 void SMem::detach() {
@@ -68,4 +59,9 @@ void SMem::detach() {
         perror("SMem error: shmdt failed");
         return;
     }
+    isAttached = false;
+}
+
+void *SMem::get() {
+    return shmp;
 }

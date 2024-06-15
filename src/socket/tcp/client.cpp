@@ -1,4 +1,4 @@
-#include "socket/client.hpp"
+#include "socket/tcp/client.hpp"
 
 TCPClient::TCPClient(const std::string &address, int port, bool nonBlocking)
 : nonBlocking(nonBlocking), isConnected(false) {
@@ -118,4 +118,8 @@ void TCPClient::close() {
 
 bool TCPClient::isNonBlocking() {
     return nonBlocking;
+}
+
+URI TCPClient::getServerURI() {
+    return URI(inet_ntoa(server.sin_addr), ntohs(server.sin_port));
 }

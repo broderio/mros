@@ -2,12 +2,9 @@
 
 SQueue::SQueue(const std::string &name, int id, size_t capacity)
 : smem(name, id, sizeof(SQueue::SQueueData) + capacity * sizeof(char)), smutex(name, id+1) {
-    // Attach to shared memory
-    smem.attach();
-
     // Initialize the queue
     smutex.lock();
-    SQueueData *queue = (SQueueData *)smem.get();
+    queue = (SQueueData *)smem.get();
     queue->capacity = capacity;
     queue->size = 0;
     std::memset(queue->data, 0, capacity);
@@ -18,7 +15,6 @@ SQueue::~SQueue() { }
 
 void SQueue::push(char *data, size_t size) {
     smutex.lock();
-    SQueueData *queue = (SQueueData *)smem.get();
     if (queue->size + size > queue->capacity) {
         smutex.unlock();
         return;
@@ -31,7 +27,6 @@ void SQueue::push(char *data, size_t size) {
 
 void SQueue::pop(char *data, size_t size) {
     smutex.lock();
-    SQueueData *queue = (SQueueData *)smem.get();
     if (queue->size < size) {
         smutex.unlock();
         return;
@@ -45,7 +40,6 @@ void SQueue::pop(char *data, size_t size) {
 
 bool SQueue::empty() {
     smutex.lock();
-    SQueueData *queue = (SQueueData *)smem.get();
     bool result = queue->size == 0;
     smutex.unlock();
     return result;
@@ -53,7 +47,6 @@ bool SQueue::empty() {
 
 size_t SQueue::size() {
     smutex.lock();
-    SQueueData *queue = (SQueueData *)smem.get();
     size_t result = queue->size;
     smutex.unlock();
     return result;
@@ -61,7 +54,6 @@ size_t SQueue::size() {
 
 size_t SQueue::capacity() {
     smutex.lock();
-    SQueueData *queue = (SQueueData *)smem.get();
     size_t result = queue->capacity;
     smutex.unlock();
     return result;
@@ -69,7 +61,6 @@ size_t SQueue::capacity() {
 
 size_t SQueue::available() {
     smutex.lock();
-    SQueueData *queue = (SQueueData *)smem.get();
     size_t result = queue->capacity - queue->size;
     smutex.unlock();
     return result;
