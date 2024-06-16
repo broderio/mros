@@ -1,5 +1,5 @@
 #include <cassert>
-#include "messages/msg_types/twist2d.hpp"
+#include "messages/mbot_msgs/twist2d.hpp"
 
 int main() {
     Twist2D twist;

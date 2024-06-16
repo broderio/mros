@@ -6,7 +6,6 @@
 
 class LidarScan : public IMessage
 {
-    friend Parser;
 public:
     int64_t utime;
     int32_t num_ranges;
@@ -21,7 +20,6 @@ public:
         return sizeof(int64_t) + sizeof(int32_t) + num_ranges * (sizeof(float) + sizeof(float) + sizeof(int64_t) + sizeof(float));
     }
 
-private:
     virtual std::string encode() const override {
         std::string msg;
         msg.append((char*)&utime, sizeof(int64_t));

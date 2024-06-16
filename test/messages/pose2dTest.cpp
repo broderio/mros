@@ -1,5 +1,5 @@
 #include <cassert>
-#include "messages/msg_types/pose2d.hpp"
+#include "messages/mbot_msgs/pose2d.hpp"
 
 int main() {
     Pose2D pose;

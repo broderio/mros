@@ -1,5 +1,5 @@
 #include <cassert>
-#include "messages/msg_types/mbotEncoders.hpp"
+#include "messages/mbot_msgs/mbotEncoders.hpp"
 
 int main() {
     MbotEncoders enc;

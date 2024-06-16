@@ -1,5 +1,5 @@
 #include <cassert>
-#include "messages/msg_types/lidarScan.hpp"
+#include "messages/mbot_msgs/lidarScan.hpp"
 
 int main() {
     LidarScan scan;

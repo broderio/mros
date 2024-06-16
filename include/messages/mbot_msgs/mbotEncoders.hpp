@@ -4,7 +4,6 @@
 #include "messages/message.hpp"
 
 class MbotEncoders : public IMessage {
-    friend Parser;
 public:
     int64_t utime;
     int64_t ticks[3]; // no units
@@ -15,7 +14,6 @@ public:
         return sizeof(int64_t) + 3 * sizeof(int64_t) + 3 * sizeof(int32_t) + sizeof(int32_t);
     }
 
-private:
     virtual std::string encode() const override {
         std::string msg;
         msg.append((char*)&utime, sizeof(int64_t));

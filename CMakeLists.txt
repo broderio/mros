@@ -111,3 +111,7 @@ target_include_directories(mbotEncodersTest PUBLIC include)
 # Add lidarScan messages test
 add_executable(lidarScanTest test/messages/lidarScanTest.cpp)
 target_include_directories(lidarScanTest PUBLIC include)
+
+# Add pose messages test
+add_executable(poseTest test/messages/poseTest.cpp)
+target_include_directories(poseTest PUBLIC include)

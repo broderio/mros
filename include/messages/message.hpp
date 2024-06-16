@@ -36,9 +36,6 @@ class Parser;
  * This interface defines the common functionality that all message types should implement.
  */
 struct IMessage {
-    friend Parser;
-
-public:
     /**
      * @brief Destructor for the IMessage interface.
      */
@@ -58,7 +55,6 @@ public:
      */
     uint16_t getTopicId() const { return topicId; }
 
-private:
     /**
      * @brief Encode the message into a byte string.
      * 
@@ -187,7 +183,7 @@ public:
         msg.decode(msg_data);
 
         // Set the topic ID
-        msg.topicId = (uint16_t) (data[6] << 8 | data[5]);
+        msg.topicId = (uint16_t) (data[6] << 8 | (data[5] & 0xFF));
 
         return true;
     }

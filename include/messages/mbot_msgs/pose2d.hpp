@@ -4,7 +4,6 @@
 #include "messages/message.hpp"
 
 class Pose2D : public IMessage {
-    friend Parser;
 public:
     int64_t utime;
     float x;
@@ -15,7 +14,6 @@ public:
         return sizeof(int64_t) + 3 * sizeof(float);
     }
 
-private:
     virtual std::string encode() const override {
         std::string msg;
         msg.append((char*)&utime, sizeof(int64_t));
