@@ -11,6 +11,10 @@ public:
     Point position;
     Quaternion orientation;
 
+    Pose() : position(), orientation() {}
+
+    Pose(const Point& position, const Quaternion& orientation) : position(position), orientation(orientation) {}
+
     uint16_t getMsgLen() const override {
         return position.getMsgLen() + orientation.getMsgLen();
     }

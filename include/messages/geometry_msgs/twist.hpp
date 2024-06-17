@@ -10,6 +10,10 @@ public:
     Vector3 linear;
     Vector3 angular;
 
+    Twist() : linear(), angular() {}
+
+    Twist(const Vector3 &linear, const Vector3 &angular) : linear(linear), angular(angular) {}
+
     uint16_t getMsgLen() const override {
         return 3 * sizeof(float);
     }

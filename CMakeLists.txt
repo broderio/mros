@@ -22,6 +22,12 @@ add_library(socketlib STATIC src/socket/tcp/client.cpp
 target_include_directories(socketlib PRIVATE include)
 target_link_libraries(socketlib utils)
 
+add_library(linalg STATIC src/linalg/vector.cpp
+                          src/linalg/matrix.cpp
+                          src/linalg/quaternion.cpp)
+target_include_directories(linalg PRIVATE include)
+target_link_libraries(linalg utils)
+
 add_library(mros STATIC src/mros/core.cpp
                         src/mros/publisher.cpp
                         src/mros/subscriber.cpp)
@@ -115,3 +121,18 @@ target_include_directories(lidarScanTest PUBLIC include)
 # Add pose messages test
 add_executable(poseTest test/messages/poseTest.cpp)
 target_include_directories(poseTest PUBLIC include)
+
+# Add linalg vector test
+add_executable(vectorTest test/linalg/vectorTest.cpp)
+target_link_libraries(vectorTest linalg)
+target_include_directories(vectorTest PUBLIC include)
+
+# Add linalg matrix test
+add_executable(matrixTest test/linalg/matrixTest.cpp)
+target_link_libraries(matrixTest linalg)
+target_include_directories(matrixTest PUBLIC include)
+
+# Add linalg quaternion test
+add_executable(quaternionTest test/linalg/quaternionTest.cpp)
+target_link_libraries(quaternionTest linalg)
+target_include_directories(quaternionTest PUBLIC include)

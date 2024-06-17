@@ -29,6 +29,14 @@ int getTimeMs() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
+float degToRad(float deg) {
+    return deg * M_PI / 180.0;
+}
+
+float radToDeg(float rad) {
+    return rad * 180.0 / M_PI;
+}
+
 std::string getIPAddr() {
     struct addrinfo hints, *info, *p;
     int gai_result;

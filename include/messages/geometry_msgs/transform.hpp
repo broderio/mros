@@ -11,6 +11,10 @@ public:
     Vector3 translation;
     Quaternion rotation;
 
+    Transform() : translation(), rotation() {}
+
+    Transform(const Vector3& translation, const Quaternion& rotation) : translation(translation), rotation(rotation) {}
+
     uint16_t getMsgLen() const override {
         return translation.getMsgLen() + rotation.getMsgLen();
     }

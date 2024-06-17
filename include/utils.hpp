@@ -27,6 +27,10 @@ void sleep(int milliseconds);
 
 int getTimeMs();
 
+float degToRad(float deg);
+
+float radToDeg(float rad);
+
 std::string getIPAddr();
 
 #endif // UTILS_HPP
