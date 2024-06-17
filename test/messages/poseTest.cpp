@@ -1,6 +1,8 @@
 #include <cassert>
 #include "messages/geometry_msgs/pose.hpp"
 
+using namespace geometry_msgs;
+
 int main() {
     Pose pose;
     pose.position.x = 1.0;

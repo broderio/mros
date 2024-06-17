@@ -4,6 +4,7 @@
 
 #include "linalg/vector.hpp"
 
+using namespace linalg;
 
 int main() {
     std::vector<float> data = {0, 0, 1};

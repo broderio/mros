@@ -1,5 +1,7 @@
 #include "linalg/vector.hpp"
 
+using namespace linalg;
+
 Vector::Vector() : data() {}
 
 Vector::Vector(size_t size) : data(size) {}
@@ -16,7 +18,16 @@ Vector &Vector::operator=(const Vector& rhs) {
 
 Vector::Vector(const std::vector<float>& data) : data(data) {}
 
-Vector::Vector(const Vector3& v) : data({v.x, v.y, v.z}) {}
+Vector::Vector(const geometry_msgs::Vector3& v) : data({v.x, v.y, v.z}) {}
+
+geometry_msgs::Vector3 Vector::toVector3() const {
+    if (data.size() > 4) {
+        std::cerr << "Error: cannot convert vector to geometry_msgs::Vector3." << std::endl;
+        return geometry_msgs::Vector3();
+    }
+
+    return geometry_msgs::Vector3(data[0], data[1], data[2]);
+}
 
 std::vector<float> Vector::getData() const {
     return data;
@@ -68,13 +79,17 @@ Vector Vector::operator+(const Vector& rhs) const {
     }
 
     Vector v(data.size());
-    std::transform(data.begin(), data.end(), rhs.data.begin(), v.data.begin(), std::plus<float>());
+    for (size_t i = 0; i < data.size(); ++i) {
+        v.data[i] = data[i] + rhs.data[i];
+    }
     return v;
 }
 
 Vector Vector::operator+(const float& rhs) const {
     Vector v(data.size());
-    std::transform(data.begin(), data.end(), v.data.begin(), [rhs](float f) { return f + rhs; });
+    for (size_t i = 0; i < data.size(); ++i) {
+        v.data[i] = data[i] + rhs;
+    }
     return v;
 }
 
@@ -86,13 +101,17 @@ Vector Vector::operator-(const Vector& rhs) const {
     }
 
     Vector v(data.size());
-    std::transform(data.begin(), data.end(), rhs.data.begin(), v.data.begin(), std::minus<float>());
+    for (size_t i = 0; i < data.size(); ++i) {
+        v.data[i] = data[i] - rhs.data[i];
+    }
     return v;
 }
 
 Vector Vector::operator-(const float& rhs) const {
     Vector v(data.size());
-    std::transform(data.begin(), data.end(), v.data.begin(), [rhs](float f) { return f - rhs; });
+    for (size_t i = 0; i < data.size(); ++i) {
+        v.data[i] = data[i] - rhs;
+    }
     return v;
 }
 
@@ -104,13 +123,17 @@ Vector Vector::operator*(const Vector& rhs) const {
     }
 
     Vector v(data.size());
-    std::transform(data.begin(), data.end(), rhs.data.begin(), v.data.begin(), std::multiplies<float>());
+    for (size_t i = 0; i < data.size(); ++i) {
+        v.data[i] = data[i] * rhs.data[i];
+    }
     return v;
 }
 
 Vector Vector::operator*(const float& rhs) const {
     Vector v(data.size());
-    std::transform(data.begin(), data.end(), v.data.begin(), [rhs](float f) { return f * rhs; });
+    for (size_t i = 0; i < data.size(); ++i) {
+        v.data[i] = data[i] * rhs;
+    }
     return v;
 }
 
@@ -122,13 +145,17 @@ Vector Vector::operator/(const Vector& rhs) const {
     }
 
     Vector v(data.size());
-    std::transform(data.begin(), data.end(), rhs.data.begin(), v.data.begin(), std::divides<float>());
+    for (size_t i = 0; i < data.size(); ++i) {
+        v.data[i] = data[i] / rhs.data[i];
+    }
     return v;
 }
 
 Vector Vector::operator/(const float& rhs) const {
     Vector v(data.size());
-    std::transform(data.begin(), data.end(), v.data.begin(), [rhs](float f) { return f / rhs; });
+    for (size_t i = 0; i < data.size(); ++i) {
+        v.data[i] = data[i] / rhs;
+    }
     return v;
 }
 
@@ -139,12 +166,16 @@ Vector Vector::operator+=(const Vector& rhs) {
         return *this;
     }
 
-    std::transform(data.begin(), data.end(), rhs.data.begin(), data.begin(), std::plus<float>());
+    for (size_t i = 0; i < data.size(); ++i) {
+        data[i] += rhs.data[i];
+    }
     return *this;
 }
 
 Vector Vector::operator+=(const float& rhs) {
-    std::transform(data.begin(), data.end(), data.begin(), [rhs](float f) { return f + rhs; });
+    for (size_t i = 0; i < data.size(); ++i) {
+        data[i] += rhs;
+    }
     return *this;
 }
 
@@ -155,12 +186,16 @@ Vector Vector::operator-=(const Vector& rhs) {
         return *this;
     }
 
-    std::transform(data.begin(), data.end(), rhs.data.begin(), data.begin(), std::minus<float>());
+    for (size_t i = 0; i < data.size(); ++i) {
+        data[i] -= rhs.data[i];
+    }
     return *this;
 }
 
 Vector Vector::operator-=(const float& rhs) {
-    std::transform(data.begin(), data.end(), data.begin(), [rhs](float f) { return f - rhs; });
+    for (size_t i = 0; i < data.size(); ++i) {
+        data[i] -= rhs;
+    }
     return *this;
 }
 
@@ -171,12 +206,16 @@ Vector Vector::operator*=(const Vector& rhs) {
         return *this;
     }
 
-    std::transform(data.begin(), data.end(), rhs.data.begin(), data.begin(), std::multiplies<float>());
+    for (size_t i = 0; i < data.size(); ++i) {
+        data[i] *= rhs.data[i];
+    }
     return *this;
 }
 
 Vector Vector::operator*=(const float& rhs) {
-    std::transform(data.begin(), data.end(), data.begin(), [rhs](float f) { return f * rhs; });
+    for (size_t i = 0; i < data.size(); ++i) {
+        data[i] *= rhs;
+    }
     return *this;
 }
 
@@ -187,12 +226,16 @@ Vector Vector::operator/=(const Vector& rhs) {
         return *this;
     }
 
-    std::transform(data.begin(), data.end(), rhs.data.begin(), data.begin(), std::divides<float>());
+    for (size_t i = 0; i < data.size(); ++i) {
+        data[i] /= rhs.data[i];
+    }
     return *this;
 }
 
 Vector Vector::operator/=(const float& rhs) {
-    std::transform(data.begin(), data.end(), data.begin(), [rhs](float f) { return f / rhs; });
+    for (size_t i = 0; i < data.size(); ++i) {
+        data[i] /= rhs;
+    }
     return *this;
 }
 
@@ -202,7 +245,13 @@ bool Vector::operator==(const Vector& rhs) const {
         return false;
     }
 
-    return std::equal(data.begin(), data.end(), rhs.data.begin());
+    for (size_t i = 0; i < data.size(); ++i) {
+        if (data[i] != rhs.data[i]) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool Vector::operator!=(const Vector& rhs) const {
@@ -210,15 +259,15 @@ bool Vector::operator!=(const Vector& rhs) const {
 }
 
 
-Vector operator+(const float& lhs, const Vector& rhs) {
+Vector linalg::operator+(const float& lhs, const Vector& rhs) {
     return rhs + lhs;
 }
 
-Vector operator-(const float& lhs, const Vector& rhs) {
+Vector linalg::operator-(const float& lhs, const Vector& rhs) {
     return -rhs + lhs;
 }
 
-Vector operator*(const float& lhs, const Vector& rhs) {
+Vector linalg::operator*(const float& lhs, const Vector& rhs) {
     return rhs * lhs;
 }
 
@@ -230,8 +279,9 @@ float Vector::dot(const Vector& lhs, const Vector& rhs) {
     }
 
     float result = 0;
-    std::vector<float>::const_iterator r = rhs.data.begin(); 
-    std::for_each(lhs.data.begin(), lhs.data.end(), [&result, &r](float f) { result += f * *r++; });
+    for (size_t i = 0; i < lhs.getSize(); ++i) {
+        result += lhs.get(i) * rhs.get(i);
+    }
 
     return result;
 }
@@ -267,7 +317,7 @@ float Vector::angle(const Vector& lhs, const Vector& rhs) {
     return std::acos(Vector::dot(lhs, rhs) / (std::pow(Vector::norm(lhs), 2)));
 }
 
-std::ostream &operator<<(std::ostream &os, const Vector& v) {
+std::ostream &linalg::operator<<(std::ostream &os, const Vector& v) {
     os << "[";
     for (size_t i = 0; i < v.getSize(); ++i) {
         os << v.get(i);

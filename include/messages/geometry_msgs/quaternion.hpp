@@ -1,8 +1,10 @@
-#ifndef QUATERNION_HPP
-#define QUATERNION_HPP
+#ifndef QUATERNION_MSG_HPP
+#define QUATERNION_MSG_HPP
 
 #include "messages/message.hpp"
 #include "messages/std_msgs/header.hpp"
+
+namespace geometry_msgs {
 
 class Quaternion : public IMessage {
 public:
@@ -69,4 +71,6 @@ public:
     }
 };
 
-#endif // QUATERNION_HPP
+} // namespace geometry_msgs
+
+#endif // QUATERNION_MSG_HPP

@@ -7,13 +7,26 @@ class String : public IMessage {
 public:
     std::string data;
 
+    String() : data("") {}
+
+    String(const std::string& data) : data(data) {}
+
+    String operator=(const std::string& data) {
+        this->data = data;
+        return *this;
+    }
+
+    operator std::string() const {
+        return data;
+    }
+
     uint16_t getMsgLen() const override {
-        return data.size();
+        return data.size() + 1;
     }
 
     virtual std::string encode() const override {
         std::string msg;
-        msg.append(data);
+        msg.append(data + '\0');
         return msg;
     }
 

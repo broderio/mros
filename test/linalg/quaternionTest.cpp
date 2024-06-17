@@ -6,6 +6,7 @@
 #include "linalg/matrix.hpp"
 #include "linalg/quaternion.hpp"
 
+using namespace linalg;
 
 int main() {
     Vector axis(3);

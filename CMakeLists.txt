@@ -122,6 +122,10 @@ target_include_directories(lidarScanTest PUBLIC include)
 add_executable(poseTest test/messages/poseTest.cpp)
 target_include_directories(poseTest PUBLIC include)
 
+# Add jointState messages test
+add_executable(jointStateTest test/messages/jointStateTest.cpp)
+target_include_directories(jointStateTest PUBLIC include)
+
 # Add linalg vector test
 add_executable(vectorTest test/linalg/vectorTest.cpp)
 target_link_libraries(vectorTest linalg)
@@ -136,3 +140,13 @@ target_include_directories(matrixTest PUBLIC include)
 add_executable(quaternionTest test/linalg/quaternionTest.cpp)
 target_link_libraries(quaternionTest linalg)
 target_include_directories(quaternionTest PUBLIC include)
+
+### COMBINED TESTS ###
+
+add_executable(jointStatePublisher test/simpleFK/jointStatePublisher.cpp)
+target_link_libraries(jointStatePublisher socketlib linalg utils)
+target_include_directories(jointStatePublisher PRIVATE include)
+
+add_executable(jointStateSubscription test/simpleFK/jointStateSubscription.cpp)
+target_link_libraries(jointStateSubscription socketlib linalg utils)
+target_include_directories(jointStateSubscription PRIVATE include)

@@ -4,6 +4,8 @@
 #include "messages/message.hpp"
 #include "messages/std_msgs/header.hpp"
 
+namespace geometry_msgs {
+
 class Vector3 : public IMessage {
 public:
     float x;
@@ -65,5 +67,7 @@ public:
         vector.decode(msg.substr(header.getMsgLen()));
     }
 };
+
+} // namespace geometry_msgs
 
 #endif // VECTOR3_HPP

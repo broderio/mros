@@ -1,6 +1,10 @@
 #include "linalg/quaternion.hpp"
 
+using namespace linalg;
+
 Quaternion::Quaternion() : x(0), y(0), z(0), w(1) {}
+
+Quaternion::Quaternion(const geometry_msgs::Quaternion& q) : x(q.x), y(q.y), z(q.z), w(q.w) {}
 
 Quaternion::Quaternion(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
 
@@ -23,6 +27,10 @@ Quaternion::Quaternion(const Vector& axis, const float& angle) {
     y = axis.get(0) * std::sin(halfAngle);
     z = axis.get(1) * std::sin(halfAngle);
     w = axis.get(2) * std::sin(halfAngle);
+}
+
+geometry_msgs::Quaternion Quaternion::toMsg() const {
+    return geometry_msgs::Quaternion(x, y, z, w);
 }
 
 float Quaternion::norm() const {
@@ -52,7 +60,8 @@ Matrix Quaternion::toRotationMatrix(const Quaternion& q) {
     float yw = q.y * q.w;
     float zz = q.z * q.z;
     float zw = q.z * q.w;
-    return Matrix({{1 - 2 * (yy + zz), 2 * (xy - zw), 2 * (xz + yw)},
-                   {2 * (xy + zw), 1 - 2 * (xx + zz), 2 * (yz - xw)},
-                   {2 * (xz - yw), 2 * (yz + xw), 1 - 2 * (xx + yy)}});
+    return Matrix({{1 - 2 * (yy + zz), 2 * (xy - zw), 2 * (xz + yw), 0},
+                   {2 * (xy + zw), 1 - 2 * (xx + zz), 2 * (yz - xw), 0},
+                   {2 * (xz - yw), 2 * (yz + xw), 1 - 2 * (xx + yy), 0},
+                   {0,             0,             0,                 1}});
 }

@@ -5,6 +5,8 @@
 #include "messages/std_msgs/header.hpp"
 #include "messages/geometry_msgs/vector3.hpp"
 
+namespace geometry_msgs {
+
 class Twist : public IMessage {
 public:
     Vector3 linear;
@@ -63,5 +65,7 @@ public:
         twist.decode(msg.substr(header.getMsgLen()));
     }
 };
+
+} // namespace geometry_msgs
 
 #endif // TWIST_HPP

@@ -3,6 +3,9 @@
 
 #include "messages/message.hpp"
 #include "messages/std_msgs/header.hpp"
+#include "messages/geometry_msgs/vector3.hpp"
+
+namespace geometry_msgs {
 
 class Point : public IMessage {
 public:
@@ -13,6 +16,8 @@ public:
     Point() : x(0), y(0), z(0) {}
 
     Point(float x, float y, float z) : x(x), y(y), z(z) {}
+
+    Point(const Vector3& vector) : x(vector.x), y(vector.y), z(vector.z) {}
 
     uint16_t getMsgLen() const override {
         return 3 * sizeof(float);
@@ -65,5 +70,7 @@ public:
         point.decode(msg.substr(header.getMsgLen()));
     }
 };
+
+} // namespace geometry_msgs
 
 #endif // POINT_HPP

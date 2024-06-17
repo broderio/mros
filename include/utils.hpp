@@ -27,6 +27,8 @@ void sleep(int milliseconds);
 
 int getTimeMs();
 
+int getTimeNano();
+
 float degToRad(float deg);
 
 float radToDeg(float rad);

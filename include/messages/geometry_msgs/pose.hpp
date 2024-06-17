@@ -6,6 +6,8 @@
 #include "messages/geometry_msgs/quaternion.hpp"
 #include "messages/geometry_msgs/point.hpp"
 
+namespace geometry_msgs {
+
 class Pose : public IMessage {
 public:
     Point position;
@@ -64,5 +66,7 @@ public:
         pose.decode(msg.substr(header.getMsgLen()));
     }
 };
+
+} // namespace geometry_msgs
 
 #endif // POINT_HPP

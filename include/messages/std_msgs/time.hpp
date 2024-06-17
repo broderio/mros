@@ -8,6 +8,21 @@ public:
     int32_t sec;
     int32_t nsec;
 
+    Time() : sec(0), nsec(0) {}
+
+    Time(int32_t sec, int32_t nsec) : sec(sec), nsec(nsec) {}
+
+    Time(const Time& other) : sec(other.sec), nsec(other.nsec) {}
+
+    Time& operator=(const Time& other) {
+        if (this == &other) {
+            return *this;
+        }
+        sec = other.sec;
+        nsec = other.nsec;
+        return *this;
+    }
+
     uint16_t getMsgLen() const override {
         return 2 * sizeof(int32_t);
     }

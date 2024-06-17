@@ -11,8 +11,24 @@ public:
     Time stamp;
     String frame_id;
 
+    Header() : seq(0), stamp(), frame_id() {}
+
+    Header(uint32_t seq, const Time& stamp, const String& frame_id) : seq(seq), stamp(stamp), frame_id(frame_id) {}
+
+    Header(const Header& other) : seq(other.seq), stamp(other.stamp), frame_id(other.frame_id) {}
+
+    Header& operator=(const Header& other) {
+        if (this == &other) {
+            return *this;
+        }
+        seq = other.seq;
+        stamp = other.stamp;
+        frame_id = other.frame_id;
+        return *this;
+    }
+
     uint16_t getMsgLen() const override {
-        return stamp.getMsgLen() * sizeof(int32_t) + frame_id.getMsgLen();
+        return  sizeof(int32_t) + stamp.getMsgLen() + frame_id.getMsgLen();
     }
 
     virtual std::string encode() const override {
@@ -32,7 +48,7 @@ public:
         int len = 0;
         std::memcpy(&seq, msg.data(), sizeof(seq)); len += sizeof(seq);
         stamp.decode(msg.substr(len)); len += stamp.getMsgLen();
-        frame_id.decode(msg.substr(len));
+        frame_id.decode(msg.substr(len, msg.find_first_of('\0', len) - len));
     }
 };
 

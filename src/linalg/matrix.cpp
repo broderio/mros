@@ -1,5 +1,7 @@
 #include "linalg/matrix.hpp"
 
+using namespace linalg;
+
 Matrix::Matrix()
 : rows(), cols(), data() {}
 
@@ -478,17 +480,16 @@ bool Matrix::QR(const Matrix& A, Matrix& Q, Matrix& R) {
 
     Q = Matrix(A.rows, A.cols);
 
-    Vector sum(A.rows);
     for (size_t i = 0; i < A.cols; ++i) 
     {
+        Vector sum(A.rows);
         Vector u = A.getCol(i);
         for (size_t j = 0; j < i; ++j) 
         {
             Vector q = Q.getCol(j);
-            sum += q * (Vector::dot(u, q) / Vector::dot(q, q));
+            u -= q * (Vector::dot(u, q) / Vector::dot(q, q));
         }
-        Vector v = u - sum;
-        Q.setCol(i, Vector::normalize(v));
+        Q.setCol(i, Vector::normalize(u));
     }
     R = multiply(transpose(Q), A);
     
@@ -501,12 +502,19 @@ Matrix Matrix::inverse(const Matrix& m) {
         return Matrix();
     }
 
-    Matrix Q(m.rows, m.cols), R(m.rows, m.cols);
-    QR(m, Q, R);
-    Matrix QT = transpose(Q);
-    Matrix RInv = invertUpperTriangular(R);
+    // Inversion using LU decomposition
 
-    return multiply(RInv, QT);
+    Matrix L, U;
+    if (!LU(m, L, U)) {
+        return Matrix();
+    }
+
+    Matrix Uinv = invertUpperTriangular(U);
+    Matrix Linv = invertLowerTriangular(L);
+
+    Matrix inv = multiply(Uinv, Linv);
+
+    return inv;
 }
 
 Matrix Matrix::pseudoInverse(const Matrix& m) {
@@ -523,32 +531,6 @@ Matrix Matrix::pseudoInverse(const Matrix& m) {
     }
 }
 
-Vector Matrix::solve(const Matrix& A, const Vector& b, const bool& useLU) {
-    if (A.rows != A.cols) {
-        std::cerr << "Error: cannot solve non-square system." << std::endl;
-        return Vector();
-    }
-
-    if (useLU) {
-        Matrix L, U;
-        if (!LU(A, L, U)) {
-            return Vector();
-        }
-
-        Vector y = forwardSub(L, b);
-        return backwardSub(U, y);
-    }
-    else {
-        // Use QR
-        Matrix Q, R;
-        if (!QR(A, Q, R)) {
-            return Vector();
-        }
-        return backwardSub(R, multiply(transpose(Q), b));
-    }
-    
-}
-
 Matrix Matrix::invertUpperTriangular(const Matrix& U) {
     if (U.rows != U.cols) {
         std::cerr << "Error: cannot invert non-square matrix." << std::endl;
@@ -561,9 +543,29 @@ Matrix Matrix::invertUpperTriangular(const Matrix& U) {
         for (size_t j = i + 1; j < U.cols; ++j) {
             float sum = 0;
             for (size_t k = i; k < j; ++k) {
-                sum += U.data[i][k] * inv.data[k][j];
+                sum += U.data[k][j] * inv.data[i][k];
             }
             inv.data[i][j] = -sum / U.data[j][j];
+        }
+    }
+    return inv;
+}
+
+Matrix Matrix::invertLowerTriangular(const Matrix& L) {
+    if (L.rows != L.cols) {
+        std::cerr << "Error: cannot invert non-square matrix." << std::endl;
+        return Matrix();
+    }
+
+    Matrix inv(L.rows, L.cols);
+    for (size_t i = 0; i < L.rows; ++i) {
+        inv.data[i][i] = 1 / L.data[i][i];
+        for (size_t j = 0; j < i; ++j) {
+            float sum = 0;
+            for (size_t k = j; k < i; ++k) {
+                sum += L.data[i][k] * inv.data[k][j];
+            }
+            inv.data[i][j] = -sum / L.data[i][i];
         }
     }
     return inv;
@@ -603,27 +605,27 @@ Vector Matrix::forwardSub(const Matrix& L, const Vector& b) {
     return x;
 }
 
-Matrix operator+(const Matrix& lhs, const float& rhs) {
-    Matrix m(lhs.getRows(), lhs.getCols());
-    for (size_t i = 0; i < lhs.getRows(); ++i) {
-        for (size_t j = 0; j < lhs.getCols(); ++j) {
-            m.at(i, j) = lhs.get(i, j) + rhs;
+Matrix linalg::operator+(const float& lhs, const Matrix& rhs) {
+    Matrix m(rhs.getRows(), rhs.getCols());
+    for (size_t i = 0; i < rhs.getRows(); ++i) {
+        for (size_t j = 0; j < rhs.getCols(); ++j) {
+            m.at(i, j) = rhs.get(i, j) + lhs;
         }
     }
     return m;
 }
 
-Matrix operator-(const Matrix& lhs, const float& rhs) {
-    Matrix m(lhs.getRows(), lhs.getCols());
-    for (size_t i = 0; i < lhs.getRows(); ++i) {
-        for (size_t j = 0; j < lhs.getCols(); ++j) {
-            m.at(i, j) = lhs.get(i, j) - rhs;
+Matrix linalg::operator-(const float& lhs, const Matrix& rhs) {
+    Matrix m(rhs.getRows(), rhs.getCols());
+    for (size_t i = 0; i < rhs.getRows(); ++i) {
+        for (size_t j = 0; j < rhs.getCols(); ++j) {
+            m.at(i, j) = rhs.get(i, j) - lhs;
         }
     }
     return m;
 }
 
-Matrix operator*(const float& lhs, const Matrix& rhs) {
+Matrix linalg::operator*(const float& lhs, const Matrix& rhs) {
     Matrix m(rhs.getRows(), rhs.getCols());
     for (size_t i = 0; i < rhs.getRows(); ++i) {
         for (size_t j = 0; j < rhs.getCols(); ++j) {
@@ -633,7 +635,7 @@ Matrix operator*(const float& lhs, const Matrix& rhs) {
     return m;
 }
 
-std::ostream &operator<<(std::ostream& os, const Matrix& m) {
+std::ostream &linalg::operator<<(std::ostream& os, const Matrix& m) {
     os << "[";
     for (size_t i = 0; i < m.getRows(); ++i) {
         os << "[";
@@ -652,6 +654,48 @@ std::ostream &operator<<(std::ostream& os, const Matrix& m) {
     return os;
 }
 
-bool approx(const float& lhs, const float& rhs, const float& eps) {
+bool linalg::approx(const float& lhs, const float& rhs, const float& eps) {
     return std::abs(lhs - rhs) < eps;
+}
+
+Vector linalg::linearSolve(const Matrix& A, const Vector& b, const bool& useLU) {
+    Matrix A2 = A, At = Matrix::transpose(A);
+    if (A.getRows() != A.getCols()) {
+        A2 = Matrix::multiply(At, A);
+    }
+
+    if (useLU) {
+        Matrix L, U;
+        if (!Matrix::LU(A2, L, U)) {
+            return Vector();
+        }
+
+        Vector y = Matrix::forwardSub(L, Matrix::multiply(At, b));
+        return Matrix::backwardSub(U, y);
+    }
+    else {
+        // Use QR (this is less numerically stable than LU, but more robust to singular matrices)
+        Matrix Q, R;
+        if (!Matrix::QR(A2, Q, R)) {
+            return Vector();
+        }
+
+        return Matrix::backwardSub(R, Matrix::multiply(Matrix::transpose(Q), Matrix::multiply(At, b)));
+    }
+}
+
+Vector linalg::polyfit(const Vector& x, const Vector& y, const size_t& order, const bool& useLU) {
+    if (x.getSize() != y.getSize()) {
+        std::cerr << "Error: input vectors must be of the same size." << std::endl;
+        return Vector();
+    }
+
+    Matrix A(x.getSize(), order + 1);
+    for (size_t i = 0; i < x.getSize(); ++i) {
+        for (size_t j = 0; j <= order; ++j) {
+            A.at(i, j) = std::pow(x.get(i), j);
+        }
+    }
+
+    return linalg::linearSolve(A, y, useLU);
 }
