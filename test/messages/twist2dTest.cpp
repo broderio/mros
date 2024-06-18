@@ -2,7 +2,7 @@
 #include "messages/mbot_msgs/twist2d.hpp"
 
 int main() {
-    Twist2D twist;
+    Twist2d twist;
     twist.utime = 123456789;
     twist.vx = 1.0;
     twist.vy = 2.0;
@@ -16,7 +16,7 @@ int main() {
 
     std::string msg = Parser::encode(twist, TOPIC_ID::MBOT_VEL_CMD);
 
-    Twist2D twist2;
+    Twist2d twist2;
     bool res = Parser::decode(msg, twist2);
     if (!res) return 1;
 

@@ -21,11 +21,6 @@ Vector::Vector(const std::vector<float>& data) : data(data) {}
 Vector::Vector(const geometry_msgs::Vector3& v) : data({v.x, v.y, v.z}) {}
 
 geometry_msgs::Vector3 Vector::toVector3() const {
-    if (data.size() > 4) {
-        std::cerr << "Error: cannot convert vector to geometry_msgs::Vector3." << std::endl;
-        return geometry_msgs::Vector3();
-    }
-
     return geometry_msgs::Vector3(data[0], data[1], data[2]);
 }
 

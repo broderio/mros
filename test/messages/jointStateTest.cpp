@@ -26,28 +26,7 @@ int main() {
     jointState.effort.push_back(8.0);
     jointState.effort.push_back(9.0);
 
-    std::cout << "Values:" << std::endl;
-    std::cout << "Header:" << std::endl;
-    std::cout << "\tseq: " << jointState.header.seq << std::endl;
-    std::cout << "\tsec: " << jointState.header.stamp.sec << std::endl;
-    std::cout << "\tnsec: " << jointState.header.stamp.nsec << std::endl;
-    std::cout << "\tframe_id: " << (std::string)jointState.header.frame_id << std::endl;
-    std::cout << "Name:" << std::endl;
-    for (const std::string& n : jointState.name) {
-        std::cout << "\t" << n << std::endl;
-    }
-    std::cout << "Position:" << std::endl;
-    for (double p : jointState.position) {
-        std::cout << "\t" << p << std::endl;
-    }
-    std::cout << "Velocity:" << std::endl;
-    for (double v : jointState.velocity) {
-        std::cout << "\t" << v << std::endl;
-    }
-    std::cout << "Effort:" << std::endl;
-    for (double e : jointState.effort) {
-        std::cout << "\t" << e << std::endl;
-    }
+    std::cout << "Values:\n" << jointState << std::endl;
 
     std::string msg = Parser::encode(jointState, TOPIC_ID::MBOT_VEL_CMD);
 
@@ -55,30 +34,7 @@ int main() {
     bool res = Parser::decode(msg, jointState2);
     if (!res) return 1;
 
-    std::cout << "\nDecoded values:" << std::endl;
-    std::cout << "Topic ID: " << jointState2.getTopicId() << std::endl;
-    std::cout << "Message length: " << jointState2.getMsgLen() << std::endl;
-    std::cout << "Header:" << std::endl;
-    std::cout << "\tseq: " << jointState2.header.seq << std::endl;
-    std::cout << "\tsec: " << jointState2.header.stamp.sec << std::endl;
-    std::cout << "\tnsec: " << jointState2.header.stamp.nsec << std::endl;
-    std::cout << "\tframe_id: " << (std::string)jointState2.header.frame_id << std::endl;
-    std::cout << "Name:" << std::endl;
-    for (const std::string& n : jointState2.name) {
-        std::cout << "\t" << n << std::endl;
-    }
-    std::cout << "Position:" << std::endl;
-    for (double p : jointState2.position) {
-        std::cout << "\t" << p << std::endl;
-    }
-    std::cout << "Velocity:" << std::endl;
-    for (double v : jointState2.velocity) {
-        std::cout << "\t" << v << std::endl;
-    }
-    std::cout << "Effort:" << std::endl;
-    for (double e : jointState2.effort) {
-        std::cout << "\t" << e << std::endl;
-    }
+    std::cout << "\nDecoded values:\n" << jointState2 << std::endl;
 
     return 0;
 }

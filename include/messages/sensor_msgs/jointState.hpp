@@ -17,57 +17,21 @@ public:
     std::vector<double> velocity;
     std::vector<double> effort;
 
-    JointState() {}
+    JointState();
 
-    uint16_t getMsgLen() const override {
-        uint16_t nameLen = 0;
-        for (const std::string& n : name) {
-            nameLen += n.size();
-        }
-        return header.getMsgLen() + nameLen + position.size() * sizeof(double) + velocity.size() * sizeof(double) + effort.size() * sizeof(double);
-    }
+    JointState(const Header& header, const std::vector<String>& name, const std::vector<double>& position, const std::vector<double>& velocity, const std::vector<double>& effort);
 
-    virtual std::string encode() const override {
-        std::string msg;
-        msg.append(header.encode());
-        for (const String& n : name) {
-            msg.append(n.encode());
-        }
-        msg.append((char*)position.data(), position.size() * sizeof(double));
-        msg.append((char*)velocity.data(), velocity.size() * sizeof(double));
-        msg.append((char*)effort.data(), effort.size() * sizeof(double));
-        return msg;
-    }
+    JointState(const JointState& other);
 
-    virtual void decode(const std::string& msg) override {
-        if (msg.size() < header.getMsgLen()) {
-            std::cerr << "Error: message is too short to be a JointState." << std::endl;
-            return;
-        }
+    JointState& operator=(const JointState& other);
 
-        int len = 0;
-        header.decode(msg); len += header.getMsgLen();
+    uint16_t getMsgLen() const override;
 
-        int count = 0;
-        while (len + count * 3 * sizeof(double) < msg.size() - 1) {
-            size_t nameEnd = msg.find_first_of('\0', len);
-            std::string n = msg.substr(len, nameEnd - len);
-            name.push_back(n);
-            len = nameEnd + 1;
-            count++;
-        }
+    std::string toString() const override;
 
-        position.resize(count);
-        std::memcpy(position.data(), msg.data() + len, count * sizeof(double));
-        len += count * sizeof(double);
+    std::string encode() const override;
 
-        velocity.resize(count);
-        std::memcpy(velocity.data(), msg.data() + len, count * sizeof(double));
-        len += count * sizeof(double);
-
-        effort.resize(count);
-        std::memcpy(effort.data(), msg.data() + len, count * sizeof(double));
-    }
+    void decode(const std::string& msg) override;
 };
 
 } // namespace sensor_msgs

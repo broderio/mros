@@ -12,33 +12,21 @@ public:
     float y;
     float z;
 
-    Vector3() : x(0), y(0), z(0) {}
+    Vector3();
 
-    Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
+    Vector3(float x, float y, float z);
 
-    uint16_t getMsgLen() const override {
-        return 3 * sizeof(float);
-    }
+    Vector3(const Vector3& other);
 
-    virtual std::string encode() const override {
-        std::string msg;
-        msg.append((char*)&x, sizeof(float));
-        msg.append((char*)&y, sizeof(float));
-        msg.append((char*)&z, sizeof(float));
-        return msg;
-    }
+    Vector3& operator=(const Vector3& other);
 
-    virtual void decode(const std::string& msg) override {
-        if (msg.size() < getMsgLen()) {
-            std::cerr << "Error: message is too short to be a Point." << std::endl;
-            return;
-        }
+    uint16_t getMsgLen() const override;
 
-        int len = 0;
-        std::memcpy(&x, msg.data(), sizeof(x)); len += sizeof(x);
-        std::memcpy(&y, msg.data() + len, sizeof(y)); len += sizeof(y);
-        std::memcpy(&z, msg.data() + len, sizeof(z));
-    }
+    std::string toString() const override;
+
+    std::string encode() const override;
+
+    void decode(const std::string& msg) override;
 };
 
 class Vector3Stamped : public IMessage {
@@ -46,26 +34,21 @@ public:
     Header header;
     Vector3 vector;
 
-    uint16_t getMsgLen() const override {
-        return header.getMsgLen() + vector.getMsgLen();
-    }
+    Vector3Stamped();
 
-    virtual std::string encode() const override {
-        std::string msg;
-        msg.append(header.encode());
-        msg.append(vector.encode());
-        return msg;
-    }
+    Vector3Stamped(const Header& header, const Vector3& vector);
 
-    virtual void decode(const std::string& msg) override {
-        if (msg.size() < getMsgLen()) {
-            std::cerr << "Error: message is too short to be a PointStamped." << std::endl;
-            return;
-        }
+    Vector3Stamped(const Vector3Stamped& other);
 
-        header.decode(msg);
-        vector.decode(msg.substr(header.getMsgLen()));
-    }
+    Vector3Stamped& operator=(const Vector3Stamped& other);
+
+    uint16_t getMsgLen() const override;
+
+    std::string toString() const override;
+
+    std::string encode() const override;
+
+    void decode(const std::string& msg) override;
 };
 
 } // namespace geometry_msgs

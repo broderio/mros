@@ -7,37 +7,21 @@ class String : public IMessage {
 public:
     std::string data;
 
-    String() : data("") {}
+    String();
 
-    String(const std::string& data) : data(data) {}
+    String(const std::string& data);
 
-    String operator=(const std::string& data) {
-        this->data = data;
-        return *this;
-    }
+    String(const String& other);
 
-    operator std::string() const {
-        return data;
-    }
+    String operator=(const std::string& data);
 
-    uint16_t getMsgLen() const override {
-        return data.size() + 1;
-    }
+    uint16_t getMsgLen() const override;
 
-    virtual std::string encode() const override {
-        std::string msg;
-        msg.append(data + '\0');
-        return msg;
-    }
+    std::string toString() const override;
 
-    virtual void decode(const std::string& msg) override {
-        if (msg.size() < getMsgLen()) {
-            std::cerr << "Error: message is too short to be a Pose2D." << std::endl;
-            return;
-        }
+    std::string encode() const override;
 
-        data = msg;
-    }
+    void decode(const std::string& msg) override;
 };
 
 #endif // STRING_HPP

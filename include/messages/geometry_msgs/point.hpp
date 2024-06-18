@@ -13,35 +13,23 @@ public:
     float y;
     float z;
 
-    Point() : x(0), y(0), z(0) {}
+    Point();
 
-    Point(float x, float y, float z) : x(x), y(y), z(z) {}
+    Point(float x, float y, float z);
 
-    Point(const Vector3& vector) : x(vector.x), y(vector.y), z(vector.z) {}
+    Point(const Vector3& vector);
 
-    uint16_t getMsgLen() const override {
-        return 3 * sizeof(float);
-    }
+    Point(const Point& other);
 
-    virtual std::string encode() const override {
-        std::string msg;
-        msg.append((char*)&x, sizeof(float));
-        msg.append((char*)&y, sizeof(float));
-        msg.append((char*)&z, sizeof(float));
-        return msg;
-    }
+    Point &operator=(const Point& other);
 
-    virtual void decode(const std::string& msg) override {
-        if (msg.size() < getMsgLen()) {
-            std::cerr << "Error: message is too short to be a Point." << std::endl;
-            return;
-        }
+    uint16_t getMsgLen() const override;
 
-        int len = 0;
-        std::memcpy(&x, msg.data(), sizeof(x)); len += sizeof(x);
-        std::memcpy(&y, msg.data() + len, sizeof(y)); len += sizeof(y);
-        std::memcpy(&z, msg.data() + len, sizeof(z));
-    }
+    std::string toString() const override;
+
+    std::string encode() const override;
+    
+    void decode(const std::string& msg) override;
 };
 
 class PointStamped : public IMessage {
@@ -49,26 +37,22 @@ public:
     Header header;
     Point point;
 
-    uint16_t getMsgLen() const override {
-        return header.getMsgLen() + point.getMsgLen();
-    }
+    PointStamped();
 
-    virtual std::string encode() const override {
-        std::string msg;
-        msg.append(header.encode());
-        msg.append(point.encode());
-        return msg;
-    }
+    PointStamped(const Header& header, const Point& point);
 
-    virtual void decode(const std::string& msg) override {
-        if (msg.size() < getMsgLen()) {
-            std::cerr << "Error: message is too short to be a PointStamped." << std::endl;
-            return;
-        }
+    PointStamped(const PointStamped& other);
 
-        header.decode(msg);
-        point.decode(msg.substr(header.getMsgLen()));
-    }
+    PointStamped& operator=(const PointStamped& other);
+
+    uint16_t getMsgLen() const override;
+
+    std::string toString() const override;
+
+    std::string encode() const override;
+
+    void decode(const std::string& msg) override;
+    
 };
 
 } // namespace geometry_msgs

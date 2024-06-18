@@ -2,8 +2,10 @@
 #define IMESSAGE_HPP
 
 #include <iostream>
+#include <ostream>
 #include <string>
 #include <type_traits>
+#include <sstream>
 
 #define SYNC_FLAG       0xFF
 #define VERSION_FLAG    0xFE
@@ -28,14 +30,24 @@ enum TOPIC_ID {
     MBOT_LIDAR = 240,
 };
 
-class Parser;
-
 /**
  * @brief The base interface for all message types.
  * 
  * This interface defines the common functionality that all message types should implement.
  */
 struct IMessage {
+    /**
+     * @brief Default constructor for the IMessage interface.
+     */
+    IMessage() = default;
+
+    /**
+     * @brief Copy constructor for the IMessage interface.
+     * 
+     * @param other The other IMessage object to copy.
+     */
+    IMessage(const IMessage& other) = delete;
+
     /**
      * @brief Destructor for the IMessage interface.
      */
@@ -54,6 +66,8 @@ struct IMessage {
      * @return The topic ID of the message.
      */
     uint16_t getTopicId() const { return topicId; }
+
+    virtual std::string toString() const = 0;
 
     /**
      * @brief Encode the message into a byte string.
@@ -75,6 +89,8 @@ struct IMessage {
     */
     uint16_t topicId;
 };
+
+std::ostream& operator<<(std::ostream& os, const IMessage& msg);
 
 class Parser {
 public:
@@ -203,7 +219,7 @@ private:
             sum += data[i];
         }
         return 255 - ( ( sum ) % 256 );
-    }
+    }   
 };
 
 #endif // IMESSAGE_HPP

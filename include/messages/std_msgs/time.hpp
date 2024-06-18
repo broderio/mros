@@ -1,6 +1,8 @@
 #ifndef TIME_HPP
 #define TIME_HPP
 
+#include <sstream>
+
 #include "messages/message.hpp"
 
 class Time : public IMessage {
@@ -8,42 +10,21 @@ public:
     int32_t sec;
     int32_t nsec;
 
-    Time() : sec(0), nsec(0) {}
+    Time();
 
-    Time(int32_t sec, int32_t nsec) : sec(sec), nsec(nsec) {}
+    Time(int32_t sec, int32_t nsec);
 
-    Time(const Time& other) : sec(other.sec), nsec(other.nsec) {}
+    Time(const Time& other);
 
-    Time& operator=(const Time& other) {
-        if (this == &other) {
-            return *this;
-        }
-        sec = other.sec;
-        nsec = other.nsec;
-        return *this;
-    }
+    Time& operator=(const Time& other);
 
-    uint16_t getMsgLen() const override {
-        return 2 * sizeof(int32_t);
-    }
+    uint16_t getMsgLen() const override;
 
-    virtual std::string encode() const override {
-        std::string msg;
-        msg.append((char*)&sec, sizeof(int32_t));
-        msg.append((char*)&nsec, sizeof(int32_t));
-        return msg;
-    }
+    std::string toString() const override;
 
-    virtual void decode(const std::string& msg) override {
-        if (msg.size() < getMsgLen()) {
-            std::cerr << "Error: message is too short to be a Pose2D." << std::endl;
-            return;
-        }
+    std::string encode() const override;
 
-        int len = 0;
-        std::memcpy(&sec, msg.data(), sizeof(sec)); len += sizeof(sec);
-        std::memcpy(&nsec, msg.data() + len, sizeof(nsec));
-    }
+    void decode(const std::string& msg) override;
 };
 
 #endif // TIME_HPP

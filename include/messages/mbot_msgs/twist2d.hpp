@@ -3,37 +3,28 @@
 
 #include "messages/message.hpp"
 
-class Twist2D : public IMessage {
+class Twist2d : public IMessage {
 public:
     int64_t utime;
     float vx;
     float vy;
     float wz;
 
-    uint16_t getMsgLen() const override {
-        return sizeof(int64_t) + 3 * sizeof(float);
-    }
+    Twist2d();
 
-    virtual std::string encode() const override {
-        std::string msg;
-        msg.append((char*)&utime, sizeof(int64_t));
-        msg.append((char*)&vx, sizeof(float));
-        msg.append((char*)&vy, sizeof(float));
-        msg.append((char*)&wz, sizeof(float));
-        return msg;
-    }
+    Twist2d(int64_t utime, float vx, float vy, float wz);
 
-    virtual void decode(const std::string& msg) override {
-        if (msg.size() != getMsgLen()) {
-            std::cerr << "Error: Invalid message size to Twist2D::decode()" << std::endl;
-            return;
-        }
+    Twist2d(const Twist2d& other);
 
-        std::memcpy(&utime, msg.data(), sizeof(utime));
-        std::memcpy(&vx, msg.data() + sizeof(utime), sizeof(vx));
-        std::memcpy(&vy, msg.data() + sizeof(utime) + sizeof(vx), sizeof(vy));
-        std::memcpy(&wz, msg.data() + sizeof(utime) + sizeof(vx) + sizeof(vy), sizeof(wz));
-    }
+    Twist2d& operator=(const Twist2d& other);
+
+    uint16_t getMsgLen() const override;
+
+    std::string toString() const override;
+
+    std::string encode() const override;
+
+    void decode(const std::string& msg) override;
 };
 
 #endif // TWIST2D_HPP

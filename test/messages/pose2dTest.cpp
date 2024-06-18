@@ -2,7 +2,7 @@
 #include "messages/mbot_msgs/pose2d.hpp"
 
 int main() {
-    Pose2D pose;
+    Pose2d pose;
     pose.utime = 123456789;
     pose.x = 1.0;
     pose.y = 2.0;
@@ -16,7 +16,7 @@ int main() {
 
     std::string msg = Parser::encode(pose, TOPIC_ID::MBOT_ODOMETRY);
 
-    Pose2D pose2;
+    Pose2d pose2;
     bool res = Parser::decode(msg, pose2);
     if (!res) return 1;
 

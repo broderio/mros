@@ -13,31 +13,21 @@ public:
     Point position;
     Quaternion orientation;
 
-    Pose() : position(), orientation() {}
+    Pose();
 
-    Pose(const Point& position, const Quaternion& orientation) : position(position), orientation(orientation) {}
+    Pose(const Point& position, const Quaternion& orientation);
 
-    uint16_t getMsgLen() const override {
-        return position.getMsgLen() + orientation.getMsgLen();
-    }
+    Pose(const Pose& other);
 
-    virtual std::string encode() const override {
-        std::string msg;
-        msg.append(position.encode());
-        msg.append(orientation.encode());
-        return msg;
-    }
+    Pose& operator=(const Pose& other);
 
-    virtual void decode(const std::string& msg) override {
-        if (msg.size() < getMsgLen()) {
-            std::cerr << "Error: message is too short to be a Point." << std::endl;
-            return;
-        }
+    uint16_t getMsgLen() const override;
 
-        int len = 0;
-        position.decode(msg);
-        orientation.decode(msg.substr(position.getMsgLen()));
-    }
+    std::string toString() const override;
+
+    std::string encode() const override;
+
+    void decode(const std::string& msg) override;
 };
 
 class PoseStamped : public IMessage {
@@ -45,26 +35,21 @@ public:
     Header header;
     Pose pose;
 
-    uint16_t getMsgLen() const override {
-        return header.getMsgLen() + pose.getMsgLen();
-    }
+    PoseStamped();
 
-    virtual std::string encode() const override {
-        std::string msg;
-        msg.append(header.encode());
-        msg.append(pose.encode());
-        return msg;
-    }
+    PoseStamped(const Header& header, const Pose& pose);
 
-    virtual void decode(const std::string& msg) override {
-        if (msg.size() < getMsgLen()) {
-            std::cerr << "Error: message is too short to be a PointStamped." << std::endl;
-            return;
-        }
+    PoseStamped(const PoseStamped& other);
 
-        header.decode(msg);
-        pose.decode(msg.substr(header.getMsgLen()));
-    }
+    PoseStamped& operator=(const PoseStamped& other);
+
+    uint16_t getMsgLen() const override;
+
+    std::string toString() const override;
+
+    std::string encode() const override;
+
+    void decode(const std::string& msg) override;
 };
 
 } // namespace geometry_msgs
