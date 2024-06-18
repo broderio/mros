@@ -55,6 +55,12 @@ add_library(linalg STATIC src/linalg/vector.cpp
 target_include_directories(linalg PRIVATE include)
 target_link_libraries(linalg utils messagelib)
 
+### JRDF ###
+add_library(jrdf STATIC src/jrdf/json.cpp
+                        src/jrdf/robotModel.cpp)
+target_include_directories(jrdf PRIVATE include)
+target_link_libraries(jrdf utils)
+
 ### MROS ###
 
 add_library(mros STATIC src/mros/core.cpp
@@ -177,6 +183,11 @@ target_include_directories(matrixTest PUBLIC include)
 add_executable(quaternionTest test/linalg/quaternionTest.cpp)
 target_link_libraries(quaternionTest linalg)
 target_include_directories(quaternionTest PUBLIC include)
+
+### JRDF TESTS ###
+add_executable(jsonTest test/jrdf/jsonTest.cpp)
+target_link_libraries(jsonTest jrdf)
+target_include_directories(jsonTest PRIVATE include)
 
 ### COMBINED TESTS ###
 
