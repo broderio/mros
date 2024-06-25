@@ -57,17 +57,26 @@ target_link_libraries(linalg utils messagelib)
 
 ### JRDF ###
 add_library(jrdf STATIC src/jrdf/json.cpp
-                        src/jrdf/robotModel.cpp)
+                        src/jrdf/jrdf.cpp)
 target_include_directories(jrdf PRIVATE include)
 target_link_libraries(jrdf utils)
 
+### MROS PRIVATE MESSAGES ###
+add_library(mros_priv_messages STATIC src/mros/private_msgs/disconnect.cpp
+                                      src/mros/private_msgs/register.cpp
+                                      src/mros/private_msgs/request.cpp
+                                      src/mros/private_msgs/uri.cpp)
+target_include_directories(mros_priv_messages PRIVATE include)
+target_link_libraries(mros_priv_messages messagelib)
+
 ### MROS ###
 
-add_library(mros STATIC src/mros/core.cpp
+add_library(mros STATIC src/mros/mediator.cpp
+                        src/mros/node.cpp
                         src/mros/publisher.cpp
                         src/mros/subscriber.cpp)
 target_include_directories(mros PRIVATE include)
-target_link_libraries(mros socketlib smemlib utils)
+target_link_libraries(mros socketlib smemlib utils messagelib mros_priv_messages)
 
 ### MROS TESTS ###
 
