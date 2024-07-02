@@ -23,9 +23,8 @@ uint16_t Pose::getMsgLen() const {
 
 std::string Pose::toString() const {
     std::stringstream ss;
-    ss << "Pose:\n";
-    ss << position.toString();
-    ss << orientation.toString();
+    ss << "position:\n" << addTab(position.toString(), 1) << '\n';
+    ss << "orientation:\n" << addTab(orientation.toString(), 1);
     return ss.str();
 }
 
@@ -36,15 +35,23 @@ std::string Pose::encode() const {
     return msg;
 }
 
-void Pose::decode(const std::string& msg) {
+bool Pose::decode(const std::string& msg) {
     if (msg.size() < getMsgLen()) {
-        std::cerr << "Error: message is too short to be a Point." << std::endl;
-        return;
+        std::cerr << "Error: message is too short to be a Pose." << std::endl;
+        return false;
     }
 
     int len = 0;
-    position.decode(msg);
-    orientation.decode(msg.substr(position.getMsgLen()));
+    if (!position.decode(msg)) {
+        std::cerr << "Error: failed to decode position." << std::endl;
+        return false;
+    }
+    if (!orientation.decode(msg.substr(position.getMsgLen()))) {
+        std::cerr << "Error: failed to decode orientation." << std::endl;
+        return false;
+    }
+
+    return true;
 }
 
 
@@ -69,9 +76,8 @@ uint16_t PoseStamped::getMsgLen() const {
 
 std::string PoseStamped::toString() const {
     std::stringstream ss;
-    ss << "PoseStamped:\n";
-    ss << header.toString();
-    ss << pose.toString();
+    ss << "header:\n" << addTab(header.toString(), 1) << std::endl;
+    ss << "pose:\n" << addTab(pose.toString(), 1);
     return ss.str();
 }
 
@@ -82,14 +88,25 @@ std::string PoseStamped::encode() const {
     return msg;
 }
 
-void PoseStamped::decode(const std::string& msg) {
+bool PoseStamped::decode(const std::string& msg) {
     if (msg.size() < getMsgLen()) {
-        std::cerr << "Error: message is too short to be a PointStamped." << std::endl;
-        return;
+        std::cerr << "Error: message is too short to be a PoseStamped." << std::endl;
+        return false;
     }
 
-    header.decode(msg);
-    pose.decode(msg.substr(header.getMsgLen()));
+    int len = 0;
+    if (!header.decode(msg)) {
+        std::cerr << "Error: failed to decode header." << std::endl;
+        return false;
+    }
+    len += header.getMsgLen();
+
+    if (!pose.decode(msg.substr(len))) {
+        std::cerr << "Error: failed to decode pose." << std::endl;
+        return false;
+    }
+
+    return true;
 }
 
 } // namespace geometry_msgs

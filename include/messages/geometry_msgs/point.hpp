@@ -1,21 +1,23 @@
-#ifndef POINT_HPP
-#define POINT_HPP
+#pragma once
 
 #include "messages/message.hpp"
 #include "messages/std_msgs/header.hpp"
+#include "messages/std_msgs/float.hpp"
 #include "messages/geometry_msgs/vector3.hpp"
+
+using namespace std_msgs;
 
 namespace geometry_msgs {
 
 class Point : public IMessage {
 public:
-    float x;
-    float y;
-    float z;
+    Float32 x;
+    Float32 y;
+    Float32 z;
 
     Point();
 
-    Point(float x, float y, float z);
+    Point(Float32 x, Float32 y, Float32 z);
 
     Point(const Vector3& vector);
 
@@ -29,7 +31,7 @@ public:
 
     std::string encode() const override;
     
-    void decode(const std::string& msg) override;
+    bool decode(const std::string& msg) override;
 };
 
 class PointStamped : public IMessage {
@@ -51,10 +53,8 @@ public:
 
     std::string encode() const override;
 
-    void decode(const std::string& msg) override;
+    bool decode(const std::string& msg) override;
     
 };
 
 } // namespace geometry_msgs
-
-#endif // POINT_HPP

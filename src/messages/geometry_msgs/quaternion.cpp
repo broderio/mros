@@ -1,10 +1,12 @@
 #include "messages/geometry_msgs/quaternion.hpp"
 
+using namespace std_msgs;
+
 namespace geometry_msgs {
 
 Quaternion::Quaternion() : x(0), y(0), z(0), w(0) {}
 
-Quaternion::Quaternion(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
+Quaternion::Quaternion(Float32 x, Float32 y, Float32 z, Float32 w) : x(x), y(y), z(z), w(w) {}
 
 Quaternion::Quaternion(const Quaternion& other) : x(other.x), y(other.y), z(other.z), w(other.w) {}
 
@@ -25,34 +27,53 @@ uint16_t Quaternion::getMsgLen() const {
 
 std::string Quaternion::toString() const {
     std::stringstream ss;
-    ss << "Quaternion:\n";
-    ss << '\t' << x << "\n";
-    ss << '\t' << y << "\n";
-    ss << '\t' << z << "\n";
-    ss << '\t' << w << "\n";
+    ss << "x: " << x.toString() << '\n';
+    ss << "y: " << y.toString() << '\n';
+    ss << "z: " << z.toString() << '\n';
+    ss << "w: " << w.toString() << '\n';
     return ss.str();
 }
 
 std::string Quaternion::encode() const {
     std::string msg;
-    msg.append((char*)&x, sizeof(float));
-    msg.append((char*)&y, sizeof(float));
-    msg.append((char*)&z, sizeof(float));
-    msg.append((char*)&w, sizeof(float));
+    msg.append(x.encode());
+    msg.append(y.encode());
+    msg.append(z.encode());
+    msg.append(w.encode());
     return msg;
 }
 
-void Quaternion::decode(const std::string& msg) {
+bool Quaternion::decode(const std::string& msg) {
     if (msg.size() < getMsgLen()) {
-        std::cerr << "Error: message is too short to be a Point." << std::endl;
-        return;
+        std::cerr << "Error: message is too short to be a Quaternion." << std::endl;
+        return false;
     }
 
     int len = 0;
-    std::memcpy(&x, msg.data(), sizeof(x)); len += sizeof(x);
-    std::memcpy(&y, msg.data() + len, sizeof(y)); len += sizeof(y);
-    std::memcpy(&z, msg.data() + len, sizeof(z)); len += sizeof(z);
-    std::memcpy(&w, msg.data() + len, sizeof(w));
+    if (!x.decode(msg)) {
+        std::cerr << "Error: failed to decode x." << std::endl;
+        return false;
+    }
+    len += x.getMsgLen();
+
+    if (!y.decode(msg.substr(len))) {
+        std::cerr << "Error: failed to decode y." << std::endl;
+        return false;
+    }
+    len += y.getMsgLen();
+
+    if (!z.decode(msg.substr(len))) {
+        std::cerr << "Error: failed to decode z." << std::endl;
+        return false;
+    }
+    len += z.getMsgLen();
+
+    if (!w.decode(msg.substr(len))) {
+        std::cerr << "Error: failed to decode w." << std::endl;
+        return false;
+    }
+    
+    return true;
 }
 
 QuaternionStamped::QuaternionStamped() {}
@@ -76,9 +97,8 @@ uint16_t QuaternionStamped::getMsgLen() const {
 
 std::string QuaternionStamped::toString() const {
     std::stringstream ss;
-    ss << "QuaternionStamped:\n";
-    ss << header.toString();
-    ss << q.toString();
+    ss << "header:\n" << addTab(header.toString(), 1) << std::endl;
+    ss << "q:\n" << addTab(q.toString(), 1);
     return ss.str();
 }
 
@@ -89,14 +109,25 @@ std::string QuaternionStamped::encode() const {
     return msg;
 }
 
-void QuaternionStamped::decode(const std::string& msg) {
+bool QuaternionStamped::decode(const std::string& msg) {
     if (msg.size() < getMsgLen()) {
-        std::cerr << "Error: message is too short to be a PointStamped." << std::endl;
-        return;
+        std::cerr << "Error: message is too short to be a QuaternionStamped." << std::endl;
+        return false;
+    }
+    
+    int len = 0;
+    if (!header.decode(msg)) {
+        std::cerr << "Error: failed to decode header." << std::endl;
+        return false;
+    }
+    len += header.getMsgLen();
+
+    if (!q.decode(msg.substr(len))) {
+        std::cerr << "Error: failed to decode q." << std::endl;
+        return false;
     }
 
-    header.decode(msg);
-    q.decode(msg.substr(q.getMsgLen()));
+    return true;
 }
 
 } // namespace geometry_msgs

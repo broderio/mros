@@ -24,12 +24,10 @@ uint16_t Transform::getMsgLen() const {
 }
 
 std::string Transform::toString() const {
-    std::string str;
-    str.append("translation: ");
-    str.append(translation.toString());
-    str.append("\nrotation: ");
-    str.append(rotation.toString());
-    return str;
+    std::stringstream ss;
+    ss << "translation:\n" << addTab(translation.toString(), 1) << '\n';
+    ss << "rotation:\n" << addTab(rotation.toString(), 1);
+    return ss.str();
 }
 
 std::string Transform::encode() const {
@@ -39,15 +37,25 @@ std::string Transform::encode() const {
     return msg;
 }
 
-void Transform::decode(const std::string& msg) {
+bool Transform::decode(const std::string& msg) {
     if (msg.size() < getMsgLen()) {
-        std::cerr << "Error: message is too short to be a Point." << std::endl;
-        return;
+        std::cerr << "Error: message is too short to be a Transform." << std::endl;
+        return false;
     }
 
     int len = 0;
-    translation.decode(msg);
-    rotation.decode(msg.substr(translation.getMsgLen()));
+    if (!translation.decode(msg)) {
+        std::cerr << "Error: failed to decode translation." << std::endl;
+        return false;
+    }
+    len += translation.getMsgLen();
+
+    if (!rotation.decode(msg.substr(len))) {
+        std::cerr << "Error: failed to decode rotation." << std::endl;
+        return false;
+    }
+
+    return true;
 }
 
 
@@ -73,14 +81,11 @@ uint16_t TransformStamped::getMsgLen() const {
 }
 
 std::string TransformStamped::toString() const {
-    std::string str;
-    str.append("header: ");
-    str.append(header.toString());
-    str.append("\nchild_frame_id: ");
-    str.append(child_frame_id.toString());
-    str.append("\ntransform: ");
-    str.append(transform.toString());
-    return str;
+    std::stringstream ss;
+    ss << "header:\n" << addTab(header.toString(), 1) << '\n';
+    ss << "child_frame_id: " << addTab(child_frame_id.toString(), 1) << '\n';
+    ss << "transform:\n" << addTab(transform.toString(), 1);
+    return ss.str();
 }
 
 std::string TransformStamped::encode() const {
@@ -91,16 +96,31 @@ std::string TransformStamped::encode() const {
     return msg;
 }
 
-void TransformStamped::decode(const std::string& msg) {
+bool TransformStamped::decode(const std::string& msg) {
     if (msg.size() < getMsgLen()) {
-        std::cerr << "Error: message is too short to be a PointStamped." << std::endl;
-        return;
+        std::cerr << "Error: message is too short to be a TransformStamped." << std::endl;
+        return false;
     }
 
     int len = 0;
-    header.decode(msg); len += header.getMsgLen();
-    child_frame_id.decode(msg.substr(len, msg.find_first_of('\0', len) - len)); len += child_frame_id.getMsgLen();
-    transform.decode(msg.substr(header.getMsgLen()));
+    if (!header.decode(msg)) {
+        std::cerr << "Error: failed to decode header." << std::endl;
+        return false;
+    }
+    len += header.getMsgLen();
+
+    if (!child_frame_id.decode(msg.substr(len))) {
+        std::cerr << "Error: failed to decode child_frame_id." << std::endl;
+        return false;
+    }
+    len += child_frame_id.getMsgLen();
+
+    if (!transform.decode(msg.substr(len))) {
+        std::cerr << "Error: failed to decode transform." << std::endl;
+        return false;
+    }
+
+    return true;
 }
 
 
@@ -119,43 +139,36 @@ TF& TF::operator=(const TF& other) {
 }
 
 uint16_t TF::getMsgLen() const {
-    uint16_t len = sizeof(uint32_t);
-    for (const TransformStamped& t : transforms) {
-        len += t.getMsgLen();
-    }
-    return len;
+    return IMessage::getVectorLen(transforms);
 }
 
 std::string TF::toString() const {
-    std::string str;
-    for (const TransformStamped& t : transforms) {
-        str.append(t.toString());
-        str.append("\n");
+    std::stringstream ss;
+    ss << "transforms: [\n";
+    for (const auto& transform : transforms) {
+        ss << addTab(transform.toString(), 1) << ",\n";
     }
-    return str;
+    ss << "]";
+    return ss.str();
 }
 
 std::string TF::encode() const {
     std::string msg;
-    for (const TransformStamped& t : transforms) {
-        msg.append(t.encode());
-    }
-    return msg;
+    return IMessage::encodeVector(transforms);
 }
 
-void TF::decode(const std::string& msg) {
+bool TF::decode(const std::string& msg) {
     if (msg.size() < sizeof(uint32_t)) {
         std::cerr << "Error: message is too short to be a TF." << std::endl;
-        return;
+        return false;
     }
 
-    int len = 0;
-    while (len < msg.size()) {
-        TransformStamped t;
-        t.decode(msg.substr(len));
-        transforms.push_back(t);
-        len += t.getMsgLen();
+    if (!IMessage::decodeVector(transforms, msg)) {
+        std::cerr << "Error: failed to decode transforms vector." << std::endl;
+        return false;
     }
+
+    return true;
 }
 
 } // namespace geometry_msgs

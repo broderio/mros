@@ -23,9 +23,8 @@ uint16_t Twist::getMsgLen() const {
 
 std::string Twist::toString() const {
     std::stringstream ss;
-    ss << "Twist:\n";
-    ss << linear.toString();
-    ss << angular.toString();
+    ss << "linear:\n" << addTab(linear.toString(), 1) << '\n';
+    ss << "angular:\n" << addTab(angular.toString(), 1);
     return ss.str();
 }
 
@@ -36,15 +35,25 @@ std::string Twist::encode() const {
     return msg;
 }
 
-void Twist::decode(const std::string& msg) {
+bool Twist::decode(const std::string& msg) {
     if (msg.size() < getMsgLen()) {
-        std::cerr << "Error: message is too short to be a Point." << std::endl;
-        return;
+        std::cerr << "Error: message is too short to be a Twist." << std::endl;
+        return false;
     }
 
     int len = 0;
-    linear.decode(msg);
-    angular.decode(msg.substr(linear.getMsgLen()));
+    if (!linear.decode(msg)) {
+        std::cerr << "Error: failed to decode linear." << std::endl;
+        return false;
+    }
+    len += linear.getMsgLen();
+
+    if (!angular.decode(msg.substr(len))) {
+        std::cerr << "Error: failed to decode angular." << std::endl;
+        return false;
+    }
+
+    return true;
 }
 
 
@@ -69,9 +78,8 @@ uint16_t TwistStamped::getMsgLen() const {
 
 std::string TwistStamped::toString() const {
     std::stringstream ss;
-    ss << "TwistStamped:\n";
-    ss << header.toString();
-    ss << twist.toString();
+    ss << "header:\n" << addTab(header.toString(), 1) << '\n';
+    ss << "twist:\n" << addTab(twist.toString(), 1);
     return ss.str();
 }
 
@@ -82,14 +90,25 @@ std::string TwistStamped::encode() const {
     return msg;
 }
 
-void TwistStamped::decode(const std::string& msg) {
+bool TwistStamped::decode(const std::string& msg) {
     if (msg.size() < getMsgLen()) {
-        std::cerr << "Error: message is too short to be a PointStamped." << std::endl;
-        return;
+        std::cerr << "Error: message is too short to be a TwistStamped." << std::endl;
+        return false;
     }
 
-    header.decode(msg);
-    twist.decode(msg.substr(header.getMsgLen()));
+    int len = 0;
+    if (!header.decode(msg)) {
+        std::cerr << "Error: failed to decode header." << std::endl;
+        return false;
+    }
+    len += header.getMsgLen();
+
+    if (!twist.decode(msg.substr(len))) {
+        std::cerr << "Error: failed to decode twist." << std::endl;
+        return false;
+    }
+
+    return true;
 }
 
 } // namespace geometry_msgs

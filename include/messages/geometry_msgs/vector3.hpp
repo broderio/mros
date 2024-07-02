@@ -1,20 +1,22 @@
-#ifndef VECTOR3_HPP
-#define VECTOR3_HPP
+#pragma once
 
 #include "messages/message.hpp"
 #include "messages/std_msgs/header.hpp"
+#include "messages/std_msgs/float.hpp"
+
+using namespace std_msgs;
 
 namespace geometry_msgs {
 
 class Vector3 : public IMessage {
 public:
-    float x;
-    float y;
-    float z;
+    Float32 x;
+    Float32 y;
+    Float32 z;
 
     Vector3();
 
-    Vector3(float x, float y, float z);
+    Vector3(Float32 x, Float32 y, Float32 z);
 
     Vector3(const Vector3& other);
 
@@ -26,7 +28,7 @@ public:
 
     std::string encode() const override;
 
-    void decode(const std::string& msg) override;
+    bool decode(const std::string& msg) override;
 };
 
 class Vector3Stamped : public IMessage {
@@ -48,9 +50,7 @@ public:
 
     std::string encode() const override;
 
-    void decode(const std::string& msg) override;
+    bool decode(const std::string& msg) override;
 };
 
 } // namespace geometry_msgs
-
-#endif // VECTOR3_HPP

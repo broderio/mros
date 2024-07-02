@@ -1,27 +1,30 @@
-#ifndef STRING_HPP
-#define STRING_HPP
+#pragma once
 
 #include "messages/message.hpp"
 
-class String : public IMessage {
-public:
-    std::string data;
+namespace std_msgs
+{
 
-    String();
+    class String : public IMessage
+    {
+    public:
+        std::string data;
 
-    String(const std::string& data);
+        String();
 
-    String(const String& other);
+        String(const std::string &data);
 
-    String operator=(const std::string& data);
+        String(const String &other);
 
-    uint16_t getMsgLen() const override;
+        String operator=(const std::string &data);
 
-    std::string toString() const override;
+        uint16_t getMsgLen() const override;
 
-    std::string encode() const override;
+        std::string toString() const override;
 
-    void decode(const std::string& msg) override;
-};
+        std::string encode() const override;
 
-#endif // STRING_HPP
+        bool decode(const std::string &msg) override;
+    };
+
+}

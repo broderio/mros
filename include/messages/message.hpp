@@ -1,11 +1,13 @@
-#ifndef IMESSAGE_HPP
-#define IMESSAGE_HPP
+#pragma once
 
 #include <iostream>
 #include <ostream>
+#include <vector>
 #include <string>
 #include <type_traits>
 #include <sstream>
+
+#include "utils.hpp"
 
 #define SYNC_FLAG       0xFF
 #define VERSION_FLAG    0xFE
@@ -35,74 +37,89 @@ enum TOPIC_ID {
  * 
  * This interface defines the common functionality that all message types should implement.
  */
-struct IMessage {
-    /**
-     * @brief Default constructor for the IMessage interface.
-     */
+class IMessage {
+public:
+
     IMessage() = default;
 
-    /**
-     * @brief Copy constructor for the IMessage interface.
-     * 
-     * @param other The other IMessage object to copy.
-     */
     IMessage(const IMessage& other) = delete;
 
-    /**
-     * @brief Destructor for the IMessage interface.
-     */
     virtual ~IMessage() = default;
 
-    /**
-     * @brief Get the length of the message.
-     * 
-     * @return The length of the message in bytes.
-     */
     virtual uint16_t getMsgLen() const = 0;
 
-    /**
-     * @brief Get the topic ID of the message.
-     * 
-     * @return The topic ID of the message.
-     */
     uint16_t getTopicId() const { return topicId; }
 
     virtual std::string toString() const = 0;
 
-    /**
-     * @brief Encode the message into a byte string.
-     * 
-     * @return The encoded message as a string.
-     */
     virtual std::string encode() const = 0;
 
-    /**
-     * @brief Decode the message from a string representation. 
-     * Stores the data in the message object.
-     * 
-     * @param msg The byte string representation of the message.
-     */
-    virtual void decode(const std::string& msg) = 0;
+    virtual bool decode(const std::string& msg) = 0;
 
-    /**
-     * @brief The topic ID of the message.
-    */
     uint16_t topicId;
+    
+protected:
+
+    template<typename MsgType>
+    static std::string encodeVector(const std::vector<MsgType>& vec) {
+        static_assert(!std::is_pointer<MsgType>::value, "MsgType must not be a pointer");
+        static_assert(std::is_base_of<IMessage, MsgType>::value, "MsgType must inherit from IMessage");
+
+        std::string msg(4, 0);
+
+        // Add the number of elements in the vector (4 bytes)
+        uint32_t size = vec.size();
+        std::memcpy(&msg[0], &size, 4);
+
+        // Add the encoded messages
+        for (const MsgType& m : vec) {
+            msg.append(m.encode());
+        }
+
+        return msg;
+    }
+
+    template<typename MsgType>
+    static bool decodeVector(std::vector<MsgType>& vec, const std::string& msg) {
+        static_assert(!std::is_pointer<MsgType>::value, "MsgType must not be a pointer");
+        static_assert(std::is_base_of<IMessage, MsgType>::value, "MsgType must inherit from IMessage");
+
+        uint32_t size;
+        std::memcpy(&size, &msg[0], 4);
+
+        // Decode the messages
+        int len = 4;
+        for (int i = 0; i < size; i++) {
+            MsgType m;
+            if (!m.decode(msg.substr(len))) {
+                return false;
+            }
+            vec.push_back(m);
+            len += m.getMsgLen();
+        }
+
+        return true;
+    }
+
+    template<typename MsgType>
+    static uint32_t getVectorLen(const std::vector<MsgType>& vec) {
+        static_assert(!std::is_pointer<MsgType>::value, "MsgType must not be a pointer");
+        static_assert(std::is_base_of<IMessage, MsgType>::value, "MsgType must inherit from IMessage");
+
+        uint32_t len = 4;
+        for (const MsgType& m : vec) {
+            len += m.getMsgLen();
+        }
+
+        return len;
+    }
 };
 
 std::ostream& operator<<(std::ostream& os, const IMessage& msg);
 
 class Parser {
 public:
-    /**
-     * @brief Encode a message into a byte string.
-     * 
-     * @tparam MsgType The type of the message to encode.
-     * @param msg The message to encode.
-     * @param topicId The topic ID of the message.
-     * @return The encoded message as a byte string in the rosserial packet format: http://wiki.ros.org/rosserial/Overview/Protocol.
-     * 
-    */
+
     template<typename MsgType>
     static std::string encode(const MsgType &msg, uint16_t topicId) {
         static_assert(!std::is_pointer<MsgType>::value, "MsgType must not be a pointer");
@@ -112,8 +129,9 @@ public:
         std::string data(PKG_LEN + msg.getMsgLen(), 0);
         data[0] = SYNC_FLAG;
         data[1] = VERSION_FLAG;
-        data[2] = msg.getMsgLen() & 0xFF;
-        data[3] = (msg.getMsgLen() >> 8) & 0xFF;
+        uint16_t msgLen = msg.getMsgLen();
+        data[2] = msgLen & 0xFF;
+        data[3] = (msgLen >> 8) & 0xFF;
 
         // Calculate the checksum of the header
         char cs1_addends[2] = {data[2], data[3]};
@@ -142,14 +160,6 @@ public:
         return data;
     }
 
-    /**
-     * @brief Decode a message from a byte string.
-     * 
-     * @tparam MsgType The type of the message to decode.
-     * @param data The byte string representation of the message in rosserial packet format: http://wiki.ros.org/rosserial/Overview/Protocol.
-     * @param msg The message object to store the decoded data.
-     * @return True if the decoding was successful, false otherwise.
-     */
     template<typename MsgType>
     static bool decode(const std::string& data, MsgType& msg) {
         static_assert(!std::is_pointer<MsgType>::value, "MsgType must not be a pointer");
@@ -196,7 +206,10 @@ public:
 
         // Decode the message
         std::string msg_data(data.begin() + HEADER_LEN, data.end() - FOOTER_LEN);
-        msg.decode(msg_data);
+        if (!msg.decode(msg_data)) {
+            std::cerr << "Failed to decode message" << std::endl;
+            return false;
+        }
 
         // Set the topic ID
         msg.topicId = (uint16_t) (data[6] << 8 | (data[5] & 0xFF));
@@ -204,22 +217,32 @@ public:
         return true;
     }
 
+    static bool getTopicID(const std::string& data, uint16_t& topicId) {
+         // Check the sync flag
+        if ((uint8_t)data[0] != SYNC_FLAG) {
+            std::cerr << "Sync flag not found" << std::endl;
+            return false;
+        }
+
+        // Check the version flag
+        if ((uint8_t)data[1] != VERSION_FLAG) {
+            std::cerr << "Version flag not found" << std::endl;
+            return false;
+        }
+
+        // Check the checksum of the header
+        char cs1_addends[2] = {data[2], data[3]};
+        if (data[4] != checksum(cs1_addends, 2)) {
+            std::cerr << "Checksum 1 failed" << std::endl;
+            return false;
+        }
+
+        topicId = (uint16_t) (data[6] << 8 | (data[5] & 0xFF));
+        return true;
+    }
+
 private:
 
-    /**
-     * @brief Calculate the checksum of a byte array defined in http://wiki.ros.org/rosserial/Overview/Protocol.
-     * 
-     * @param data The byte array to calculate the checksum for.
-     * @param len The length of the byte array.
-     * @return The checksum of the byte array.
-     */
-    static char checksum(char* data, int len) {
-        char sum = 0;
-        for (int i = 0; i < len; i++) {
-            sum += data[i];
-        }
-        return 255 - ( ( sum ) % 256 );
-    }   
-};
+    static char checksum(char* data, int len);
 
-#endif // IMESSAGE_HPP
+};

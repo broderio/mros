@@ -26,7 +26,7 @@ int main() {
     jointState.effort.push_back(8.0);
     jointState.effort.push_back(9.0);
 
-    std::cout << "Values:\n" << jointState << std::endl;
+    std::cout << "Values:\n" << jointState << '\n';
 
     std::string msg = Parser::encode(jointState, TOPIC_ID::MBOT_VEL_CMD);
 
@@ -34,7 +34,7 @@ int main() {
     bool res = Parser::decode(msg, jointState2);
     if (!res) return 1;
 
-    std::cout << "\nDecoded values:\n" << jointState2 << std::endl;
+    std::cout << "\nDecoded values:\n" << jointState2;
 
     return 0;
 }

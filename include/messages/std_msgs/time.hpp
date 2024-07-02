@@ -1,30 +1,32 @@
-#ifndef TIME_HPP
-#define TIME_HPP
-
-#include <sstream>
+#pragma once
 
 #include "messages/message.hpp"
+#include "messages/std_msgs/integer.hpp"
 
-class Time : public IMessage {
-public:
-    int32_t sec;
-    int32_t nsec;
+namespace std_msgs
+{
 
-    Time();
+    class Time : public IMessage
+    {
+    public:
+        Int32 sec;
+        Int32 nsec;
 
-    Time(int32_t sec, int32_t nsec);
+        Time();
 
-    Time(const Time& other);
+        Time(Int32 sec, Int32 nsec);
 
-    Time& operator=(const Time& other);
+        Time(const Time &other);
 
-    uint16_t getMsgLen() const override;
+        Time &operator=(const Time &other);
 
-    std::string toString() const override;
+        uint16_t getMsgLen() const override;
 
-    std::string encode() const override;
+        std::string toString() const override;
 
-    void decode(const std::string& msg) override;
-};
+        std::string encode() const override;
 
-#endif // TIME_HPP
+        bool decode(const std::string &msg) override;
+    };
+
+}

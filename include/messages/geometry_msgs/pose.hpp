@@ -1,5 +1,4 @@
-#ifndef POSE_HPP
-#define POSE_HPP
+#pragma once
 
 #include "messages/message.hpp"
 #include "messages/std_msgs/header.hpp"
@@ -27,7 +26,7 @@ public:
 
     std::string encode() const override;
 
-    void decode(const std::string& msg) override;
+    bool decode(const std::string& msg) override;
 };
 
 class PoseStamped : public IMessage {
@@ -49,9 +48,7 @@ public:
 
     std::string encode() const override;
 
-    void decode(const std::string& msg) override;
+    bool decode(const std::string& msg) override;
 };
 
 } // namespace geometry_msgs
-
-#endif // POINT_HPP

@@ -1,9 +1,10 @@
-#ifndef TWIST_HPP
-#define TWIST_HPP
+#pragma once
 
 #include "messages/message.hpp"
 #include "messages/std_msgs/header.hpp"
 #include "messages/geometry_msgs/vector3.hpp"
+
+using namespace std_msgs;
 
 namespace geometry_msgs {
 
@@ -26,7 +27,7 @@ public:
 
     std::string encode() const override;
 
-    void decode(const std::string& msg) override;
+    bool decode(const std::string& msg) override;
 };
 
 class TwistStamped : public IMessage {
@@ -48,9 +49,7 @@ public:
 
     std::string encode() const override;
 
-    void decode(const std::string& msg) override;
+    bool decode(const std::string& msg) override;
 };
 
 } // namespace geometry_msgs
-
-#endif // TWIST_HPP

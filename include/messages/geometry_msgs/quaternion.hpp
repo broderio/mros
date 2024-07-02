@@ -1,21 +1,23 @@
-#ifndef QUATERNION_MSG_HPP
-#define QUATERNION_MSG_HPP
+#pragma once 
 
 #include "messages/message.hpp"
 #include "messages/std_msgs/header.hpp"
+#include "messages/std_msgs/float.hpp"
+
+using namespace std_msgs;
 
 namespace geometry_msgs {
 
 class Quaternion : public IMessage {
 public:
-    float x;
-    float y;
-    float z;
-    float w;
+    Float32 x;
+    Float32 y;
+    Float32 z;
+    Float32 w;
 
     Quaternion();
 
-    Quaternion(float x, float y, float z, float w);
+    Quaternion(Float32 x, Float32 y, Float32 z, Float32 w);
 
     Quaternion(const Quaternion& other);
 
@@ -27,7 +29,7 @@ public:
 
     std::string encode() const override;
 
-    void decode(const std::string& msg) override;
+    bool decode(const std::string& msg) override;
 };
 
 class QuaternionStamped : public IMessage {
@@ -49,9 +51,7 @@ public:
 
     std::string encode() const override;
 
-    void decode(const std::string& msg) override;
+    bool decode(const std::string& msg) override;
 };
 
 } // namespace geometry_msgs
-
-#endif // QUATERNION_MSG_HPP

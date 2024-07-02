@@ -1,99 +1,127 @@
 #include "messages/sensor_msgs/jointState.hpp"
 
-namespace sensor_msgs {
+namespace sensor_msgs
+{
 
-JointState::JointState() {}
+    JointState::JointState() {}
 
-JointState::JointState(const Header& header, const std::vector<String>& name, const std::vector<double>& position, const std::vector<double>& velocity, const std::vector<double>& effort)
- : header(header), name(name), position(position), velocity(velocity), effort(effort) {}
+    JointState::JointState(const Header &header, const std::vector<String> &name, const std::vector<Float64> &position, const std::vector<Float64> &velocity, const std::vector<Float64> &effort)
+        : header(header), name(name), position(position), velocity(velocity), effort(effort) {}
 
-JointState::JointState(const JointState& js)
-    : header(js.header), name(js.name), position(js.position), velocity(js.velocity), effort(js.effort) {}
+    JointState::JointState(const JointState &js)
+    {
+        header = js.header;
+        name = js.name;
+        position = js.position;
+        velocity = js.velocity;
+        effort = js.effort;
+    }
 
-JointState& JointState::operator=(const JointState& js) {
-    if (this == &js) {
+    JointState &JointState::operator=(const JointState &js)
+    {
+        if (this == &js)
+        {
+            return *this;
+        }
+        header = js.header;
+        name = js.name;
+        position = js.position;
+        velocity = js.velocity;
+        effort = js.effort;
         return *this;
     }
-    header = js.header;
-    name = js.name;
-    position = js.position;
-    velocity = js.velocity;
-    effort = js.effort;
-    return *this;
-}
 
-uint16_t JointState::getMsgLen() const {
-    uint16_t nameLen = 0;
-    for (const String& n : name) {
-        nameLen += n.data.size();
-    }
-    return header.getMsgLen() + nameLen + position.size() * sizeof(double) + velocity.size() * sizeof(double) + effort.size() * sizeof(double);
-}
-
-std::string JointState::toString() const {
-    std::string str;
-    str.append(header.toString());
-    str.append("\n");
-    for (const String& n : name) {
-        str.append(n.data);
-        str.append("\n");
-    }
-    for (double p : position) {
-        str.append(std::to_string(p));
-        str.append("\n");
-    }
-    for (double v : velocity) {
-        str.append(std::to_string(v));
-        str.append("\n");
-    }
-    for (double e : effort) {
-        str.append(std::to_string(e));
-        str.append("\n");
-    }
-    return str;
-
-}
-
-std::string JointState::encode() const {
-    std::string msg;
-    msg.append(header.encode());
-    for (const String& n : name) {
-        msg.append(n.encode());
-    }
-    msg.append((char*)position.data(), position.size() * sizeof(double));
-    msg.append((char*)velocity.data(), velocity.size() * sizeof(double));
-    msg.append((char*)effort.data(), effort.size() * sizeof(double));
-    return msg;
-}
-
-void JointState::decode(const std::string& msg) {
-    if (msg.size() < header.getMsgLen()) {
-        std::cerr << "Error: message is too short to be a JointState." << std::endl;
-        return;
+    uint16_t JointState::getMsgLen() const
+    {
+        return header.getMsgLen() + IMessage::getVectorLen(name) + IMessage::getVectorLen(position) + IMessage::getVectorLen(velocity) + IMessage::getVectorLen(effort);
     }
 
-    int len = 0;
-    header.decode(msg); len += header.getMsgLen();
-
-    int count = 0;
-    while (len + count * 3 * sizeof(double) < msg.size() - 1) {
-        size_t nameEnd = msg.find_first_of('\0', len);
-        std::string n = msg.substr(len, nameEnd - len);
-        name.push_back(n);
-        len = nameEnd + 1;
-        count++;
+    std::string JointState::toString() const
+    {
+        std::stringstream ss;
+        ss << "header:\n" << addTab(header.toString(), 1) << std::endl;
+        ss << "name: [\n";
+        for (size_t i = 0; i < name.size(); i++)
+        {
+            ss << addTab(name[i].toString(), 1) << ",\n";
+        }
+        ss << "]\n";
+        ss << "position: [\n";
+        for (size_t i = 0; i < position.size(); i++)
+        {
+            ss << addTab(position[i].toString(), 1) << ",\n";
+        }
+        ss << "]\n";
+        ss << "velocity: [\n";
+        for (size_t i = 0; i < velocity.size(); i++)
+        {
+            ss << addTab(velocity[i].toString(), 1) << ",\n";
+        }
+        ss << "]\n";
+        ss << "effort: [\n";
+        for (size_t i = 0; i < effort.size(); i++)
+        {
+            ss << addTab(effort[i].toString(), 1) << ",\n";
+        }
+        ss << "]\n";
+        return ss.str();
     }
 
-    position.resize(count);
-    std::memcpy(position.data(), msg.data() + len, count * sizeof(double));
-    len += count * sizeof(double);
+    std::string JointState::encode() const
+    {
+        std::string msg;
+        msg.append(header.encode());
+        msg.append(IMessage::encodeVector(name));
+        msg.append(IMessage::encodeVector(position));
+        msg.append(IMessage::encodeVector(velocity));
+        msg.append(IMessage::encodeVector(effort));
+        return msg;
+    }
 
-    velocity.resize(count);
-    std::memcpy(velocity.data(), msg.data() + len, count * sizeof(double));
-    len += count * sizeof(double);
+    bool JointState::decode(const std::string &msg)
+    {
+        if (msg.size() < header.getMsgLen())
+        {
+            std::cerr << "Error: message is too short to be a JointState." << std::endl;
+            return false;
+        }
 
-    effort.resize(count);
-    std::memcpy(effort.data(), msg.data() + len, count * sizeof(double));
-}
+        int len = 0;
+        if (!header.decode(msg))
+        {
+            std::cerr << "Error: failed to decode header." << std::endl;
+            return false;
+        }
+        len += header.getMsgLen();
+        
+        if (!IMessage::decodeVector(name, msg.substr(len)))
+        {
+            std::cerr << "Error: failed to decode name vector." << std::endl;
+            return false;
+        }
+        len += IMessage::getVectorLen(name);
+
+        if (!IMessage::decodeVector(position, msg.substr(len)))
+        {
+            std::cerr << "Error: failed to decode position vector." << std::endl;
+            return false;
+        }
+        len += IMessage::getVectorLen(position);
+
+        if (!IMessage::decodeVector(velocity, msg.substr(len)))
+        {
+            std::cerr << "Error: failed to decode velocity vector." << std::endl;
+            return false;
+        }
+        len += IMessage::getVectorLen(velocity);
+
+        if (!IMessage::decodeVector(effort, msg.substr(len)))
+        {
+            std::cerr << "Error: failed to decode effort vector." << std::endl;
+            return false;
+        }
+
+        return true;
+    }
 
 } // namespace sensor_msgs

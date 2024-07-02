@@ -1,31 +1,35 @@
-#ifndef HEADER_HPP
-#define HEADER_HPP
+#pragma once
 
 #include "messages/message.hpp"
 #include "messages/std_msgs/time.hpp"
 #include "messages/std_msgs/string.hpp"
+#include "messages/std_msgs/integer.hpp"
 
-class Header : public IMessage {
-public:
-    uint32_t seq;
-    Time stamp;
-    String frame_id;
+namespace std_msgs
+{
 
-    Header();
+    class Header : public IMessage
+    {
+    public:
+        UInt32 seq;
+        Time stamp;
+        String frame_id;
 
-    Header(uint32_t seq, const Time& stamp, const String& frame_id);
+        Header();
 
-    Header(const Header& other);
+        Header(UInt32 seq, const Time &stamp, const String &frame_id);
 
-    Header& operator=(const Header& other);
+        Header(const Header &other);
 
-    uint16_t getMsgLen() const override;
+        Header &operator=(const Header &other);
 
-    std::string toString() const override;
+        uint16_t getMsgLen() const override;
 
-    std::string encode() const override;
+        std::string toString() const override;
 
-    void decode(const std::string& msg) override;
-};
+        std::string encode() const override;
 
-#endif // HEADER_HPP
+        bool decode(const std::string &msg) override;
+    };
+
+} // namespace std_msgs

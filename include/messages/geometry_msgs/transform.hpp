@@ -1,12 +1,11 @@
-#ifndef TRANSFORM_HPP
-#define TRANSFORM_HPP
-
-#include <vector>
+#pragma once
 
 #include "messages/message.hpp"
 #include "messages/std_msgs/header.hpp"
 #include "messages/geometry_msgs/quaternion.hpp"
 #include "messages/geometry_msgs/vector3.hpp"
+
+using namespace std_msgs;
 
 namespace geometry_msgs {
 
@@ -31,7 +30,7 @@ public:
 
     std::string encode() const override;
 
-    void decode(const std::string& msg) override;
+    bool decode(const std::string& msg) override;
 };
 
 class TransformStamped : public IMessage {
@@ -56,7 +55,7 @@ public:
 
     std::string encode() const override;
 
-    void decode(const std::string& msg) override;
+    bool decode(const std::string& msg) override;
 };
 
 class TF : IMessage {
@@ -77,9 +76,7 @@ public:
 
     std::string encode() const override;
 
-    void decode(const std::string& msg) override;
+    bool decode(const std::string& msg) override;
 };
 
 } // namespace geometry_msgs
-
-#endif // TRANSFORM_HPP
