@@ -1,5 +1,4 @@
-#ifndef UTILS_HPP
-#define UTILS_HPP
+#pragma once 
 
 #include <netdb.h>
 #include <netinet/in.h>
@@ -35,4 +34,4 @@ float radToDeg(float rad);
 
 std::string getIPAddr();
 
-#endif // UTILS_HPP
+std::string addTab(const std::string &str, int tabCount);

@@ -91,3 +91,15 @@ std::string getIPAddr() {
 
     return ipstr;
 }
+
+std::string addTab(const std::string& str, int tabCount) {
+    // Insert tabCount number of tabs at the beginning of each line
+    std::string tab(tabCount, '\t');
+    std::string result = tab + str;
+    size_t pos = 2;
+    while ((pos = result.find("\n", pos)) != std::string::npos) {
+        result.replace(pos, 1, "\n" + tab);
+        pos += tabCount + 1;
+    }
+    return result;
+}

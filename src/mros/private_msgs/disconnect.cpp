@@ -30,10 +30,9 @@ uint16_t Disconnect::getMsgLen() const {
 
 std::string Disconnect::toString() const {
     std::stringstream ss;
-    ss << "Disconnect:\n";
-    ss << '\t' << header.toString() << "\n";
-    ss << '\t' << uri.toString() << "\n";
-    ss << '\t' << topic.toString() << "\n";
+    ss << "header:\n" << addTab(header.toString(), 1) << "\n";
+    ss << "uri:\n" << addTab(uri.toString(), 1) << "\n";
+    ss << "topic:\n" << addTab(topic.toString(), 1) << "\n";
     return ss.str();
 }
 
@@ -45,16 +44,32 @@ std::string Disconnect::encode() const {
     return msg;
 }
 
-void Disconnect::decode(const std::string& msg) {
+bool Disconnect::decode(const std::string& msg) {
     if (msg.size() < getMsgLen()) {
         std::cerr << "Error: message is too short to be a Disconnect." << std::endl;
-        return;
+        return false;
     }
 
     int len = 0;
-    header.decode(msg); len += header.getMsgLen();
-    uri.decode(msg.substr(len)); len += uri.getMsgLen();
-    topic.decode(msg.substr(len));
+    if (!header.decode(msg)) {
+        std::cerr << "Error: could not decode header." << std::endl;
+        return false;
+    }
+    len += header.getMsgLen();
+
+    if (!uri.decode(msg.substr(len))) {
+        std::cerr << "Error: could not decode uri." << std::endl;
+        return false;
+    }
+    len += uri.getMsgLen();
+
+    if (!topic.decode(msg.substr(len))) {
+        std::cerr << "Error: could not decode topic." << std::endl;
+        return false;
+    }
+    len += topic.getMsgLen();
+
+    return true;
 }
 
 }

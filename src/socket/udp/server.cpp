@@ -1,56 +1,126 @@
 #include "socket/udp/server.hpp"
 
-UDPServer::UDPServer(int port) 
-: isBound(false) {
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(port);
-    serverAddr.sin_addr.s_addr = INADDR_ANY;
-
-    fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0) {
-        std::cerr << "UDPServer error: failed to create socket" << std::endl;
-        return;
-    }
+UDPServer::UDPServer()
+    : bound(false), opened(false), nonblocking(true)
+{
 }
-    
-UDPServer::~UDPServer() {
+
+UDPServer::UDPServer(int port, bool nonblocking)
+    : bound(false), opened(false), nonblocking(nonblocking)
+{
+    open(port);
+}
+
+UDPServer::~UDPServer()
+{
+    std::cout << "Closing UDP server with URI " << getURI() << std::endl;
     close();
 }
 
-int UDPServer::bind() {
-    if (::bind(fd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
+int UDPServer::open(int port, bool nonblocking)
+{
+    if (opened)
+    {
+        std::cerr << "UDPServer error: already open" << std::endl;
+        return -1;
+    }
+
+    server.sin_family = AF_INET;
+    server.sin_port = htons(port);
+    std::string ipAddress = getIPAddr();
+    if (inet_pton(AF_INET, ipAddress.c_str(), &(server.sin_addr)) <= 0) 
+    {
+        std::cerr << "UDPServer error: Invalid address/ Address not supported" << std::endl;
+        return -1;
+    }
+
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd < 0)
+    {
+        std::cerr << "UDPServer error: failed to create socket" << std::endl;
+        return -1;
+    }
+
+    if (nonblocking)
+    {
+        if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
+        {
+            std::cerr << "UDPServer error: failed to set non-blocking" << std::endl;
+            ::close(fd);
+            return -1;
+        }
+    }
+
+    opened = true;
+    return 0;
+}
+
+int UDPServer::bind()
+{
+    if (!opened)
+    {
+        std::cerr << "UDPServer error: not open" << std::endl;
+        return -1;
+    }
+
+    if (bound)
+    {
+        std::cerr << "UDPServer error: already bound" << std::endl;
+        return -1;
+    }
+
+    if (::bind(fd, (struct sockaddr *)&server, sizeof(server)) < 0)
+    {
         perror("UDPServer: bind failed");
         ::close(fd);
         return -1;
     }
-    isBound = true;
-    return 0;
-}
 
-int UDPServer::sendTo(const std::string& message, const URI &clientURI) {
-    if (!isBound) {
-        std::cerr << "UDPServer error: not bound" << std::endl;
+    // Get the socket name
+    socklen_t len = sizeof(server);
+    if (getsockname(fd, (struct sockaddr *)&server, &len) == -1)
+    {
+        perror("getsockname");
+        ::close(fd);
         return -1;
     }
 
-    if (clientURIs.find(clientURI) == clientURIs.end()) {
-        std::cerr << "UDPServer error: client IP not found" << std::endl;
+    bound = true;
+    return 0;
+}
+
+int UDPServer::sendTo(const std::string &message, const URI &clientURI)
+{
+    if (!bound)
+    {
+        std::cerr << "UDPServer error: not bound" << std::endl;
         return -1;
     }
 
     sockaddr_in clientAddr;
     clientAddr.sin_family = AF_INET;
     clientAddr.sin_port = htons(clientURI.port);
-    if (inet_aton(clientURI.ip.c_str(), &clientAddr.sin_addr) == 0) {
-        std::cerr << "UDPClient error: invalid server address" << std::endl;
+    if (inet_aton(clientURI.ip.c_str(), &clientAddr.sin_addr) == 0)
+    {
+        std::cerr << "UDPServer error: invalid address" << std::endl;
         return -1;
     }
 
-    return ::sendto(fd, message.c_str(), message.size(), 0, (struct sockaddr *)&clientAddr, sizeof(clientAddr));
+    int bytesSent = sendto(fd, message.c_str(), message.size(), 0, (struct sockaddr *)&clientAddr, sizeof(clientAddr));
+    if (bytesSent < 0)
+    {
+        // std::cerr << "UDPClient error: send failed" << std::endl;
+        perror("sendto");
+        return -1;
+    }
+
+    return 0;
 }
 
-int UDPServer::receiveFrom(std::string& message, size_t bytes, URI &clientURI) {
-    if (!isBound) {
+int UDPServer::receiveFrom(std::string &message, size_t bytes, URI &clientURI)
+{
+    if (!bound)
+    {
         std::cerr << "UDPServer error: not bound" << std::endl;
         return -1;
     }
@@ -60,28 +130,47 @@ int UDPServer::receiveFrom(std::string& message, size_t bytes, URI &clientURI) {
 
     std::string buffer(bytes, 0);
     int bytes_received = recvfrom(fd, &buffer[0], bytes, 0, (struct sockaddr *)&clientAddr, &clientAddrLen);
-    if (bytes_received < 0) {
-        std::cerr << "UDPServer error: receive failed" << std::endl;
+    if (bytes_received < 0)
+    {
         message = "";
-        return -1;
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+        {
+            return 0;
+        }
+        else {
+            perror("recvfrom");
+            return -1;
+        }
     }
 
-    clientURI.ip = inet_ntoa(clientAddr.sin_addr);
-    clientURI.port = ntohs(clientAddr.sin_port);
-
-    if (clientURIs.find(clientURI) == clientURIs.end()) {
-        clientURIs.insert(clientURI);
-    }
+    clientURI = URI(inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
 
     message = buffer.substr(0, bytes_received);
     return 0;
 }
 
-void UDPServer::close() {
+void UDPServer::close()
+{
     ::close(fd);
-    isBound = false;
+    bound = false;
 }
 
-std::vector<URI> UDPServer::getClientURIs() {
-    return std::vector<URI>(clientURIs.begin(), clientURIs.end());
+bool UDPServer::isOpen() const
+{
+    return opened;
+}
+
+bool UDPServer::isBound() const
+{
+    return bound;
+}
+
+bool UDPServer::isNonblocking() const
+{
+    return nonblocking;
+}
+
+URI UDPServer::getURI()
+{
+    return URI(inet_ntoa(server.sin_addr), ntohs(server.sin_port));
 }

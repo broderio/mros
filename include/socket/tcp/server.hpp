@@ -25,7 +25,9 @@ public:
     
     void close();
 
-    bool isNonBlocking();
+    bool isOpen() const; 
+
+    bool isNonblocking() const;
 
     URI getClientURI();
 
@@ -35,24 +37,39 @@ private:
 
     sockaddr_in client;
     
-    bool isOpen;
+    bool opened;
 
-    bool nonBlocking;
+    bool nonblocking;
 
 };
 
 class TCPServer {
 public:
-    
-    TCPServer(int port, bool nonBlocking = 1, int maxConnections = 10);
+    TCPServer();
+
+    TCPServer(int port, bool nonblocking = 1, int maxConnections = 10);
     
     ~TCPServer();
+
+    int open(int port, bool nonblocking = 1, int maxConnections = 10);
+
+    int bind();
+
+    int listen();
 
     int accept(TCPConnection& connection);
     
     void close();
 
-    bool isNonBlocking();
+    bool isOpen() const;
+
+    bool isBound() const;
+
+    bool isListening() const;
+
+    bool isNonblocking() const;
+
+    URI getURI();
 
 private:
     
@@ -62,10 +79,15 @@ private:
 
     int numConnections;
 
-    bool nonBlocking;
+    bool opened;
+
+    bool bound;
+
+    bool listening;
+
+    bool nonblocking;
     
     sockaddr_in server;
-
 };
 
 #endif // TCP_SERVER_HPP

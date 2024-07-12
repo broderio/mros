@@ -16,6 +16,11 @@ int main() {
         if (res < 0) {
             return 1;
         }
+        if (message.size() == 0) {
+            i--;
+            continue;
+        }
+
         std::cout << "Received: \"" << message << "\" from " << clientURI << std::endl;
 
         server.sendTo(message, clientURI);

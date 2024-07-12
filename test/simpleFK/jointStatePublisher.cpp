@@ -44,12 +44,12 @@ int main() {
             return 1;
         }
 
-        js.header.seq++;
+        js.header.seq.data++;
         js.header.stamp.sec = getTimeNano() / 1000000000;
         js.header.stamp.nsec = getTimeNano() % 1000000000;
 
-        js.position[0] += 0.1;
-        js.position[1] += 0.05;
+        js.position[0].data += 0.1;
+        js.position[1].data += 0.05;
 
         std::cout << "Sent joint state message:" << std::endl;
         std::cout << "Size: " << msg.size() << std::endl;

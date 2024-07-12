@@ -1,5 +1,4 @@
-#ifndef PUBLISHER_HPP
-#define PUBLISHER_HPP
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -9,6 +8,7 @@
 #include <memory>
 #include <thread>
 #include <chrono>
+#include <queue>
 
 #include "utils.hpp"
 
@@ -23,40 +23,73 @@
 
 #include "mros/private_msgs/register.hpp"
 #include "mros/private_msgs/request.hpp"
+#include "mros/private_msgs/response.hpp"
 #include "mros/private_msgs/disconnect.hpp"
 #include "mros/private_msgs/uri.hpp"
 
 #include "mros/common.hpp"
 
-namespace mros {
+namespace mros
+{
 
-class IPublisher {
-public:
-    virtual ~IPublisher() = default;
+    class Node;
 
-    virtual void publish(const std::string& msg) = 0;
-};
+    class Publisher
+    {
 
-template<typename T>
-class Publisher : public IPublisher {
-public:
-    Publisher(const std::string& topic, const size_t& queueSize);
-    ~Publisher();
+        friend class Node;
 
-    void publish(const T& msg) override; 
+    public:
+        ~Publisher();
 
-private:
-    TCPServer subServer; // For accepting connections from Subscribers
-    std::vector<TCPConnection> subConnections; // For sending public messages to Subscribers
+        template <typename MsgType>
+        void publish(const MsgType &msg)
+        {
+            static_assert(std::is_base_of<IMessage, MsgType>::value, "MsgType must inherit from IMessage");
+            if (typeid(MsgType).name() != msgType)
+            {
+                throw std::runtime_error("MsgType must match the type of the Publisher");
+            }
 
-    UDPServer server; // For receiving private messages from Subscribers and the Mediator
-    UDPClient mediatorClient; // For sending private messages to the Mediator
+            if (msgQueue.size() >= queueSize)
+            {
+                msgQueue.pop();
+            }
 
-    std::string topic;
-    std::string msgType;
-    std::string hostName;
-};
+            std::string msgStr = Parser::encode(msg, 0);
+            msgQueue.push(msgStr);
+        }
+
+        int getNumSubscribers() const;
+
+        std::string getTopic() const;
+
+        void shutdown();
+
+    private:
+        
+        Publisher(const std::string &topic, const size_t &queueSize, const std::string &msgType);
+
+        static std::shared_ptr<Publisher> create(const std::string &topic, const size_t &queueSize, const std::string &msgType);
+
+        void runOnce();
+
+        bool shutdownFlag;
+
+        std::string topic;
+        size_t queueSize;
+        std::string msgType;
+
+        std::queue<std::string> msgQueue;
+
+        std::set<URI> awaitingRequests;                         // Populated by Node upon receiving a PUB_NOTIFY message from the mediator
+        std::queue<URI> outgoingResponses;                      // Populated by Publisher upon receiving a SUB_REQUEST message from a Subscriber
+        std::set<URI> awaitingAccept; // Populated by Publisher upon sending a PUB_RESPONSE message to a Subscriber
+        std::queue<std::shared_ptr<TCPConnection>> awaitingURI;                // Populated by Publisher upon receiving a SUB_RESPONSE message from a Subscriber
+        std::map<URI, std::shared_ptr<TCPConnection>> subs;                      // Populated by Publisher upon accepting a connection from a Subscriber
+
+        UDPServer publicServer;  // For communicating with Subscribers
+        TCPServer privateServer; // For accepting connections from Subscribers
+    };
 
 }
-
-#endif // PUBLISHER_HPP

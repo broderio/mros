@@ -1,5 +1,6 @@
 #include "mros/node.hpp"
 #include "mros/publisher.hpp"
+#include "mros/subscriber.hpp"
 #include "utils.hpp"
 
 #include "messages/std_msgs/string.hpp"
@@ -15,13 +16,20 @@ int main() {
     mros::Node node("publisher_node", uri);
 
     std::shared_ptr<mros::Publisher> pub = node.advertise<String>("test_topic", 10);
-
     if (pub == nullptr) {
         std::cout << "Failed to advertise topic" << std::endl;
         return 1;
     }
 
-    while (pub->getNumSubscribers() == 0) {
+    std::shared_ptr<mros::Subscriber> sub = node.subscribe<String>("test_topic", 10, [](const String &msg) {
+        std::cout << "Received message: " << msg.data << std::endl;
+    });
+    if (sub == nullptr) {
+        std::cout << "Failed to subscribe to topic" << std::endl;
+        return 1;
+    }
+
+    while (sub->getNumPublishers() == 0) {
         node.spinOnce();
         sleep(10);
     }

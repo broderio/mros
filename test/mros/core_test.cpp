@@ -1,9 +1,10 @@
-#include "mros/node.hpp"
+#include "mros/mediator.hpp"
 
 #include <iostream>
 #include <string>
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    mros::Mediator mediator;
+    mediator.spin();
     return 0;
 }

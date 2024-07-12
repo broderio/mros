@@ -2,43 +2,56 @@
 #define UDP_SERVER_HPP
 
 #include <iostream>
-#include <string> 
+#include <string>
 #include <set>
 
-#include <sys/types.h> 
-#include <arpa/inet.h> 
-#include <sys/socket.h> 
-#include <netinet/in.h> 
-#include <unistd.h> 
+#include <sys/types.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
 #include <stdlib.h>
+#include <fcntl.h>
 
 #include "utils.hpp"
 
-class UDPServer {
+class UDPServer
+{
 public:
-    UDPServer(int port);
-    
+    UDPServer();
+
+    UDPServer(int port, bool nonBlocking = true);
+
     ~UDPServer();
-    
+
+    int open(int port, bool nonBlocking = true);
+
     int bind();
-    
-    int sendTo(const std::string& message, const URI &clientURI);
-    
-    int receiveFrom(std::string& message, size_t bytes, URI &clientURI);
-    
+
+    int sendTo(const std::string &message, const URI &clientURI);
+
+    int receiveFrom(std::string &message, size_t bytes, URI &clientURI);
+
     void close();
 
-    std::vector<URI> getClientURIs();
+    bool isOpen() const;
+
+    bool isBound() const;
+
+    bool isNonblocking() const;
+
+    URI getURI();
 
 private:
-
     int fd;
 
-    sockaddr_in serverAddr;
-    std::set<URI> clientURIs;
+    bool opened;
 
-    bool isBound;
+    bool bound;
 
+    bool nonblocking;
+    
+    sockaddr_in server;
 };
 
 #endif // UDP_SERVER_HPP

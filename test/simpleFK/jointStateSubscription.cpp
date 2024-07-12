@@ -58,17 +58,17 @@ int main() {
         t2 = tfList[1].transform.translation;
 
         // Update translation and rotation for joint 1
-        float angle1 = js.position.at(0);
+        float angle1 = js.position.at(0).data;
         linalg::Quaternion q1(axis1, angle1);
         linalg::Matrix R1 = linalg::Quaternion::toRotationMatrix(q1);
-        linalg::Matrix T1 = linalg::Matrix::translation(t1.x, t1.y, t1.z);
+        linalg::Matrix T1 = linalg::Matrix::translation(t1.x.data, t1.y.data, t1.z.data);
         linalg::Matrix H1 = linalg::Matrix::multiply(T1, R1);
 
         // Update translation and rotation for joint 2
-        float angle2 = js.position.at(1);
+        float angle2 = js.position.at(1).data;
         linalg::Quaternion q2(axis2, angle2);
         linalg::Matrix R2 = linalg::Quaternion::toRotationMatrix(q2);
-        linalg::Matrix T2 = linalg::Matrix::translation(t2.x, t2.y, t2.z);
+        linalg::Matrix T2 = linalg::Matrix::translation(t2.x.data, t2.y.data, t2.z.data);
         linalg::Matrix H2 = linalg::Matrix::multiply(H1, linalg::Matrix::multiply(T2, R2));
 
         // Create header
@@ -86,11 +86,11 @@ int main() {
 
         // Update joint pose
         std::vector<geometry_msgs::Pose> jointPoses(3);
-        linalg::Vector tVec(std::vector<float>({t1.x, t1.y, t1.z, 1.0}));
+        linalg::Vector tVec(std::vector<float>({t1.x.data, t1.y.data, t1.z.data, 1.0}));
         jointPoses[0] = geometry_msgs::Pose(geometry_msgs::Point(linalg::Matrix::multiply(H0, tVec).toVector3()), q1.toMsg());
-        tVec = linalg::Vector(std::vector<float>({t2.x, t2.y, t2.z, 1.0}));
+        tVec = linalg::Vector(std::vector<float>({t2.x.data, t2.y.data, t2.z.data, 1.0}));
         jointPoses[1] = geometry_msgs::Pose(geometry_msgs::Point(linalg::Matrix::multiply(H1, tVec).toVector3()), q2.toMsg());
-        tVec = linalg::Vector(std::vector<float>({t3.x, t3.y, t3.z, 1.0}));
+        tVec = linalg::Vector(std::vector<float>({t3.x.data, t3.y.data, t3.z.data, 1.0}));
         jointPoses[2] = geometry_msgs::Pose(geometry_msgs::Point(linalg::Matrix::multiply(H2, tVec).toVector3()), linalg::Quaternion().toMsg());
 
         // Create tf message

@@ -48,15 +48,11 @@ public:
 
     virtual uint16_t getMsgLen() const = 0;
 
-    uint16_t getTopicId() const { return topicId; }
-
     virtual std::string toString() const = 0;
 
     virtual std::string encode() const = 0;
 
     virtual bool decode(const std::string& msg) = 0;
-
-    uint16_t topicId;
     
 protected:
 
@@ -211,8 +207,8 @@ public:
             return false;
         }
 
-        // Set the topic ID
-        msg.topicId = (uint16_t) (data[6] << 8 | (data[5] & 0xFF));
+        // Get the topic ID
+        uint16_t topicId = (uint16_t) (data[6] << 8 | (data[5] & 0xFF));
 
         return true;
     }

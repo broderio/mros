@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 #include "utils.hpp"
 
@@ -10,19 +10,20 @@ using namespace std_msgs;
 
 namespace private_msgs {
 
-class Disconnect : public IMessage {
+class Notify : public IMessage {
 public:
     Header header;
-    URI uri;
+    String error;
     String topic;
+    std::vector<URI> uris;
 
-    Disconnect();
+    Notify();
 
-    Disconnect(const Header& header, const private_msgs::URI& uri, const String& topic);
+    Notify(const Header& header, const String& error, const String& topic, const std::vector<URI>& uris);
 
-    Disconnect(const Disconnect& other);
+    Notify(const Notify& other);
 
-    Disconnect& operator=(const Disconnect& other);
+    Notify& operator=(const Notify& other);
 
     uint16_t getMsgLen() const override;
 
@@ -33,4 +34,4 @@ public:
     bool decode(const std::string& msg) override;
 };
 
-}
+} // namespace private_msgs

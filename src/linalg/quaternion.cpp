@@ -4,7 +4,7 @@ using namespace linalg;
 
 Quaternion::Quaternion() : x(0), y(0), z(0), w(1) {}
 
-Quaternion::Quaternion(const geometry_msgs::Quaternion& q) : x(q.x), y(q.y), z(q.z), w(q.w) {}
+Quaternion::Quaternion(const geometry_msgs::Quaternion& q) : x(q.x.data), y(q.y.data), z(q.z.data), w(q.w.data) {}
 
 Quaternion::Quaternion(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
 

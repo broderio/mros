@@ -1,21 +1,22 @@
-#ifndef URI_MSG_HPP
-#define URI_MSG_HPP
+#pragma once
 
 #include "utils.hpp"
 
 #include "messages/std_msgs/string.hpp"
 #include "messages/std_msgs/header.hpp"
 
+using namespace std_msgs;
+
 namespace private_msgs {
 
 class URI : public IMessage {
 public:
     String hostname;
-    int port;
+    Int32 port;
 
     URI();
 
-    URI(const String& hostname, const int& port);
+    URI(const std_msgs::String& hostname, const Int32& port);
 
     URI(const URI& other);
 
@@ -29,7 +30,7 @@ public:
 
     std::string encode() const override;
 
-    void decode(const std::string& msg) override;
+    bool decode(const std::string& msg) override;
 };
 
 class URIStamped : public IMessage {
@@ -51,31 +52,7 @@ public:
 
     std::string encode() const override;
 
-    void decode(const std::string& msg) override;
-};
-
-class URIArray : IMessage {
-public:
-    Header header;
-    std::vector<URI> uriArray;
-
-    URIArray();
-
-    URIArray(const Header& header, const std::vector<URI>& uriArray);
-
-    URIArray(const URIArray& other);
-
-    URIArray& operator=(const URIArray& other);
-
-    uint16_t getMsgLen() const override;
-
-    std::string toString() const override;
-
-    std::string encode() const override;
-
-    void decode(const std::string& msg) override;
+    bool decode(const std::string& msg) override;
 };
 
 }
-
-#endif // URI_MSG_HPP

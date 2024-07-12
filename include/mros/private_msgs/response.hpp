@@ -1,7 +1,5 @@
 #pragma once 
 
-#include "utils.hpp"
-
 #include "messages/std_msgs/string.hpp"
 #include "messages/std_msgs/header.hpp"
 #include "mros/private_msgs/uri.hpp"
@@ -10,19 +8,21 @@ using namespace std_msgs;
 
 namespace private_msgs {
 
-class Disconnect : public IMessage {
+class Response : public IMessage {
 public:
     Header header;
-    URI uri;
+    String error;
+    String protocol;
     String topic;
+    URI uri;
 
-    Disconnect();
+    Response();
 
-    Disconnect(const Header& header, const private_msgs::URI& uri, const String& topic);
+    Response(const Header& header, const String& error, const String& protocol, const String& topic, const URI& uri);
 
-    Disconnect(const Disconnect& other);
+    Response(const Response& other);
 
-    Disconnect& operator=(const Disconnect& other);
+    Response& operator=(const Response& other);
 
     uint16_t getMsgLen() const override;
 

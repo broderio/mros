@@ -1,13 +1,20 @@
-#ifndef MROS_COMMON_HPP
-#define MROS_COMMON_HPP
+#pragma once
 
-enum CORE_TOPICS {
-    REGISTER, // From nodes to mediator, msgType: private_msgs::Register
-    DEREGISTER, // From nodes to mediator, msgType: private_msgs::Register
-    REQUEST, // From node to node, msgType: private_msgs::Request
-    RESPONSE, // From mediator to node, msgType: private_msgs::URIArray
-    CONNECT, // From publisher node to subscriber node, msgType: private_msgs::URIStamped
-    DISCONNECT // From mediator to node, msgType: private_msgs::Disconnect
+#define MEDIATOR_PORT_NUM 8000
+
+#define MAX_MSG_SIZE 2048
+
+enum CORE_TOPICS
+{
+    SUB_REGISTER = 80,
+    PUB_REGISTER,
+    SUB_NOTIFY,
+    PUB_NOTIFY,
+    SUB_DEREGISTER,
+    PUB_DEREGISTER,
+    SUB_DISCONNECT,
+    PUB_DISCONNECT,
+    SUB_REQUEST,
+    PUB_RESPONSE,
+    SUB_RESPONSE
 };
-
-#endif // MROS_COMMON_HPP

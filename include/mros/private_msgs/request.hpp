@@ -1,34 +1,37 @@
-#ifndef REQUEST_HPP
-#define REQUEST_HPP
+#pragma once
 
 #include <messages/std_msgs/string.hpp>
 #include <messages/std_msgs/header.hpp>
+#include <mros/private_msgs/uri.hpp>
 
-namespace private_msgs {
+using namespace std_msgs;
 
-class Request : public IMessage {
-public:
-    Header header;
-    String topic;
-    String protocol;
+namespace private_msgs
+{
 
-    Request();
+    class Request : public IMessage
+    {
+    public:
+        Header header;
+        String topic;
+        String protocol;
+        URI uri;
 
-    Request(const Header& header, const String& topic, const String& protocol);
+        Request();
 
-    Request(const Request& other);
+        Request(const Header &header, const String &topic, const String &protocol, const URI &uri);
 
-    Request& operator=(const Request& other);
+        Request(const Request &other);
 
-    uint16_t getMsgLen() const override;
+        Request &operator=(const Request &other);
 
-    std::string toString() const override;
+        uint16_t getMsgLen() const override;
 
-    std::string encode() const override;
+        std::string toString() const override;
 
-    void decode(const std::string& msg) override;
-};
+        std::string encode() const override;
+
+        bool decode(const std::string &msg) override;
+    };
 
 }
-
-#endif // REQUEST_HPP

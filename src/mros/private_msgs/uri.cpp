@@ -4,7 +4,7 @@ namespace private_msgs {
 
 URI::URI() : hostname(), port(0) {}
 
-URI::URI(const String& hostname, const int& port)
+URI::URI(const String& hostname, const Int32& port)
 : hostname(hostname), port(port) {}
 
 URI::URI(const URI& other) {
@@ -22,35 +22,46 @@ URI& URI::operator=(const URI& other) {
 }
 
 ::URI URI::toURI() const {
-    return ::URI(hostname.data, port);
+    return ::URI(hostname.data, port.data);
 }
 
 uint16_t URI::getMsgLen() const {
-    return hostname.getMsgLen() + sizeof(port);
+    return hostname.getMsgLen() + port.getMsgLen();
 }
 
 std::string URI::toString() const {
     std::stringstream ss;
-    ss << hostname.data << ":" << port << "\n";
+    ss << "hostname:\n" << addTab(hostname.toString(), 1) << "\n";
+    ss << "port:\n" << addTab(std::to_string(port.data), 1) << "\n";
     return ss.str();
 }
 
 std::string URI::encode() const {
     std::string msg;
     msg.append(hostname.encode());
-    msg.append((char*)&port, sizeof(port));
+    msg.append(port.encode());
     return msg;
 }
 
-void URI::decode(const std::string& msg) {
+bool URI::decode(const std::string& msg) {
     if (msg.size() < getMsgLen()) {
         std::cerr << "Error: message is too short to be a URI." << std::endl;
-        return;
+        return false;
     }
 
     int len = 0;
-    hostname.decode(msg); len += hostname.getMsgLen();
-    std::memcpy(&port, msg.data() + len, sizeof(port));
+    if (!hostname.decode(msg)) {
+        std::cerr << "Error: could not decode hostname." << std::endl;
+        return false;
+    }
+    len += hostname.getMsgLen();
+
+    if (!port.decode(msg.substr(len))) {
+        std::cerr << "Error: could not decode port." << std::endl;
+        return false;
+    }
+
+    return true;
 }
 
 
@@ -80,8 +91,8 @@ uint16_t URIStamped::getMsgLen() const {
 
 std::string URIStamped::toString() const {
     std::stringstream ss;
-    ss << '\t' << header.toString() << "\n";
-    ss << '\t' << uri.toString() << "\n";
+    ss << "header:\n" << addTab(header.toString(), 1) << "\n";
+    ss << "uri:\n" << addTab(uri.toString(), 1) << "\n";
     return ss.str();
 }
 
@@ -92,15 +103,25 @@ std::string URIStamped::encode() const {
     return msg;
 }
 
-void URIStamped::decode(const std::string& msg) {
+bool URIStamped::decode(const std::string& msg) {
     if (msg.size() < getMsgLen()) {
         std::cerr << "Error: message is too short to be a URIStamped." << std::endl;
-        return;
+        return false;
     }
 
     int len = 0;
-    header.decode(msg); len += header.getMsgLen();
-    uri.decode(msg.substr(len));
+    if (!header.decode(msg)) {
+        std::cerr << "Error: could not decode header." << std::endl;
+        return false;
+    }
+    len += header.getMsgLen();
+
+    if (!uri.decode(msg.substr(len))) {
+        std::cerr << "Error: could not decode uri." << std::endl;
+        return false;
+    }
+
+    return true;
 }
 
 }

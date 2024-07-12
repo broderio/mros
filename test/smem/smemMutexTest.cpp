@@ -16,7 +16,7 @@ int main() {
         smutex.lock();
         int *ptr = (int*)smem.get();
         std::cout << "mutex locked! value: " << *ptr << std::endl;
-        *ptr = i++;
+        *ptr += 1;
         smutex.unlock();
         std::cout << "mutex unlocked!" << std::endl;
         sleep(1000);

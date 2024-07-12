@@ -1,7 +1,24 @@
 #include "socket/tcp/client.hpp"
 
-TCPClient::TCPClient(const std::string &address, int port, bool nonBlocking)
-: nonBlocking(nonBlocking), isConnected(false) {
+TCPClient::TCPClient()
+: nonblocking(true), connected(false), opened(false) {}
+
+TCPClient::TCPClient(const std::string &address, int port, bool nonblocking)
+: nonblocking(nonblocking), connected(false), opened(false) {
+    open(address, port, nonblocking);
+}
+
+TCPClient::~TCPClient() {
+    std::cout << "Closing TCP client with URI " << getServerURI() << std::endl;
+    close();
+}
+
+int TCPClient::open(const std::string &address, int port, bool nonblocking) {
+    if (opened) {
+        std::cerr << "TCPClient error: already open" << std::endl;
+        return -1;
+    }
+
     // AF_INET specifies that we are using the IPv4 protocol
     server.sin_family = AF_INET;
 
@@ -10,69 +27,65 @@ TCPClient::TCPClient(const std::string &address, int port, bool nonBlocking)
 
     // inet_aton() converts the address from a string to a binary representation
     if (inet_aton(address.c_str(), &server.sin_addr) == 0) {
-        throw std::runtime_error("Invalid address");
+        std::cerr << "TCPClient error: invalid address" << std::endl;
+        return -1;
     }
 
     // Create a socket
+    // AF_INET specifies that we are using the IPv4 protocol
+    // SOCK_STREAM specifies that we are using the TCP protocol
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
-        std::cerr << "TCPClient error: socket creation failed" << std::endl;
-        return;
+        std::cerr << "TCPClient error: failed to create socket" << std::endl;
+        return -1;
     }
 
     // Make the socket non-blocking
-    if (nonBlocking) {
+    if (nonblocking) {
         int flags = fcntl(fd, F_GETFL, 0);
         if (flags < 0) {
-            std::cerr << "TCPServer error: failed to get flags" << std::endl;
+            std::cerr << "TCPClient error: failed to get flags" << std::endl;
             ::close(fd);
-            return;
+            return -1;
         }
         flags |= O_NONBLOCK;
         if (fcntl(fd, F_SETFL, flags) < 0) {
-            std::cerr << "TCPServer error: failed to set flags" << std::endl;
+            std::cerr << "TCPClient error: failed to set flags" << std::endl;
             ::close(fd);
-            return;
+            return -1;
         }
     }
-}
+    this->nonblocking = nonblocking;
 
-TCPClient::~TCPClient() {
-    close();
+    opened = true;
+    return 0;
 }
 
 // TODO: Add comments for this function
-int TCPClient::connect() {
-    if (::connect(fd, (struct sockaddr *)&server, sizeof(server)) < 0) {
-        if (errno == EINPROGRESS) {
-            // Connection in progress (for nonblocking)
-            fd_set writefds;
-            FD_ZERO(&writefds);
-            FD_SET(fd, &writefds);
-            struct timeval tv;
-            tv.tv_sec = 5; // Timeout after 5 seconds
-            tv.tv_usec = 0;
-            if (select(fd + 1, NULL, &writefds, NULL, &tv) > 0) {
-                int so_error;
-                socklen_t len = sizeof so_error;
-                getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len);
-                if (so_error == 0) {
-                    isConnected = true;
-                    return 0;
-                }
-            }
-        }
-        close();
-        std::cerr << "TCPClient error: connection failed" << std::endl;
+int TCPClient::connect(int timeout) {
+    if (connected) {
+        std::cerr << "TCPClient error: already connected" << std::endl;
         return -1;
     }
-    isConnected = true;
+
+    if (::connect(fd, (struct sockaddr *)&server, sizeof(server)) < 0) {
+        if (errno == EINPROGRESS) {
+            return 1;
+        }
+        if (errno == EISCONN) {
+            connected = true;
+            return 2;
+        }
+        perror("TCPClient connect");
+        return -1;
+    }
+    connected = true;
     return 0;
 }
 
 int TCPClient::send(const std::string& message) {
     // If a connection to the server has not been made yet
-    if (!isConnected) {
+    if (!connected) {
         std::cerr << "TCPClient error: not connected" << std::endl;
         return -1;
     }
@@ -88,7 +101,7 @@ int TCPClient::send(const std::string& message) {
 
 int TCPClient::receive(std::string& message, size_t bytes) {
     // If a connection to the server has not been made yet
-    if (!isConnected) {
+    if (!connected) {
         std::cerr << "TCPClient error: not connected" << std::endl;
         return -1;
     }
@@ -97,13 +110,12 @@ int TCPClient::receive(std::string& message, size_t bytes) {
     std::string buffer(bytes, 0);
     int bytes_received = ::recv(fd, &buffer[0], bytes, 0);
     if (bytes_received < 0) {
+        message = "";
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
             // No data available to read
-            message = "";
             return 0;
         } else {
             perror("TCPClient error: receive failed");
-            message = "";
             return -1;
         }
     }
@@ -116,8 +128,16 @@ void TCPClient::close() {
     ::close(fd);
 }
 
-bool TCPClient::isNonBlocking() {
-    return nonBlocking;
+bool TCPClient::isOpen() const {
+    return opened;
+}
+
+bool TCPClient::isConnected() const {
+    return connected;
+}
+
+bool TCPClient::isNonblocking() const {
+    return nonblocking;
 }
 
 URI TCPClient::getServerURI() {

@@ -2,23 +2,38 @@
 
 using namespace mros;
 
-Mediator::Mediator() : topicMap(), server(MEDIATOR_PORT_NUM) {}
+Mediator::Mediator() : topicMap(), server(MEDIATOR_PORT_NUM)
+{
+    server.bind();
+    URI uri = server.getURI();
+    std::cout << "Mediator URI: " << uri.toString() << std::endl;
+}
 
-Mediator::~Mediator() {}
+Mediator::~Mediator()
+{
+}
 
-void Mediator::spin() {
+void Mediator::spin()
+{
     std::thread t(&Mediator::run, this);
     t.join();
 }
 
-void Mediator::run() {
-    while (true) {
+void Mediator::run()
+{
+    while (signalHandler.ok())
+    {
         std::string inMsg;
         URI clientURI;
+        // std::cout << "Waiting for message..." << std::endl;
         int err = server.receiveFrom(inMsg, 1024, clientURI);
-        if (err < 0) {
+        if (err < 0)
+        {
             std::cerr << "Error: server receiveFrom failed." << std::endl;
             return;
+        }
+        else if (inMsg.size() == 0) {
+            continue;
         }
 
         Header header;
@@ -26,122 +41,211 @@ void Mediator::run() {
         uint16_t topicId;
         Parser::getTopicID(inMsg, topicId);
 
-        if (topicId == CORE_TOPICS::REGISTER) {
-            private_msgs::Register registerMsg;
-            Parser::decode(inMsg, registerMsg);
-            parseRegisterMessage(registerMsg);
-        } 
-        else if (topicId == CORE_TOPICS::DEREGISTER) {
-            private_msgs::Register deregisterMsg;
-            Parser::decode(inMsg, deregisterMsg);
-            parseDeregisterMessage(deregisterMsg);
-        } 
-        else 
+        private_msgs::Register registerMsg;
+        Parser::decode(inMsg, registerMsg);
+        switch (topicId)
         {
+        case CORE_TOPICS::PUB_REGISTER:
+            registerPublisher(registerMsg, clientURI);
+            break;
+        case CORE_TOPICS::SUB_REGISTER:
+            registerSubscriber(registerMsg, clientURI);
+            break;
+        case CORE_TOPICS::PUB_DEREGISTER:
+            deregisterPublisher(registerMsg, clientURI);
+            break;
+        case CORE_TOPICS::SUB_DEREGISTER:
+            deregisterSubscriber(registerMsg, clientURI);
+            break;
+        default:
             std::cerr << "Error: unknown topic ID " << topicId << std::endl;
+            return;
         }
     }
 }
 
-void Mediator::parseRegisterMessage(const private_msgs::Register& msg) {
+void Mediator::registerPublisher(const private_msgs::Register &msg, const URI &clientURI)
+{
     std::string topic = msg.topic.data;
     std::string msgType = msg.msgType.data;
-    std::string role = msg.role.data;
-    URI uri = msg.uri.toURI(); // URI that we will send response to
+    URI uri = msg.uri.toURI(); // URI that will be sent to existing subscribers
 
-    std::vector<private_msgs::URI> uriArray; // URIs that will be sent in response
+    std::vector<private_msgs::URI> subURIs; // URIs that will be sent to newly registered publisher
+    std::string error = "";
 
-    if (role == "publisher") 
+    URIPair uriPair = {clientURI, uri};
+
+    // Check if topic already exists
+    if (topicMap.find(topic) == topicMap.end())
     {
-        if (topicMap.find(topic) == topicMap.end()) 
-        {
-            topicMap[topic] = Topic();
-            topicMap[topic].msgType = msgType;
-        }
-        topicMap[topic].publishers.insert(uri);
-        uriArray.push_back(private_msgs::URI(uri.ip, uri.port));
-    } 
-    else if (role == "subscriber") 
+        // Topic does not exist, create new topic
+        topicMap[topic] = Topic();
+        topicMap[topic].msgType = msgType;
+    }
+    else
     {
-        if (topicMap.find(topic) == topicMap.end()) 
+        // Topic already exists, check if publisher already exists
+        if (topicMap[topic].msgType != msgType)
         {
-            topicMap[topic] = Topic();
-            topicMap[topic].msgType = msgType;
+            // Topic exists with different message type
+            error = "Error: topic " + topic + " already exists with different message type " + topicMap[topic].msgType;
+            std::cerr << error << std::endl;
         }
-        topicMap[topic].subscribers.insert(uri);
-        for (const URI& publisher : topicMap[topic].publishers) 
+        else if (topicMap[topic].pubs.find(uriPair) != topicMap[topic].pubs.end())
         {
-            uriArray.push_back(private_msgs::URI(publisher.ip, publisher.port));
+            // Publisher already exists
+            error = "Error: publisher " + uri.toString() + " already exists for topic " + topic;
+            std::cerr << error << std::endl;
         }
-    } 
-    else 
-    {
-        std::cerr << "Error: unknown role " << role << std::endl;
-        return;
     }
 
-    Time time; 
+    // If no errors, add publisher to topic
+    if (error.size() == 0)
+    {
+        // Add publisher to topic
+        topicMap[topic].pubs.insert(uriPair);
+
+        // Add existing subscribers to response
+        for (const URIPair &subscriber : topicMap[topic].subs)
+        {
+            subURIs.push_back(private_msgs::URI(subscriber.serverURI.ip, subscriber.serverURI.port));
+        }
+    }
+
+    Time time;
     int t = getTimeNano();
-    time.sec =  t / 1000000000;
+    time.sec = t / 1000000000;
     time.nsec = t % 1000000000;
 
     Header header;
     header.stamp = time;
 
-    private_msgs::URIArray response;
+    private_msgs::Notify response;
     response.header = header;
-    response.uriArray = uriArray;
+    response.error = error;
+    response.topic = String(topic);
+    response.uris = subURIs;
 
-    std::string outMsg = Parser::encode(response, CORE_TOPICS::RESPONSE);
-    server.sendTo(outMsg, uri);
+    // Send response to publisher
+    std::string outMsg = Parser::encode(response, CORE_TOPICS::PUB_NOTIFY);
+    server.sendTo(outMsg, uriPair.clientURI);
+
+    // Send response to all subscribers of topic if no errors
+    if (error.size() == 0 && topicMap[topic].subs.size() > 0)
+    {
+        response.uris.clear();
+        response.uris.push_back(private_msgs::URI(uri.ip, uri.port));
+        outMsg = Parser::encode(response, CORE_TOPICS::SUB_NOTIFY);
+        for (const URIPair &subscriber : topicMap[topic].subs)
+        {
+            server.sendTo(outMsg, subscriber.clientURI);
+        }
+    }
 }
 
-void Mediator::parseDeregisterMessage(const private_msgs::Register& msg) {
+void Mediator::registerSubscriber(const private_msgs::Register &msg, const URI &clientURI)
+{
     std::string topic = msg.topic.data;
     std::string msgType = msg.msgType.data;
-    std::string role = msg.role.data;
+    URI uri = msg.uri.toURI(); // URI that will be sent to existing publishers
 
-    private_msgs::URI uriMsg = msg.uri; // URI that we will notify nodes about
-    URI uri = uriMsg.toURI();
+    std::vector<private_msgs::URI> pubURIs; // URIs that will be sent to newly registered subscriber
+    std::string error = "";
 
-    std::vector<URI> uriArray; // URIs that will be sent a response
+    URIPair uriPair = {clientURI, uri};
 
-    if (topicMap.find(topic) == topicMap.end()) 
+    // Check if topic already exists
+    if (topicMap.find(topic) == topicMap.end())
+    {
+        // Topic does not exist, create new topic
+        topicMap[topic] = Topic();
+        topicMap[topic].msgType = msgType;
+    }
+    else
+    {
+        // Topic already exists, check if subscriber already exists
+        if (topicMap[topic].msgType != msgType)
+        {
+            // Topic exists with different message type
+            error = "Error: topic " + topic + " already exists with different message type " + topicMap[topic].msgType;
+            std::cerr << error << std::endl;
+        }
+        else if (topicMap[topic].subs.find(uriPair) != topicMap[topic].subs.end())
+        {
+            // Subscriber already exists
+            error = "Error: subscriber " + uri.toString() + " already exists for topic " + topic;
+            std::cerr << error << std::endl;
+        }
+    }
+
+    // If no errors, add subscriber to topic
+    if (error.size() == 0)
+    {
+        // Add subscriber to topic
+        topicMap[topic].subs.insert(uriPair);
+
+        // Add existing publishers to response
+        for (const URIPair &publisher : topicMap[topic].pubs)
+        {
+            pubURIs.push_back(private_msgs::URI(publisher.serverURI.ip, publisher.serverURI.port));
+        }
+    }
+
+    Time time;
+    int t = getTimeNano();
+    time.sec = t / 1000000000;
+    time.nsec = t % 1000000000;
+
+    Header header;
+    header.stamp = time;
+
+    private_msgs::Notify response;
+    response.header = header;
+    response.error = error;
+    response.topic = String(topic);
+    response.uris = pubURIs;
+
+    // Send response to subscriber
+    std::string outMsg = Parser::encode(response, CORE_TOPICS::SUB_NOTIFY);
+    server.sendTo(outMsg, uriPair.clientURI);
+
+    // Send response to all publishers of topic if no errors
+    if (error.size() == 0 && topicMap[topic].pubs.size() > 0)
+    {
+        response.uris.clear();
+        response.uris.push_back(private_msgs::URI(uri.ip, uri.port));
+        outMsg = Parser::encode(response, CORE_TOPICS::PUB_NOTIFY);
+        for (const URIPair &publisher : topicMap[topic].pubs)
+        {
+            server.sendTo(outMsg, publisher.clientURI);
+        }
+    }
+}
+
+void Mediator::deregisterPublisher(const private_msgs::Register &msg, const URI &clientURI)
+{
+    std::string topic = msg.topic.data;
+    std::string msgType = msg.msgType.data;
+    URI uri = msg.uri.toURI(); // URI that will be deleted from map and sent to subscribers
+
+    URIPair uriPair = {clientURI, uri};
+
+    // Check if topic exists
+    if (topicMap.find(topic) == topicMap.end())
     {
         std::cerr << "Error: topic " << topic << " not found." << std::endl;
         return;
     }
 
-    if (role == "publisher") 
+    // Check if publisher exists
+    if (topicMap[topic].pubs.find(uriPair) == topicMap[topic].pubs.end())
     {
-        if (topicMap[topic].publishers.find(uri) == topicMap[topic].publishers.end()) 
-        {
-            std::cerr << "Error: publisher " << uri.toString() << " not found." << std::endl;
-            return;
-        }
-        topicMap[topic].publishers.erase(uri);
-        for (const URI& subscriber : topicMap[topic].subscribers) 
-        {
-            uriArray.push_back(subscriber);
-        }
-    } 
-    else if (role == "subscriber") 
-    {
-        if (topicMap[topic].subscribers.find(uri) == topicMap[topic].subscribers.end()) 
-        {
-            std::cerr << "Error: subscriber " << uri.toString() << " not found." << std::endl;
-            return;
-        }
-        topicMap[topic].subscribers.erase(uri);
-        for (const URI& publisher : topicMap[topic].publishers) 
-        {
-            uriArray.push_back(publisher);
-        }
-    } 
-    else 
-    {
-        std::cerr << "Error: unknown role " << role << std::endl;
+        std::cerr << "Error: publisher " << uri.toString() << " not found." << std::endl;
+        return;
     }
+
+    // Erase publisher from topic
+    topicMap[topic].pubs.erase(uriPair);
 
     Time time;
     int t = getTimeNano();
@@ -153,12 +257,64 @@ void Mediator::parseDeregisterMessage(const private_msgs::Register& msg) {
 
     private_msgs::Disconnect response;
     response.header = header;
-    response.uri = uriMsg;
+    response.uri = msg.uri;
     response.topic = msg.topic;
 
-    std::string outMsg = Parser::encode(response, CORE_TOPICS::DISCONNECT);
-    for (const URI& uri : uriArray) 
+    // Send response to all subscribers of topic
+    std::string outMsg = Parser::encode(response, CORE_TOPICS::SUB_DISCONNECT);
+    for (const URIPair &subscriber : topicMap[topic].subs)
     {
-        server.sendTo(outMsg, uri);
+        server.sendTo(outMsg, subscriber.clientURI);
     }
+}
+
+void Mediator::deregisterSubscriber(const private_msgs::Register &msg, const URI &clientURI)
+{
+    std::string topic = msg.topic.data;
+    std::string msgType = msg.msgType.data;
+    URI uri = msg.uri.toURI(); // URI that will be deleted from map and sent to publishers
+
+    URIPair uriPair = {clientURI, uri};
+
+    // Check if topic exists
+    if (topicMap.find(topic) == topicMap.end())
+    {
+        std::cerr << "Error: topic " << topic << " not found." << std::endl;
+        return;
+    }
+
+    // Check if subscriber exists
+    if (topicMap[topic].subs.find(uriPair) == topicMap[topic].subs.end())
+    {
+        std::cerr << "Error: subscriber " << uri.toString() << " not found." << std::endl;
+        return;
+    }
+
+    // Erase subscriber from topic
+    topicMap[topic].subs.erase(uriPair);
+
+    Time time;
+    int t = getTimeNano();
+    time.sec = t / 1000000000;
+    time.nsec = t % 1000000000;
+
+    Header header;
+    header.stamp = time;
+
+    private_msgs::Disconnect response;
+    response.header = header;
+    response.uri = msg.uri;
+    response.topic = msg.topic;
+
+    // Send response to all publishers of topic
+    std::string outMsg = Parser::encode(response, CORE_TOPICS::PUB_DISCONNECT);
+    for (const URIPair &publisher : topicMap[topic].pubs)
+    {
+        server.sendTo(outMsg, publisher.clientURI);
+    }
+}
+
+bool Mediator::URIPair::operator<(const URIPair &other) const
+{
+    return clientURI < other.clientURI || serverURI < other.serverURI;
 }

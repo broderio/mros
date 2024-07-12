@@ -1,11 +1,14 @@
 {
     "name": "simpleBot",
+    "endeffectors": ["forearm"],
     "joints": {
         "shoulder": {
             "type": "revolute",
             "axis": [0, 0, 1],
-            "xyz": [0, 0, 1],
-            "rpy": [0, 0, 0],
+            "origin": {
+                "xyz": [0, 0, 1],
+                "rpy": [0, 0, 0]
+            },
             "limits": [-3.14159, 3.14159],
             "parentLink": "base",
             "childLink": "upper_arm"
@@ -13,31 +16,13 @@
         "elbow": {
             "type": "revolute",
             "axis": [0, 0, 1],
-            "xyz": [0, 0, 1],
-            "rpy": [0, 0, 0],
+            "origin": {
+                "xyz": [0, 0, 1],
+                "rpy": [0, 0, 0]
+            },
             "limits": [-3.14159, 3.14159],
             "parentLink": "upper_arm",
             "childLink": "forearm"
-        }
-    },
-    "links" : {
-        "base": {
-            "xyz": [0, 0, 0],
-            "rpy": [0, 0, 0],
-            "size": [1.0, 0.1, 1.0],
-            "color": [0.5, 0.5, 0.5, 1]
-        },
-        "upper_arm": {
-            "xyz": [0, 0, 1],
-            "rpy": [0, 0, 0],
-            "size": [0.1, 0.1, 0.5],
-            "color": [0.5, 0.5, 0.5, 1]
-        },
-        "forearm": {
-            "xyz": [0, 0, 0.5],
-            "rpy": [0, 0, 0],
-            "size": [0.1, 0.1, 0.5],
-            "color": [0.5, 0.5, 0.5, 1]
         }
     }
 }

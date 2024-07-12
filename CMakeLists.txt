@@ -24,11 +24,11 @@ add_library(messagelib STATIC src/messages/message.cpp
                             src/messages/std_msgs/string.cpp
                             src/messages/std_msgs/time.cpp
                             src/messages/std_msgs/header.cpp
-                            src/messages/mbot_msgs/lidarScan.cpp
-                            src/messages/mbot_msgs/mbotEncoders.cpp
-                            src/messages/mbot_msgs/pose2d.cpp
-                            src/messages/mbot_msgs/twist2d.cpp)
+                            src/messages/std_msgs/integer.cpp
+                            src/messages/std_msgs/float.cpp
+                            src/messages/std_msgs/color.cpp)
 target_include_directories(messagelib PRIVATE include)
+target_link_libraries(messagelib utils)
 
 ### SHARED MEMORY ###
 
@@ -63,8 +63,10 @@ target_link_libraries(jrdf utils)
 
 ### MROS PRIVATE MESSAGES ###
 add_library(mros_priv_messages STATIC src/mros/private_msgs/disconnect.cpp
+                                      src/mros/private_msgs/notify.cpp
                                       src/mros/private_msgs/register.cpp
                                       src/mros/private_msgs/request.cpp
+                                      src/mros/private_msgs/response.cpp
                                       src/mros/private_msgs/uri.cpp)
 target_include_directories(mros_priv_messages PRIVATE include)
 target_link_libraries(mros_priv_messages messagelib)
@@ -74,7 +76,8 @@ target_link_libraries(mros_priv_messages messagelib)
 add_library(mros STATIC src/mros/mediator.cpp
                         src/mros/node.cpp
                         src/mros/publisher.cpp
-                        src/mros/subscriber.cpp)
+                        src/mros/subscriber.cpp
+                        src/mros/signalHandler.cpp)
 target_include_directories(mros PRIVATE include)
 target_link_libraries(mros socketlib smemlib utils messagelib mros_priv_messages)
 
@@ -94,6 +97,11 @@ target_include_directories(publisher_test PRIVATE include)
 add_executable(subscriber_test test/mros/subscriber_test.cpp)
 target_link_libraries(subscriber_test mros)
 target_include_directories(subscriber_test PRIVATE include)
+
+# Add pubsub test
+add_executable(pubsub_test test/mros/pubsub_test.cpp)
+target_link_libraries(pubsub_test mros)
+target_include_directories(pubsub_test PRIVATE include)
 
 ### SOCKET TESTS ###
 
@@ -127,6 +135,11 @@ add_executable(udp_server_test test/socket/udp/server_test.cpp)
 target_link_libraries(udp_server_test socketlib)
 target_include_directories(udp_server_test PRIVATE include)
 
+#Add UDP socket peer test
+add_executable(udp_peer_test test/socket/udp/peer_test.cpp)
+target_link_libraries(udp_peer_test socketlib)
+target_include_directories(udp_peer_test PRIVATE include)
+
 ### SHARED MEMORY TESTS ###
 
 # Add smem read test
@@ -146,26 +159,6 @@ target_include_directories(smemMutexTest PUBLIC include)
 
 ### MESSAGES TESTS ###
 
-# Add pose2d messages test
-add_executable(pose2dTest test/messages/pose2dTest.cpp)
-target_link_libraries(pose2dTest messagelib)
-target_include_directories(pose2dTest PUBLIC include)
-
-# Add twist2d messages test
-add_executable(twist2dTest test/messages/twist2dTest.cpp)
-target_link_libraries(twist2dTest messagelib)
-target_include_directories(twist2dTest PUBLIC include)
-
-# Add mbotEncoders messages test
-add_executable(mbotEncodersTest test/messages/mbotEncodersTest.cpp)
-target_link_libraries(mbotEncodersTest messagelib)
-target_include_directories(mbotEncodersTest PUBLIC include)
-
-# Add lidarScan messages test
-add_executable(lidarScanTest test/messages/lidarScanTest.cpp)
-target_link_libraries(lidarScanTest messagelib)
-target_include_directories(lidarScanTest PUBLIC include)
-
 # Add pose messages test
 add_executable(poseTest test/messages/poseTest.cpp)
 target_link_libraries(poseTest messagelib)
@@ -173,7 +166,7 @@ target_include_directories(poseTest PUBLIC include)
 
 # Add jointState messages test
 add_executable(jointStateTest test/messages/jointStateTest.cpp)
-target_link_libraries(jointStateTest messagelib linalg)
+target_link_libraries(jointStateTest messagelib)
 target_include_directories(jointStateTest PUBLIC include)
 
 ### LINALG TESTS ###

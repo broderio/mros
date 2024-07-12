@@ -2,36 +2,43 @@
 #define UDP_CLIENT_HPP
 
 #include <iostream>
-#include <string> 
+#include <string>
 
-#include <sys/types.h> 
-#include <arpa/inet.h> 
-#include <sys/socket.h> 
-#include <netinet/in.h> 
-#include <unistd.h> 
+#include <sys/types.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
 #include <stdlib.h>
+#include <fcntl.h>
 
-class UDPClient {
+#include "utils.hpp"
+
+class UDPClient
+{
 public:
-    UDPClient(const std::string &address, int port);
+    UDPClient(bool nonblocking = true);
 
     ~UDPClient();
 
-    int connect();
+    int open(bool nonblocking = true);
 
-    int sendTo(const std::string& message);
+    int sendTo(const std::string &message, const URI &serverURI);
 
-    int receiveFrom(std::string& message, size_t bytes);
+    int receiveFrom(std::string &message, size_t bytes, URI &serverURI);
 
     void close();
 
+    bool isOpen() const;
+
+    bool isNonblocking() const;
+
 private:
-    
-        int fd;
-    
-        sockaddr_in serverAddr;
-    
-        bool isConnected;
+    int fd;
+
+    bool opened;
+
+    bool nonblocking;
 };
 
 #endif // UDP_CLIENT_HPP
