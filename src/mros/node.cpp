@@ -3,29 +3,13 @@
 namespace mros
 {
     Node::Node(const std::string &name, const URI &coreURI)
-        : name(name), coreURI(coreURI), client(), signalHandler()
+        : name(name), coreURI(coreURI), client(), signalHandler(), spinning(false), shutdownFlag(false)
     {
     }
 
     Node::~Node()
     {
         shutdown();
-    }
-
-    void Node::spin()
-    {
-        std::thread t(&Node::run, this);
-        t.join();
-        std::cout << "Node shutting down" << std::endl;
-    }
-
-    void Node::spinOnce()
-    {
-        runOnce();
-    }
-
-    void Node::shutdown()
-    {
         for (auto &topic : publishers)
         {
             for (auto &pub : topic.second)
@@ -47,9 +31,43 @@ namespace mros
         client.close();
     }
 
+    void Node::spin(bool detach)
+    {
+        if (spinning)
+        {
+            return;
+        }
+
+        spinning = true;
+        std::thread t(&Node::run, this);
+        if (detach)
+        {
+            t.detach();
+        }
+        else
+        {
+            t.join();
+        }
+    }
+
+    void Node::spinOnce()
+    {
+        runOnce();
+    }
+
+    void Node::shutdown()
+    {
+        if (shutdownFlag)
+        {
+            return;
+        }
+
+        shutdownFlag = true;
+    }
+
     bool Node::ok()
     {
-        return signalHandler.ok();
+        return signalHandler.ok() && !shutdownFlag;
     }
 
     void Node::run()
@@ -119,20 +137,42 @@ namespace mros
         }
 
         // Run each publisher and subscriber
+        std::vector<std::pair<std::string, std::shared_ptr<Publisher>>> toDeletePub;
         for (auto &topic : publishers)
         {
             for (auto &pub : topic.second)
             {
+                if (pub->shutdownFlag)
+                {
+                    contactMediator(topic.first, pub->msgType, pub->publicServer.getURI(), CORE_TOPICS::PUB_DEREGISTER);
+                    toDeletePub.push_back(std::make_pair(topic.first, pub));
+                    continue;
+                }
                 pub->runOnce();
             }
         }
+        for (auto &pair : toDeletePub)
+        {
+            publishers[pair.first].erase(pair.second);
+        }
 
+        std::vector<std::pair<std::string, std::shared_ptr<Subscriber>>> toDeleteSub;
         for (auto &topic : subscribers)
         {
             for (auto &sub : topic.second)
             {
+                if (sub->shutdownFlag)
+                {
+                    contactMediator(topic.first, sub->msgType, sub->publicServer.getURI(), CORE_TOPICS::SUB_DEREGISTER);
+                    toDeleteSub.push_back(std::make_pair(topic.first, sub));
+                    continue;
+                }
                 sub->runOnce();
             }
+        }
+        for (auto &pair : toDeleteSub)
+        {
+            subscribers[pair.first].erase(pair.second);
         }
     }
 

@@ -9,6 +9,7 @@
 #include <thread>
 #include <chrono>
 #include <queue>
+#include <mutex>
 
 #include "utils.hpp"
 
@@ -50,7 +51,8 @@ namespace mros
             {
                 throw std::runtime_error("MsgType must match the type of the Publisher");
             }
-
+            
+            msgQueueMutex.lock();   
             if (msgQueue.size() >= queueSize)
             {
                 msgQueue.pop();
@@ -58,6 +60,7 @@ namespace mros
 
             std::string msgStr = Parser::encode(msg, 0);
             msgQueue.push(msgStr);
+            msgQueueMutex.unlock();
         }
 
         int getNumSubscribers() const;
@@ -80,6 +83,7 @@ namespace mros
         size_t queueSize;
         std::string msgType;
 
+        std::mutex msgQueueMutex;
         std::queue<std::string> msgQueue;
 
         std::set<URI> awaitingRequests;                         // Populated by Node upon receiving a PUB_NOTIFY message from the mediator

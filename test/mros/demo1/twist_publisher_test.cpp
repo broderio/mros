@@ -21,6 +21,8 @@ int main() {
         return 1;
     }
 
+    node.spin(true);
+
     int i = 0;
     while (node.ok()) {
 
@@ -31,7 +33,6 @@ int main() {
         pub->publish(msg);
 
         sleep(500);
-        node.spinOnce();
         ++i;
     }
 

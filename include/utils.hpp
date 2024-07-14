@@ -1,5 +1,6 @@
 #pragma once 
 
+#include <iostream>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -32,6 +33,8 @@ float degToRad(float deg);
 
 float radToDeg(float rad);
 
-std::string getIPAddr();
+std::vector<std::string> getLocalIPv4Addresses();
+
+std::string getPublicIPv4Address();
 
 std::string addTab(const std::string &str, int tabCount);

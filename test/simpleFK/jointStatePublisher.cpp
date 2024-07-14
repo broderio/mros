@@ -10,7 +10,7 @@
 
 
 int main() {
-    TCPServer server(URI(getIPAddr(), 9002), false);
+    TCPServer server(URI(getPublicIPv4Address(), 9002), false);
     TCPConnection conn;
     int res = server.accept(conn);
     if (res < 0) {

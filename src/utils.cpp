@@ -41,7 +41,7 @@ float radToDeg(float rad) {
     return rad * 180.0 / M_PI;
 }
 
-std::string getIPAddr() {
+std::vector<std::string> getLocalIPv4Addresses() {
     struct addrinfo hints, *info, *p;
     int gai_result;
     char hostname[1024];
@@ -71,6 +71,7 @@ std::string getIPAddr() {
         throw std::runtime_error(gai_strerror(gai_result));
     }
 
+    std::vector<std::string> ipAddrs;
     for(p = info; p != NULL; p = p->ai_next) {
         if (p->ai_family == AF_INET) { // IPv4
             struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
@@ -83,13 +84,28 @@ std::string getIPAddr() {
                 - https://man7.org/linux/man-pages/man3/inet_ntop.3.html
             */
             inet_ntop(p->ai_family, &(ipv4->sin_addr), ipstr, sizeof ipstr);
-            break;
+            ipAddrs.push_back(ipstr);
         }
     }
 
     freeaddrinfo(info); // free the linked list
 
-    return ipstr;
+    return ipAddrs;
+}
+
+std::string getPublicIPv4Address() {
+    std::vector<std::string> ipAddrs = getLocalIPv4Addresses();
+    if (ipAddrs.size() == 0) {
+        return "";
+    }
+
+    // Return first IP address not equal to loopback address
+    for (const std::string& ip : ipAddrs) {
+        if (ip != "127.0.0.1") {
+            return ip;
+        }
+    }
+    return "";
 }
 
 std::string addTab(const std::string& str, int tabCount) {

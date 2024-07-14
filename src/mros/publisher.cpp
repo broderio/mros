@@ -4,6 +4,7 @@ namespace mros
 {
     Publisher::~Publisher()
     {
+        shutdown();
         for (auto &sub : subs)
         {
             sub.second->close();
@@ -24,7 +25,11 @@ namespace mros
 
     void Publisher::shutdown()
     {
-       shutdownFlag = true;
+        if (shutdownFlag)
+        {
+            return;
+        }
+        shutdownFlag = true;
     }
 
     void Publisher::runOnce()
@@ -140,8 +145,11 @@ namespace mros
         // Send any outgoing messages
         if (msgQueue.size() > 0)
         {
+            msgQueueMutex.lock();
             std::string msg = msgQueue.front();
             msgQueue.pop();
+            msgQueueMutex.unlock();
+
             for (auto &sub : subs)
             {
                 sub.second->send(msg);
@@ -150,7 +158,7 @@ namespace mros
     }
 
     Publisher::Publisher(const std::string &topic, const size_t &queueSize, const std::string& msgType)
-        : shutdownFlag(false), topic(topic), queueSize(queueSize), msgType(msgType), msgQueue(), publicServer(URI(getIPAddr(), 0)), privateServer(URI(getIPAddr(), 0)) {
+        : shutdownFlag(false), topic(topic), queueSize(queueSize), msgType(msgType), msgQueue(), publicServer(URI(getPublicIPv4Address(), 0)), privateServer(URI(getPublicIPv4Address(), 0)) {
             publicServer.bind();
             privateServer.bind();
             privateServer.listen();

@@ -5,8 +5,12 @@ using namespace mros;
 Mediator::Mediator() : topicMap(), server(URI("0.0.0.0", MEDIATOR_PORT_NUM))
 {
     server.bind();
-    URI uri = server.getURI();
-    std::cout << "Mediator URI: " << uri.toString() << std::endl;
+    std::vector<std::string> ipAddrs = getLocalIPv4Addresses();
+    std::cout << "Mediator hosting on: \n";
+    for (const std::string &ip : ipAddrs)
+    {
+        std::cout << '\t' << ip << ":" << MEDIATOR_PORT_NUM << "\n";
+    }
 }
 
 Mediator::~Mediator()
@@ -104,7 +108,7 @@ void Mediator::registerPublisher(const private_msgs::Register &msg, const URI &c
     {
         // Add publisher to topic
         topicMap[topic].pubs.insert(uriPair);
-        std::cout << "Registered publisher: " << uriPair.serverURI << " on topic " << topic << std::endl;
+        std::cout << "Registered publisher " << uriPair.serverURI << " from node " << uriPair.clientURI << " on topic " << topic << std::endl;
 
         // Add existing subscribers to response
         for (const URIPair &subscriber : topicMap[topic].subs)
@@ -184,7 +188,7 @@ void Mediator::registerSubscriber(const private_msgs::Register &msg, const URI &
     {
         // Add subscriber to topic
         topicMap[topic].subs.insert(uriPair);
-        std::cout << "Registered subscriber: " << uriPair.serverURI << " on topic " << topic << std::endl;
+        std::cout << "Registered subscriber " << uriPair.serverURI << " from node " << uriPair.clientURI << " on topic " << topic << std::endl;
 
         // Add existing publishers to response
         for (const URIPair &publisher : topicMap[topic].pubs)
@@ -248,7 +252,7 @@ void Mediator::deregisterPublisher(const private_msgs::Register &msg, const URI 
 
     // Erase publisher from topic
     topicMap[topic].pubs.erase(uriPair);
-    std::cout << "Deregistered publisher: " << uriPair.serverURI << " from topic " << topic << std::endl;
+    std::cout << "Deregistered publisher " << uriPair.serverURI << " from node " << uriPair.clientURI << " on topic " << topic << std::endl;
 
     Time time;
     int t = getTimeNano();
@@ -295,7 +299,7 @@ void Mediator::deregisterSubscriber(const private_msgs::Register &msg, const URI
 
     // Erase subscriber from topic
     topicMap[topic].subs.erase(uriPair);
-    std::cout << "Deregistered subscriber: " << uriPair.serverURI << " from topic " << topic << std::endl;
+    std::cout << "Deregistered subscriber " << uriPair.serverURI << " from node " << uriPair.clientURI << " on topic " << topic << std::endl;
 
     Time time;
     int t = getTimeNano();

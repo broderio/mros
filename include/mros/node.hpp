@@ -43,7 +43,7 @@ namespace mros
 
         ~Node();
 
-        void spin();
+        void spin(bool detach=false);
 
         void spinOnce();
 
@@ -101,6 +101,9 @@ namespace mros
 
         std::string name;
         URI coreURI;
+
+        bool spinning;
+        bool shutdownFlag;
 
         std::map<std::string, std::set<std::shared_ptr<Publisher>>> publishers;   // Map of topic names to Publisher objects
         std::map<std::string, std::set<std::shared_ptr<Subscriber>>> subscribers; // Map of topic names to Subscriber objects

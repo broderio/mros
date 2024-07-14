@@ -5,6 +5,11 @@ namespace mros
     Subscriber::~Subscriber()
     {
         shutdown();
+        for (auto &pub : pubs)
+        {
+            pub.second->close();
+        }
+        publicServer.close();
     }
 
     int Subscriber::getNumPublishers() const
@@ -19,11 +24,12 @@ namespace mros
 
     void Subscriber::shutdown()
     {
-        for (auto &pub : pubs)
+        if (shutdownFlag)
         {
-            pub.second->close();
+            return;
         }
-        publicServer.close();
+        
+        shutdownFlag = true;
     }
 
     void Subscriber::runOnce()
