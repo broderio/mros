@@ -47,8 +47,7 @@ std::vector<std::vector<float>> Matrix::getData() const {
 
 float Matrix::get(size_t row, size_t col) const {
     if (row >= rows || col >= cols) {
-        std::cerr << "Error: index out of bounds." << std::endl;
-        return 0;
+        throw std::out_of_range("Index out of bounds.");
     }
 
     return data[row][col];
@@ -56,8 +55,7 @@ float Matrix::get(size_t row, size_t col) const {
 
 float &Matrix::at(size_t row, size_t col) {
     if (row >= rows || col >= cols) {
-        std::cerr << "Error: index out of bounds." << std::endl;
-        return data[0][0];
+        throw std::out_of_range("Index out of bounds.");
     }
 
     return data[row][col];
@@ -65,8 +63,7 @@ float &Matrix::at(size_t row, size_t col) {
 
 void Matrix::set(size_t row, size_t col, float val) {
     if (row >= rows || col >= cols) {
-        std::cerr << "Error: index out of bounds." << std::endl;
-        return;
+        throw std::out_of_range("Index out of bounds.");
     }
 
     data[row][col] = val;
@@ -74,8 +71,7 @@ void Matrix::set(size_t row, size_t col, float val) {
 
 Vector Matrix::getRow(size_t row) const {
     if (row >= rows) {
-        std::cerr << "Error: index out of bounds." << std::endl;
-        return Vector();
+        throw std::out_of_range("Index out of bounds.");
     }
 
     return Vector(data[row]);
@@ -83,8 +79,7 @@ Vector Matrix::getRow(size_t row) const {
 
 Vector Matrix::getCol(size_t col) const {
     if (col >= cols) {
-        std::cerr << "Error: index out of bounds." << std::endl;
-        return Vector();
+        throw std::out_of_range("Index out of bounds.");
     }
 
     std::vector<float> v(rows);
@@ -96,8 +91,7 @@ Vector Matrix::getCol(size_t col) const {
 
 void Matrix::setRow(size_t row, const Vector& v) {
     if (row >= rows || v.getSize() != cols) {
-        std::cerr << "Error: index out of bounds or vector size mismatch." << std::endl;
-        return;
+        throw std::out_of_range("Index out of bounds or vector size mismatch.");
     }
 
     data[row] = v.getData();
@@ -105,8 +99,7 @@ void Matrix::setRow(size_t row, const Vector& v) {
 
 void Matrix::setCol(size_t col, const Vector& v) {
     if (col >= cols || v.getSize() != rows) {
-        std::cerr << "Error: index out of bounds or vector size mismatch." << std::endl;
-        return;
+        throw std::out_of_range("Index out of bounds or vector size mismatch.");
     }
 
     for (size_t i = 0; i < rows; ++i) {
@@ -125,8 +118,7 @@ size_t Matrix::getCols() const {
 
 Matrix Matrix::operator+(const Matrix& rhs) const {
     if (rows != rhs.rows || cols != rhs.cols) {
-        std::cerr << "Error: cannot add matrices of different sizes." << std::endl;
-        return Matrix();
+        throw std::invalid_argument("Cannot add matrices of different sizes.");
     }
 
     Matrix m(rows, cols);
@@ -151,8 +143,7 @@ Matrix Matrix::operator+(const float& rhs) const {
 
 Matrix Matrix::operator-(const Matrix& rhs) const {
     if (rows != rhs.rows || cols != rhs.cols) {
-        std::cerr << "Error: cannot subtract matrices of different sizes." << std::endl;
-        return Matrix();
+        throw std::invalid_argument("Cannot subtract matrices of different sizes.");
     }
 
     Matrix m(rows, cols);
@@ -177,8 +168,7 @@ Matrix Matrix::operator-(const float& rhs) const {
 
 Matrix Matrix::operator*(const Matrix& rhs) const {
     if (rows != rhs.rows || cols != rhs.cols) {
-        std::cerr << "Error: cannot multiply matrices of different sizes." << std::endl;
-        return Matrix();
+        throw std::invalid_argument("Cannot multiply matrices of different sizes.");
     }
 
     Matrix m(rows, cols);
@@ -203,8 +193,7 @@ Matrix Matrix::operator*(const float& rhs) const {
 
 Matrix Matrix::operator/(const Matrix& rhs) const {
     if (rows != rhs.rows || cols != rhs.cols) {
-        std::cerr << "Error: cannot divide matrices of different sizes." << std::endl;
-        return Matrix();
+        throw std::invalid_argument("Cannot divide matrices of different sizes.");
     }
 
     Matrix m(rows, cols);
@@ -229,8 +218,7 @@ Matrix Matrix::operator/(const float& rhs) const {
 
 Matrix Matrix::operator+=(const Matrix& rhs) {
     if (rows != rhs.rows || cols != rhs.cols) {
-        std::cerr << "Error: cannot add matrices of different sizes." << std::endl;
-        return *this;
+        throw std::invalid_argument("Cannot add matrices of different sizes.");
     }
 
     for (size_t i = 0; i < rows; ++i) {
@@ -253,8 +241,7 @@ Matrix Matrix::operator+=(const float& rhs) {
 
 Matrix Matrix::operator-=(const Matrix& rhs) {
     if (rows != rhs.rows || cols != rhs.cols) {
-        std::cerr << "Error: cannot subtract matrices of different sizes." << std::endl;
-        return *this;
+        throw std::invalid_argument("Cannot subtract matrices of different sizes.");
     }
 
     for (size_t i = 0; i < rows; ++i) {
@@ -277,8 +264,7 @@ Matrix Matrix::operator-=(const float& rhs) {
 
 Matrix Matrix::operator*=(const Matrix& rhs) {
     if (rows != rhs.rows || cols != rhs.cols) {
-        std::cerr << "Error: cannot multiply matrices of different sizes." << std::endl;
-        return *this;
+        throw std::invalid_argument("Cannot multiply matrices of different sizes.");
     }
 
     for (size_t i = 0; i < rows; ++i) {
@@ -301,8 +287,7 @@ Matrix Matrix::operator*=(const float& rhs) {
 
 Matrix Matrix::operator/=(const Matrix& rhs) {
     if (rows != rhs.rows || cols != rhs.cols) {
-        std::cerr << "Error: cannot divide matrices of different sizes." << std::endl;
-        return *this;
+        throw std::invalid_argument("Cannot divide matrices of different sizes.");
     }
 
     for (size_t i = 0; i < rows; ++i) {
@@ -399,8 +384,7 @@ Matrix Matrix::multiply(const Vector& colVector, const Vector& rowVector) {
 
 Vector Matrix::multiply(const Matrix& m, const Vector& colVector) {
     if (m.getCols() != colVector.getSize()) {
-        std::cerr << "Error: cannot multiply matrix and vector of incompatible sizes." << std::endl;
-        return Vector();
+        throw std::invalid_argument("Cannot multiply matrix and vector of incompatible sizes.");
     }
 
     Vector v(m.getRows());
@@ -414,8 +398,7 @@ Vector Matrix::multiply(const Matrix& m, const Vector& colVector) {
 
 Matrix Matrix::multiply(const Matrix& lhs, const Matrix& rhs) {
     if (lhs.getCols() != rhs.getRows()) {
-        std::cerr << "Error: cannot multiply matrices of incompatible sizes." << std::endl;
-        return Matrix();
+        throw std::invalid_argument("Cannot multiply matrices of incompatible sizes.");
     }
 
     Matrix m(lhs.getRows(), rhs.getCols());
@@ -441,8 +424,7 @@ Matrix Matrix::transpose(const Matrix& m) {
 
 bool Matrix::LU(const Matrix& A, Matrix& L, Matrix& U) {
     if (A.rows != A.cols) {
-        std::cerr << "Error: cannot factorize non-square matrix." << std::endl;
-        return false;
+        throw std::invalid_argument("Cannot factorize non-square matrix.");
     }
 
     Matrix temp(A);
@@ -474,8 +456,7 @@ bool Matrix::LU(const Matrix& A, Matrix& L, Matrix& U) {
 
 bool Matrix::QR(const Matrix& A, Matrix& Q, Matrix& R) {
     if (A.rows != A.cols) {
-        std::cerr << "Error: cannot factorize non-square matrix." << std::endl;
-        return false;
+        throw std::invalid_argument("Cannot factorize non-square matrix.");
     }
 
     Q = Matrix(A.rows, A.cols);
@@ -498,8 +479,7 @@ bool Matrix::QR(const Matrix& A, Matrix& Q, Matrix& R) {
 
 Matrix Matrix::inverse(const Matrix& m) {
     if (m.rows != m.cols) {
-        std::cerr << "Error: cannot take inverse of non-square matrix." << std::endl;
-        return Matrix();
+        throw std::invalid_argument("Cannot invert non-square matrix.");
     }
 
     // Inversion using LU decomposition
@@ -533,8 +513,7 @@ Matrix Matrix::pseudoInverse(const Matrix& m) {
 
 Matrix Matrix::invertUpperTriangular(const Matrix& U) {
     if (U.rows != U.cols) {
-        std::cerr << "Error: cannot invert non-square matrix." << std::endl;
-        return Matrix();
+        throw std::invalid_argument("Cannot invert non-square matrix.");
     }
 
     Matrix inv(U.rows, U.cols);
@@ -553,8 +532,7 @@ Matrix Matrix::invertUpperTriangular(const Matrix& U) {
 
 Matrix Matrix::invertLowerTriangular(const Matrix& L) {
     if (L.rows != L.cols) {
-        std::cerr << "Error: cannot invert non-square matrix." << std::endl;
-        return Matrix();
+        throw std::invalid_argument("Cannot invert non-square matrix.");
     }
 
     Matrix inv(L.rows, L.cols);
@@ -573,8 +551,7 @@ Matrix Matrix::invertLowerTriangular(const Matrix& L) {
 
 Vector Matrix::backwardSub(const Matrix& U, const Vector& b) {
     if (U.rows != U.cols || U.rows != b.getSize()) {
-        std::cerr << "Error: cannot perform backward substitution on incompatible sizes." << std::endl;
-        return Vector();
+        throw std::invalid_argument("Cannot perform backward substitution on incompatible sizes.");
     }
 
     Vector x(U.rows);
@@ -590,8 +567,7 @@ Vector Matrix::backwardSub(const Matrix& U, const Vector& b) {
 
 Vector Matrix::forwardSub(const Matrix& L, const Vector& b) {
     if (L.rows != L.cols || L.rows != b.getSize()) {
-        std::cerr << "Error: cannot perform forward substitution on incompatible sizes." << std::endl;
-        return Vector();
+        throw std::invalid_argument("Cannot perform forward substitution on incompatible sizes.");
     }
 
     Vector x(L.rows);
@@ -686,8 +662,7 @@ Vector linalg::linearSolve(const Matrix& A, const Vector& b, const bool& useLU) 
 
 Vector linalg::polyfit(const Vector& x, const Vector& y, const size_t& order, const bool& useLU) {
     if (x.getSize() != y.getSize()) {
-        std::cerr << "Error: input vectors must be of the same size." << std::endl;
-        return Vector();
+        throw std::invalid_argument("Cannot fit polynomial to vectors of different sizes.");
     }
 
     Matrix A(x.getSize(), order + 1);

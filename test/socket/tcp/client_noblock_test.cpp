@@ -6,7 +6,7 @@
 
 int main() {
     std::string ipAddr = getIPAddr();
-    TCPClient client(ipAddr, 8081);
+    TCPClient client(URI(ipAddr, 0), 8081);
     int res;
     do {
         res = client.connect();

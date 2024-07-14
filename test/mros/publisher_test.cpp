@@ -9,7 +9,7 @@
 
 int main() {
     URI uri;
-    uri.ip = "35.3.187.113";
+    uri.ip = "0.0.0.0";
     uri.port = MEDIATOR_PORT_NUM;
 
     mros::Node node("publisher_node", uri);

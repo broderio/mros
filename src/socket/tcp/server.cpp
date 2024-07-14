@@ -3,10 +3,10 @@
 TCPServer::TCPServer()
     : nonblocking(false), maxConnections(0), numConnections(0), opened(false), bound(false), listening(false) {}
 
-TCPServer::TCPServer(int port, bool nonblocking, int maxConnections)
+TCPServer::TCPServer(const URI &uri, bool nonblocking, int maxConnections)
     : nonblocking(nonblocking), maxConnections(maxConnections), numConnections(0), opened(false), bound(false), listening(false)
 {
-    open(port, nonblocking);
+    open(uri, nonblocking);
 }
 
 TCPServer::~TCPServer()
@@ -14,7 +14,7 @@ TCPServer::~TCPServer()
     close();
 }
 
-int TCPServer::open(int port, bool nonblocking, int maxConnections)
+int TCPServer::open(const URI &uri, bool nonblocking, int maxConnections)
 {
     if (opened)
     {
@@ -26,11 +26,9 @@ int TCPServer::open(int port, bool nonblocking, int maxConnections)
     server.sin_family = AF_INET;
 
     // htons() converts the port number from host byte order to network byte order
-    server.sin_port = htons(port);
+    server.sin_port = htons(uri.port);
 
-    // Get the IP address of the local machine
-    std::string ipAddress = getIPAddr();
-    if (inet_pton(AF_INET, ipAddress.c_str(), &(server.sin_addr)) <= 0)
+    if (inet_pton(AF_INET, uri.ip.c_str(), &(server.sin_addr)) <= 0)
     {
         std::cerr << "TCPServer error: Invalid address/ Address not supported" << std::endl;
         return -1;

@@ -5,19 +5,18 @@ UDPServer::UDPServer()
 {
 }
 
-UDPServer::UDPServer(int port, bool nonblocking)
+UDPServer::UDPServer(const URI &uri, bool nonblocking)
     : bound(false), opened(false), nonblocking(nonblocking)
 {
-    open(port);
+    open(uri, nonblocking);
 }
 
 UDPServer::~UDPServer()
 {
-    std::cout << "Closing UDP server with URI " << getURI() << std::endl;
     close();
 }
 
-int UDPServer::open(int port, bool nonblocking)
+int UDPServer::open(const URI &uri, bool nonblocking)
 {
     if (opened)
     {
@@ -26,9 +25,8 @@ int UDPServer::open(int port, bool nonblocking)
     }
 
     server.sin_family = AF_INET;
-    server.sin_port = htons(port);
-    std::string ipAddress = getIPAddr();
-    if (inet_pton(AF_INET, ipAddress.c_str(), &(server.sin_addr)) <= 0) 
+    server.sin_port = htons(uri.port);
+    if (inet_pton(AF_INET, uri.ip.c_str(), &(server.sin_addr)) <= 0) 
     {
         std::cerr << "UDPServer error: Invalid address/ Address not supported" << std::endl;
         return -1;

@@ -17,11 +17,11 @@ public:
 
     TCPClient();
 
-    TCPClient(const std::string &address, int port, bool nonblocking = 1);
+    TCPClient(const URI &uri, bool nonblocking = true);
 
     ~TCPClient();
 
-    int open(const std::string &address, int port, bool nonblocking = 1);
+    int open(const URI &uri, bool nonblocking = true);
 
     int connect(int timeout = 0);
 

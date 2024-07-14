@@ -76,7 +76,7 @@ namespace mros
 
         template <typename MsgType>
         Subscriber(const std::string &topic, const size_t &queueSize, std::function<void(const MsgType &)> callback)
-        : publicServer(0) {
+        : publicServer(URI(getIPAddr(), 0)) {
             static_assert(std::is_base_of<IMessage, MsgType>::value, "MsgType must inherit from IMessage");
             msgType = typeid(MsgType).name();
             this->topic = topic;
@@ -84,8 +84,6 @@ namespace mros
             callbackHelper = std::make_shared<CallbackHelper<MsgType>>(callback);
             shutdownFlag = false;
             publicServer.bind();
-
-            std::cout << "Subscriber public server: " << publicServer.getURI() << std::endl;
         }
 
         template <typename MsgType>

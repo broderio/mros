@@ -83,7 +83,7 @@ namespace mros
                     else
                     {
                         URI pubURI = response.uri.toURI();
-                        awaitingConnect.push(std::make_pair(sender, std::make_shared<TCPClient>(pubURI.ip, pubURI.port)));
+                        awaitingConnect.push(std::make_pair(sender, std::make_shared<TCPClient>(pubURI)));
                     }
                 }
             }

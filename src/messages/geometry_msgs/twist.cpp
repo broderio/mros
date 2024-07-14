@@ -18,7 +18,7 @@ Twist &Twist::operator=(const Twist &other) {
 }
 
 uint16_t Twist::getMsgLen() const {
-    return 3 * sizeof(float);
+    return linear.getMsgLen() + angular.getMsgLen();
 }
 
 std::string Twist::toString() const {

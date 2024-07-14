@@ -2,7 +2,7 @@
 #include "socket/udp/server.hpp"
 
 int main() {
-    UDPServer server(8081);
+    UDPServer server(URI(getIPAddr(), 8080));
 
     int res = server.bind();
     if (res < 0) {

@@ -22,7 +22,7 @@ Quaternion& Quaternion::operator=(const Quaternion& other) {
 }
 
 uint16_t Quaternion::getMsgLen() const {
-    return 4 * sizeof(float);
+    return x.getMsgLen() + y.getMsgLen() + z.getMsgLen() + w.getMsgLen();
 }
 
 std::string Quaternion::toString() const {

@@ -16,6 +16,7 @@ namespace mros
     {
         std::thread t(&Node::run, this);
         t.join();
+        std::cout << "Node shutting down" << std::endl;
     }
 
     void Node::spinOnce()
@@ -55,7 +56,12 @@ namespace mros
     {
         while (ok())
         {
-            runOnce();
+            try {
+                runOnce();
+            } catch (const std::exception &e) {
+                std::cerr << "Error thrown in Node::run(): " << e.what() << std::endl;
+                return;
+            }
         }
     }
 
@@ -141,8 +147,6 @@ namespace mros
         msg.topic = topic;
         msg.msgType = msgType;
         msg.uri = private_msgs::URI(publicURI.ip, publicURI.port);
-
-        std::cout << publicURI.toString() << std::endl;
 
         client.sendTo(Parser::encode(msg, id), coreURI);
 

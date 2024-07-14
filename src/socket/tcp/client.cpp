@@ -3,17 +3,16 @@
 TCPClient::TCPClient()
 : nonblocking(true), connected(false), opened(false) {}
 
-TCPClient::TCPClient(const std::string &address, int port, bool nonblocking)
+TCPClient::TCPClient(const URI &uri, bool nonblocking)
 : nonblocking(nonblocking), connected(false), opened(false) {
-    open(address, port, nonblocking);
+    open(uri, nonblocking);
 }
 
 TCPClient::~TCPClient() {
-    std::cout << "Closing TCP client with URI " << getServerURI() << std::endl;
     close();
 }
 
-int TCPClient::open(const std::string &address, int port, bool nonblocking) {
+int TCPClient::open(const URI &uri, bool nonblocking) {
     if (opened) {
         std::cerr << "TCPClient error: already open" << std::endl;
         return -1;
@@ -23,10 +22,10 @@ int TCPClient::open(const std::string &address, int port, bool nonblocking) {
     server.sin_family = AF_INET;
 
     // htons() converts the port number from host byte order to network byte order
-    server.sin_port = htons(port);
+    server.sin_port = htons(uri.port);
 
     // inet_aton() converts the address from a string to a binary representation
-    if (inet_aton(address.c_str(), &server.sin_addr) == 0) {
+    if (inet_aton(uri.ip.c_str(), &server.sin_addr) == 0) {
         std::cerr << "TCPClient error: invalid address" << std::endl;
         return -1;
     }

@@ -37,6 +37,22 @@ float Quaternion::norm() const {
     return std::sqrt(x * x + y * y + z * z + w * w);
 }
 
+Quaternion Quaternion::fromRPY(const float& roll, const float& pitch, const float& yaw) {
+    float cy = std::cos(yaw * 0.5);
+    float sy = std::sin(yaw * 0.5);
+    float cp = std::cos(pitch * 0.5);
+    float sp = std::sin(pitch * 0.5);
+    float cr = std::cos(roll * 0.5);
+    float sr = std::sin(roll * 0.5);
+
+    float w = cr * cp * cy + sr * sp * sy;
+    float x = sr * cp * cy - cr * sp * sy;
+    float y = cr * sp * cy + sr * cp * sy;
+    float z = cr * cp * sy - sr * sp * cy;
+
+    return Quaternion(x, y, z, w);
+}
+
 Quaternion Quaternion::normalize(const Quaternion& q) {
     float n = q.norm();
     return Quaternion(q.x / n, q.y / n, q.z / n, q.w / n);

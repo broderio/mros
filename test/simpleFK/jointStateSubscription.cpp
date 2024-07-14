@@ -22,7 +22,7 @@
 
 int main() {
     std::string ipAddr = getIPAddr();
-    TCPClient client(ipAddr, 9002, false);
+    TCPClient client(URI(ipAddr, 9002), false);
     int res = client.connect();
     if (res < 0) {
         return 1;

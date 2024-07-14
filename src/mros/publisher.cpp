@@ -150,7 +150,7 @@ namespace mros
     }
 
     Publisher::Publisher(const std::string &topic, const size_t &queueSize, const std::string& msgType)
-        : shutdownFlag(false), topic(topic), queueSize(queueSize), msgType(msgType), msgQueue(), publicServer(0), privateServer(0) {
+        : shutdownFlag(false), topic(topic), queueSize(queueSize), msgType(msgType), msgQueue(), publicServer(URI(getIPAddr(), 0)), privateServer(URI(getIPAddr(), 0)) {
             publicServer.bind();
             privateServer.bind();
             privateServer.listen();

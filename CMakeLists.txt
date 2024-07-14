@@ -103,6 +103,26 @@ add_executable(pubsub_test test/mros/pubsub_test.cpp)
 target_link_libraries(pubsub_test mros)
 target_include_directories(pubsub_test PRIVATE include)
 
+# Add pose publisher test
+add_executable(pose_publisher_test test/mros/demo1/pose_publisher_test.cpp)
+target_link_libraries(pose_publisher_test mros linalg)
+target_include_directories(pose_publisher_test PRIVATE include)
+
+# Add twist publisher test
+add_executable(twist_publisher_test test/mros/demo1/twist_publisher_test.cpp)
+target_link_libraries(twist_publisher_test mros linalg)
+target_include_directories(twist_publisher_test PRIVATE include)
+
+# Add pose listener test
+add_executable(pose_listener_test test/mros/demo1/pose_listener_test.cpp)
+target_link_libraries(pose_listener_test mros linalg)
+target_include_directories(pose_listener_test PRIVATE include)
+
+# Add twist listener test
+add_executable(twist_listener_test test/mros/demo1/twist_listener_test.cpp)
+target_link_libraries(twist_listener_test mros linalg)
+target_include_directories(twist_listener_test PRIVATE include)
+
 ### SOCKET TESTS ###
 
 # Add socket client test

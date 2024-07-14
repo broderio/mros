@@ -5,7 +5,7 @@
 #include "socket/tcp/server.hpp"
 
 int main() {
-    TCPServer server(8080, 0);
+    TCPServer server(URI(getIPAddr(), 8080), 0);
     TCPConnection connection;
     int res = server.accept(connection);
     if (res < 0) {

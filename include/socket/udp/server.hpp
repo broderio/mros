@@ -20,11 +20,11 @@ class UDPServer
 public:
     UDPServer();
 
-    UDPServer(int port, bool nonBlocking = true);
+    UDPServer(const URI &uri, bool nonBlocking = true);
 
     ~UDPServer();
 
-    int open(int port, bool nonBlocking = true);
+    int open(const URI &uri, bool nonBlocking = true);
 
     int bind();
 

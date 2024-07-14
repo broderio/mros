@@ -47,11 +47,11 @@ class TCPServer {
 public:
     TCPServer();
 
-    TCPServer(int port, bool nonblocking = 1, int maxConnections = 10);
+    TCPServer(const URI &uri, bool nonblocking = 1, int maxConnections = 10);
     
     ~TCPServer();
 
-    int open(int port, bool nonblocking = 1, int maxConnections = 10);
+    int open(const URI &uri, bool nonblocking = 1, int maxConnections = 10);
 
     int bind();
 

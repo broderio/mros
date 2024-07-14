@@ -24,6 +24,7 @@ public:
     geometry_msgs::Quaternion toMsg() const;
 
     float norm() const;
+    static Quaternion fromRPY(const float& roll, const float& pitch, const float& yaw);
     static Quaternion normalize(const Quaternion& q);
     static Quaternion multiply(const Quaternion& q1, const Quaternion& q2);
     static Matrix toRotationMatrix(const Quaternion& q);

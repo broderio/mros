@@ -28,8 +28,8 @@ namespace std_msgs
     std::string Time::toString() const
     {
         std::stringstream ss;
-        ss << "sec:" << sec.data;
-        ss << "nsec:" << nsec.data;
+        ss << "sec: " << sec.data;
+        ss << "\nnsec: " << nsec.data;
         return ss.str();
     }
 

@@ -6,6 +6,8 @@ Vector::Vector() : data() {}
 
 Vector::Vector(size_t size) : data(size) {}
 
+Vector::Vector(size_t size, float val) : data(size, val) {}
+
 Vector::Vector(const Vector& v) : data(v.data) {}
 
 Vector &Vector::operator=(const Vector& rhs) {
@@ -30,8 +32,7 @@ std::vector<float> Vector::getData() const {
 
 float Vector::get(size_t idx) const {
     if (idx >= data.size()) {
-        std::cerr << "Error: index out of bounds." << std::endl;
-        return 0;
+        throw std::out_of_range("Index out of bounds.");
     }
 
     return data[idx];
@@ -39,8 +40,7 @@ float Vector::get(size_t idx) const {
 
 float &Vector::at(size_t idx) {
     if (idx >= data.size()) {
-        std::cerr << "Error: index out of bounds." << std::endl;
-        return data[0];
+        throw std::out_of_range("Index out of bounds.");
     }
 
     return data[idx];
@@ -48,8 +48,7 @@ float &Vector::at(size_t idx) {
 
 void Vector::set(size_t idx, float val) {
     if (idx >= data.size()) {
-        std::cerr << "Error: index out of bounds." << std::endl;
-        return;
+        throw std::out_of_range("Index out of bounds.");
     }
 
     data[idx] = val;
@@ -69,8 +68,7 @@ Vector Vector::operator-() const {
 
 Vector Vector::operator+(const Vector& rhs) const {
     if (data.size() != rhs.data.size()) {
-        std::cerr << "Error: cannot add vectors of different sizes." << std::endl;
-        return Vector();
+        throw std::invalid_argument("Cannot add vectors of different sizes.");
     }
 
     Vector v(data.size());
@@ -91,8 +89,7 @@ Vector Vector::operator+(const float& rhs) const {
 
 Vector Vector::operator-(const Vector& rhs) const {
     if (data.size() != rhs.data.size()) {
-        std::cerr << "Error: cannot subtract vectors of different sizes." << std::endl;
-        return Vector();
+        throw std::invalid_argument("Cannot subtract vectors of different sizes.");
     }
 
     Vector v(data.size());
@@ -113,8 +110,7 @@ Vector Vector::operator-(const float& rhs) const {
 
 Vector Vector::operator*(const Vector& rhs) const {
     if (data.size() != rhs.data.size()) {
-        std::cerr << "Error: cannot multiply vectors of different sizes." << std::endl;
-        return Vector();
+        throw std::invalid_argument("Cannot multiply vectors of different sizes.");
     }
 
     Vector v(data.size());
@@ -135,8 +131,7 @@ Vector Vector::operator*(const float& rhs) const {
 
 Vector Vector::operator/(const Vector& rhs) const {
     if (data.size() != rhs.data.size()) {
-        std::cerr << "Error: cannot divide vectors of different sizes." << std::endl;
-        return Vector();
+        throw std::invalid_argument("Cannot divide vectors of different sizes.");
     }
 
     Vector v(data.size());
@@ -157,8 +152,7 @@ Vector Vector::operator/(const float& rhs) const {
 
 Vector Vector::operator+=(const Vector& rhs) {
     if (data.size() != rhs.data.size()) {
-        std::cerr << "Error: cannot add vectors of different sizes." << std::endl;
-        return *this;
+        throw std::invalid_argument("Cannot add vectors of different sizes.");
     }
 
     for (size_t i = 0; i < data.size(); ++i) {
@@ -177,8 +171,7 @@ Vector Vector::operator+=(const float& rhs) {
 
 Vector Vector::operator-=(const Vector& rhs) {
     if (data.size() != rhs.data.size()) {
-        std::cerr << "Error: cannot subtract vectors of different sizes." << std::endl;
-        return *this;
+        throw std::invalid_argument("Cannot subtract vectors of different sizes.");
     }
 
     for (size_t i = 0; i < data.size(); ++i) {
@@ -197,8 +190,7 @@ Vector Vector::operator-=(const float& rhs) {
 
 Vector Vector::operator*=(const Vector& rhs) {
     if (data.size() != rhs.data.size()) {
-        std::cerr << "Error: cannot multiply vectors of different sizes." << std::endl;
-        return *this;
+        throw std::invalid_argument("Cannot multiply vectors of different sizes.");
     }
 
     for (size_t i = 0; i < data.size(); ++i) {
@@ -217,8 +209,7 @@ Vector Vector::operator*=(const float& rhs) {
 
 Vector Vector::operator/=(const Vector& rhs) {
     if (data.size() != rhs.data.size()) {
-        std::cerr << "Error: cannot divide vectors of different sizes." << std::endl;
-        return *this;
+        throw std::invalid_argument("Cannot divide vectors of different sizes.");
     }
 
     for (size_t i = 0; i < data.size(); ++i) {
@@ -269,8 +260,7 @@ Vector linalg::operator*(const float& lhs, const Vector& rhs) {
 
 float Vector::dot(const Vector& lhs, const Vector& rhs) {
     if (lhs.getSize() != rhs.getSize()) {
-        std::cerr << "Error: cannot take dot product of vectors of different sizes." << std::endl;
-        return 0;
+        throw std::invalid_argument("Cannot take dot product of vectors of different sizes.");
     }
 
     float result = 0;
@@ -283,8 +273,7 @@ float Vector::dot(const Vector& lhs, const Vector& rhs) {
 
 Vector Vector::cross(const Vector& lhs, const Vector& rhs) {
     if (lhs.getSize() != 3 || rhs.getSize() != 3) {
-        std::cerr << "Error: cannot take cross product of vectors that are not 3-dimensional." << std::endl;
-        return Vector();
+        throw std::invalid_argument("Cross product is only defined for 3D vectors.");
     }
 
     std::vector<float> result(3);
@@ -305,8 +294,7 @@ Vector Vector::normalize(const Vector& v) {
 
 float Vector::angle(const Vector& lhs, const Vector& rhs) {
     if (lhs.getSize() != rhs.getSize()) {
-        std::cerr << "Error: cannot calculate angle between vectors of different sizes." << std::endl;
-        return 0;
+        throw std::invalid_argument("Cannot calculate angle between vectors of different sizes.");
     }
 
     return std::acos(Vector::dot(lhs, rhs) / (std::pow(Vector::norm(lhs), 2)));
