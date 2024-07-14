@@ -152,7 +152,9 @@ namespace mros
 
             for (auto &sub : subs)
             {
-                sub.second->send(msg);
+                if (sub.second->send(msg) < 0) {
+                    std::cerr << "Failed to send message to Subscriber" << std::endl;
+                }
             }
         }
     }

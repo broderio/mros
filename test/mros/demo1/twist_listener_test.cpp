@@ -25,15 +25,7 @@ int main() {
         return 1;
     }
 
-    node.spin(true);
-
-    sleep(2000);
-
-    sub->shutdown();
-
-    sleep(2000);
-
-    node.shutdown();
+    node.spin();
 
     return 0;
 }

@@ -246,7 +246,7 @@ void Mediator::deregisterPublisher(const private_msgs::Register &msg, const URI 
     // Check if publisher exists
     if (topicMap[topic].pubs.find(uriPair) == topicMap[topic].pubs.end())
     {
-        std::cerr << "Error: publisher " << uri.toString() << " not found." << std::endl;
+        std::cerr << "Error: publisher " << uriPair.serverURI << " from node " << uriPair.clientURI << " not found." << std::endl;
         return;
     }
 
@@ -293,7 +293,11 @@ void Mediator::deregisterSubscriber(const private_msgs::Register &msg, const URI
     // Check if subscriber exists
     if (topicMap[topic].subs.find(uriPair) == topicMap[topic].subs.end())
     {
-        std::cerr << "Error: subscriber " << uri.toString() << " not found." << std::endl;
+        std::cerr << "Error: subscriber " << uriPair.serverURI << " from node " << uriPair.clientURI << " not found." << std::endl;
+        for (const URIPair &subscriber : topicMap[topic].subs)
+        {
+            std::cout << "Subscriber: " << subscriber.serverURI << " from node " << subscriber.clientURI << std::endl;
+        }
         return;
     }
 
@@ -324,5 +328,5 @@ void Mediator::deregisterSubscriber(const private_msgs::Register &msg, const URI
 
 bool Mediator::URIPair::operator<(const URIPair &other) const
 {
-    return clientURI < other.clientURI || serverURI < other.serverURI;
+    return clientURI < other.clientURI || (clientURI == other.clientURI && serverURI < other.serverURI);
 }

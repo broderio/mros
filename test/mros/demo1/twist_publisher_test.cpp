@@ -32,7 +32,7 @@ int main() {
         msg.twist.angular.z = 0.1 * (i % 6);
         pub->publish(msg);
 
-        sleep(500);
+        sleep(100);
         ++i;
     }
 
