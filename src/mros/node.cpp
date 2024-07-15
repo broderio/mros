@@ -5,6 +5,27 @@ namespace mros
     Node::Node(const std::string &name, const URI &coreURI)
         : name(name), coreURI(coreURI), client(), signalHandler(), spinning(false), shutdownFlag(false)
     {
+        Console::init(name);
+
+        std::string inMsg;
+        URI sender;
+        int attempts = 0;
+        while (inMsg.size() == 0)
+        {
+            if (client.sendTo(std::string(1, PING_MSG), coreURI) < 0) {
+                Console::log(LogLevel::ERROR, "Failed to connect to Mediator");
+                return;
+            }
+            sleep(100);
+            client.receiveFrom(inMsg, MAX_MSG_SIZE, sender);
+
+            if (attempts > 10)
+            {
+                Console::log(LogLevel::ERROR, "Failed to connect to Mediator");
+                throw std::runtime_error("Failed to connect to Mediator");
+            }
+            attempts++;
+        }
     }
 
     Node::~Node()
@@ -77,7 +98,8 @@ namespace mros
             try {
                 runOnce();
             } catch (const std::exception &e) {
-                std::cerr << "Error thrown in Node::run(): " << e.what() << std::endl;
+                // std::cerr << "Error thrown in Node::run(): " << e.what() << std::endl;
+                Console::log(LogLevel::ERROR, "Error thrown in Node::run(): " + std::string(e.what()));
                 return;
             }
         }
@@ -90,32 +112,49 @@ namespace mros
         URI sender;
         if (client.receiveFrom(inMsg, MAX_MSG_SIZE, sender) < 0)
         {
-            std::cerr << "Failed to receive message from Mediator" << std::endl;
+            // std::cerr << "Failed to receive message from Mediator" << std::endl;
+            Console::log(LogLevel::ERROR, "Failed to receive message from Mediator");
         }
 
         // If we have a message, parse it
-        if (inMsg.size() > 0)
+        if (inMsg.size() == 1) {
+            if ((uint8_t)inMsg[0] == PING_MSG) {
+                client.sendTo(std::string(1, PONG_MSG), sender);
+            }
+            else if ((uint8_t)inMsg[0] == PONG_MSG) {
+                // std::cout << "Received PONG from Mediator" << std::endl;
+                Console::log(LogLevel::INFO, "Received PONG from Mediator");
+            }
+        }
+        else if (inMsg.size() > 0)
         {
             uint16_t topicId;
             // Parse message based on topic
             if (Parser::getTopicID(inMsg, topicId))
             {
-
                 private_msgs::Notify notify;
                 private_msgs::Disconnect disconnect;
                 if (topicId == CORE_TOPICS::PUB_NOTIFY || topicId == CORE_TOPICS::SUB_NOTIFY) {
                     if (!Parser::decode(inMsg, notify))
                     {
-                        std::cerr << "Error: Could not decode message" << std::endl;
+                        // std::cerr << "Error: Could not decode message" << std::endl;
+                        Console::log(LogLevel::ERROR, "Could not decode message");
                         return;
                     }
                 }
                 else if (topicId == CORE_TOPICS::PUB_DISCONNECT || topicId == CORE_TOPICS::SUB_DISCONNECT) {
                     if (!Parser::decode(inMsg, disconnect))
                     {
-                        std::cerr << "Error: Could not decode message" << std::endl;
+                        // std::cerr << "Error: Could not decode message" << std::endl;
+                        Console::log(LogLevel::ERROR, "Could not decode message");
                         return;
                     }
+                }
+                else if (topicId == CORE_TOPICS::MED_TERMINATE) {
+                    // std::cout << "Received termination message from Mediator" << std::endl;
+                    Console::log(LogLevel::INFO, "Received termination message from Mediator");
+                    shutdown();
+                    return;
                 }
 
                 switch (topicId)

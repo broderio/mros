@@ -52,7 +52,8 @@ namespace mros
 
             if (publicServer.sendTo(outMsg, uri) < 0)
             {
-                std::cerr << "Failed to send message to Publisher" << std::endl;
+                // std::cerr << "Failed to send message to Publisher" << std::endl;
+                Console::log(LogLevel::ERROR, "Failed to send Request message to Publisher at " + uri.toString());
                 outgoingRequests.push(uri);
             }
             else
@@ -68,7 +69,8 @@ namespace mros
             URI sender;
             if (publicServer.receiveFrom(inMsg, MAX_MSG_SIZE, sender) < 0)
             {
-                std::cerr << "Failed to receive message from Publisher" << std::endl;
+                // std::cerr << "Failed to receive message from Publisher" << std::endl;
+                Console::log(LogLevel::ERROR, "Failed to receive Response message from Publisher at " + sender.toString());
             }
             else if (inMsg.size() > 0 && awaitingResponses.find(sender) != awaitingResponses.end())
             {
@@ -78,13 +80,15 @@ namespace mros
                 private_msgs::Response response;
                 if (!Parser::decode(inMsg, response))
                 {
-                    std::cerr << "Failed to decode message from Publisher" << std::endl;
+                    // std::cerr << "Failed to decode message from Publisher" << std::endl;
+                    Console::log(LogLevel::ERROR, "Failed to decode Response message from Publisher at " + sender.toString());
                 }
                 else if (response.topic.data == topic && response.error.data.size() == 0)
                 {
                     if (response.protocol.data != "TCP")
                     {
-                        std::cerr << "Unsupported protocol" << std::endl;
+                        // std::cerr << "Unsupported protocol" << std::endl;
+                        Console::log(LogLevel::WARN, "Unsupported protocol in Response message from Publisher at " + sender.toString());
                     }
                     else
                     {
@@ -114,9 +118,14 @@ namespace mros
             }
             else {
                 int ret = pair.second->connect();
-                if (ret < 0 || ret == 1)
+                if (ret < 0)
                 {
-                    std::cerr << "Failed to connect to Publisher" << std::endl;
+                    // std::cerr << "Failed to connect to Publisher" << std::endl;
+                    Console::log(LogLevel::ERROR, "Failed to connect to Publisher at " + pair.first.toString());
+                    awaitingConnect.push(pair);
+                }
+                else if (ret == 1) {
+                    Console::log(LogLevel::WARN, "Connection to Publisher at " + pair.first.toString() + " is pending");
                     awaitingConnect.push(pair);
                 }
                 else if (ret == 0  || ret == 2)
@@ -138,7 +147,8 @@ namespace mros
             std::string inMsg;
             if (pub.second->receive(inMsg, MAX_MSG_SIZE) < 0)
             {
-                std::cerr << "Failed to receive message from Publisher" << std::endl;
+                // std::cerr << "Failed to receive message from Publisher" << std::endl;
+                Console::log(LogLevel::ERROR, "Failed to receive message from Publisher at " + pub.first.toString());
             }
             else if (inMsg.size() > 0)
             {
@@ -147,6 +157,7 @@ namespace mros
                     msgQueue.pop();
                 }
                 msgQueue.push(inMsg);
+                Console::log(LogLevel::INFO, "Received message");
             }
         }
 

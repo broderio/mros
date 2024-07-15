@@ -77,7 +77,8 @@ add_library(mros STATIC src/mros/mediator.cpp
                         src/mros/node.cpp
                         src/mros/publisher.cpp
                         src/mros/subscriber.cpp
-                        src/mros/signalHandler.cpp)
+                        src/mros/signalHandler.cpp
+                        src/mros/console.cpp)
 target_include_directories(mros PRIVATE include)
 target_link_libraries(mros socketlib smemlib utils messagelib mros_priv_messages)
 
@@ -122,6 +123,11 @@ target_include_directories(pose_listener_test PRIVATE include)
 add_executable(twist_listener_test test/mros/demo1/twist_listener_test.cpp)
 target_link_libraries(twist_listener_test mros linalg)
 target_include_directories(twist_listener_test PRIVATE include)
+
+# Add console test
+add_executable(console_test test/mros/console_test.cpp)
+target_link_libraries(console_test mros)
+target_include_directories(console_test PRIVATE include)
 
 ### SOCKET TESTS ###
 

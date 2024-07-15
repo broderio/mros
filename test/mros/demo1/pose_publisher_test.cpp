@@ -31,8 +31,6 @@ private:
 };
 
 void PosePublisher::twistCallback(const geometry_msgs::TwistStamped &msg) {
-    std::cout << "Received twist message" << std::endl;
-
     // Rotate velocity vector by current orientation
     linalg::Matrix rotMat = linalg::Quaternion::toRotationMatrix(linalg::Quaternion(currPose.pose.orientation));
     linalg::Vector vel(4, 0);

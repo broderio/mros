@@ -4,17 +4,40 @@ using namespace mros;
 
 Mediator::Mediator() : topicMap(), server(URI("0.0.0.0", MEDIATOR_PORT_NUM))
 {
+    Console::init("mediator");
     server.bind();
+    
     std::vector<std::string> ipAddrs = getLocalIPv4Addresses();
-    std::cout << "Mediator hosting on: \n";
+    std::string ipList = "[";
     for (const std::string &ip : ipAddrs)
     {
-        std::cout << '\t' << ip << ":" << MEDIATOR_PORT_NUM << "\n";
+        ipList += ip;
+        if (ip != ipAddrs.back())
+        {
+            ipList += ", ";
+        }
     }
+    ipList += "]";
+    Console::log(LogLevel::INFO, "Mediator started on IP addresses: " + ipList);
 }
 
 Mediator::~Mediator()
 {
+    std_msgs::String msg;
+    msg.data = "Mediator shutting down";
+    std::string outMsg = Parser::encode(msg, CORE_TOPICS::MED_TERMINATE);
+
+    for (auto &topic : topicMap)
+    {
+        for (const URIPair &publisher : topic.second.pubs)
+        {
+            server.sendTo(outMsg, publisher.clientURI);
+        }
+        for (const URIPair &subscriber : topic.second.subs)
+        {
+            server.sendTo(outMsg, subscriber.clientURI);
+        }
+    }
 }
 
 void Mediator::spin()
@@ -33,11 +56,21 @@ void Mediator::run()
         int err = server.receiveFrom(inMsg, 1024, clientURI);
         if (err < 0)
         {
-            std::cerr << "Error: server receiveFrom failed." << std::endl;
+            Console::log(LogLevel::ERROR, "UDPServer::receiveFrom failed.");
             return;
         }
         else if (inMsg.size() == 0) {
             continue;
+        }
+        else if (inMsg.size() == 1) {
+            if ((uint8_t)inMsg[0] == PING_MSG) {
+                server.sendTo(std::string(1, PONG_MSG), clientURI);
+                continue;
+            }
+            else if ((uint8_t)inMsg[0] == PONG_MSG) {
+                Console::log(LogLevel::INFO, "Received PONG from " + clientURI.toString());
+                continue;
+            }
         }
 
         Header header;
@@ -62,7 +95,7 @@ void Mediator::run()
             deregisterSubscriber(registerMsg, clientURI);
             break;
         default:
-            std::cerr << "Error: unknown topic ID " << topicId << std::endl;
+            Console::log(LogLevel::ERROR, "Unknown topic ID: " + std::to_string(topicId));
             return;
         }
     }
@@ -92,14 +125,14 @@ void Mediator::registerPublisher(const private_msgs::Register &msg, const URI &c
         if (topicMap[topic].msgType != msgType)
         {
             // Topic exists with different message type
-            error = "Error: topic " + topic + " already exists with different message type " + topicMap[topic].msgType;
-            std::cerr << error << std::endl;
+            error = "Topic " + topic + " already exists with different message type " + topicMap[topic].msgType;
+            Console::log(LogLevel::ERROR, error);
         }
         else if (topicMap[topic].pubs.find(uriPair) != topicMap[topic].pubs.end())
         {
             // Publisher already exists
-            error = "Error: publisher " + uri.toString() + " already exists for topic " + topic;
-            std::cerr << error << std::endl;
+            error = "Publisher " + uri.toString() + " already exists for topic " + topic;
+            Console::log(LogLevel::ERROR, error);
         }
     }
 
@@ -108,7 +141,7 @@ void Mediator::registerPublisher(const private_msgs::Register &msg, const URI &c
     {
         // Add publisher to topic
         topicMap[topic].pubs.insert(uriPair);
-        std::cout << "Registered publisher " << uriPair.serverURI << " from node " << uriPair.clientURI << " on topic " << topic << std::endl;
+        Console::log(LogLevel::INFO, "Registered publisher " + uriPair.serverURI.toString() + " from node " + uriPair.clientURI.toString() + " on topic " + topic);
 
         // Add existing subscribers to response
         for (const URIPair &subscriber : topicMap[topic].subs)
@@ -172,14 +205,14 @@ void Mediator::registerSubscriber(const private_msgs::Register &msg, const URI &
         if (topicMap[topic].msgType != msgType)
         {
             // Topic exists with different message type
-            error = "Error: topic " + topic + " already exists with different message type " + topicMap[topic].msgType;
-            std::cerr << error << std::endl;
+            error = "Topic " + topic + " already exists with different message type " + topicMap[topic].msgType;
+            Console::log(LogLevel::ERROR, error);
         }
         else if (topicMap[topic].subs.find(uriPair) != topicMap[topic].subs.end())
         {
             // Subscriber already exists
-            error = "Error: subscriber " + uri.toString() + " already exists for topic " + topic;
-            std::cerr << error << std::endl;
+            error = "Subscriber " + uri.toString() + " already exists for topic " + topic;
+            Console::log(LogLevel::ERROR, error);
         }
     }
 
@@ -188,7 +221,7 @@ void Mediator::registerSubscriber(const private_msgs::Register &msg, const URI &
     {
         // Add subscriber to topic
         topicMap[topic].subs.insert(uriPair);
-        std::cout << "Registered subscriber " << uriPair.serverURI << " from node " << uriPair.clientURI << " on topic " << topic << std::endl;
+        Console::log(LogLevel::INFO, "Registered subscriber " + uriPair.serverURI.toString() + " from node " + uriPair.clientURI.toString() + " on topic " + topic);
 
         // Add existing publishers to response
         for (const URIPair &publisher : topicMap[topic].pubs)
@@ -239,20 +272,20 @@ void Mediator::deregisterPublisher(const private_msgs::Register &msg, const URI 
     // Check if topic exists
     if (topicMap.find(topic) == topicMap.end())
     {
-        std::cerr << "Error: topic " << topic << " not found." << std::endl;
+        Console::log(LogLevel::ERROR, "Topic " + topic + " not found.");
         return;
     }
 
     // Check if publisher exists
     if (topicMap[topic].pubs.find(uriPair) == topicMap[topic].pubs.end())
     {
-        std::cerr << "Error: publisher " << uriPair.serverURI << " from node " << uriPair.clientURI << " not found." << std::endl;
+        Console::log(LogLevel::ERROR, "Publisher " + uriPair.serverURI.toString() + " from node " + uriPair.clientURI.toString() + " not found.");
         return;
     }
 
     // Erase publisher from topic
     topicMap[topic].pubs.erase(uriPair);
-    std::cout << "Deregistered publisher " << uriPair.serverURI << " from node " << uriPair.clientURI << " on topic " << topic << std::endl;
+    Console::log(LogLevel::INFO, "Deregistered publisher " + uriPair.serverURI.toString() + " from node " + uriPair.clientURI.toString() + " on topic " + topic);
 
     Time time;
     int t = getTimeNano();
@@ -286,24 +319,20 @@ void Mediator::deregisterSubscriber(const private_msgs::Register &msg, const URI
     // Check if topic exists
     if (topicMap.find(topic) == topicMap.end())
     {
-        std::cerr << "Error: topic " << topic << " not found." << std::endl;
+        Console::log(LogLevel::ERROR, "Topic " + topic + " not found.");
         return;
     }
 
     // Check if subscriber exists
     if (topicMap[topic].subs.find(uriPair) == topicMap[topic].subs.end())
     {
-        std::cerr << "Error: subscriber " << uriPair.serverURI << " from node " << uriPair.clientURI << " not found." << std::endl;
-        for (const URIPair &subscriber : topicMap[topic].subs)
-        {
-            std::cout << "Subscriber: " << subscriber.serverURI << " from node " << subscriber.clientURI << std::endl;
-        }
+        Console::log(LogLevel::ERROR, "Subscriber " + uriPair.serverURI.toString() + " from node " + uriPair.clientURI.toString() + " not found.");
         return;
     }
 
     // Erase subscriber from topic
     topicMap[topic].subs.erase(uriPair);
-    std::cout << "Deregistered subscriber " << uriPair.serverURI << " from node " << uriPair.clientURI << " on topic " << topic << std::endl;
+    Console::log(LogLevel::INFO, "Deregistered subscriber " + uriPair.serverURI.toString() + " from node " + uriPair.clientURI.toString() + " on topic " + topic);
 
     Time time;
     int t = getTimeNano();

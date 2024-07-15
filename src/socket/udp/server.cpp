@@ -20,7 +20,7 @@ int UDPServer::open(const URI &uri, bool nonblocking)
 {
     if (opened)
     {
-        std::cerr << "UDPServer error: already open" << std::endl;
+        //std::cerr << "UDPServer error: already open" << std::endl;
         return -1;
     }
 
@@ -28,14 +28,14 @@ int UDPServer::open(const URI &uri, bool nonblocking)
     server.sin_port = htons(uri.port);
     if (inet_pton(AF_INET, uri.ip.c_str(), &(server.sin_addr)) <= 0) 
     {
-        std::cerr << "UDPServer error: Invalid address/ Address not supported" << std::endl;
+        //std::cerr << "UDPServer error: Invalid address/ Address not supported" << std::endl;
         return -1;
     }
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0)
     {
-        std::cerr << "UDPServer error: failed to create socket" << std::endl;
+        //std::cerr << "UDPServer error: failed to create socket" << std::endl;
         return -1;
     }
 
@@ -43,7 +43,7 @@ int UDPServer::open(const URI &uri, bool nonblocking)
     {
         if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
         {
-            std::cerr << "UDPServer error: failed to set non-blocking" << std::endl;
+            //std::cerr << "UDPServer error: failed to set non-blocking" << std::endl;
             ::close(fd);
             return -1;
         }
@@ -57,19 +57,19 @@ int UDPServer::bind()
 {
     if (!opened)
     {
-        std::cerr << "UDPServer error: not open" << std::endl;
+        //std::cerr << "UDPServer error: not open" << std::endl;
         return -1;
     }
 
     if (bound)
     {
-        std::cerr << "UDPServer error: already bound" << std::endl;
+        //std::cerr << "UDPServer error: already bound" << std::endl;
         return -1;
     }
 
     if (::bind(fd, (struct sockaddr *)&server, sizeof(server)) < 0)
     {
-        perror("UDPServer: bind failed");
+        //perror("UDPServer: bind failed");
         ::close(fd);
         return -1;
     }
@@ -78,7 +78,7 @@ int UDPServer::bind()
     socklen_t len = sizeof(server);
     if (getsockname(fd, (struct sockaddr *)&server, &len) == -1)
     {
-        perror("getsockname");
+        //perror("getsockname");
         ::close(fd);
         return -1;
     }
@@ -91,7 +91,7 @@ int UDPServer::sendTo(const std::string &message, const URI &clientURI)
 {
     if (!bound)
     {
-        std::cerr << "UDPServer error: not bound" << std::endl;
+        //std::cerr << "UDPServer error: not bound" << std::endl;
         return -1;
     }
 
@@ -100,15 +100,15 @@ int UDPServer::sendTo(const std::string &message, const URI &clientURI)
     clientAddr.sin_port = htons(clientURI.port);
     if (inet_aton(clientURI.ip.c_str(), &clientAddr.sin_addr) == 0)
     {
-        std::cerr << "UDPServer error: invalid address" << std::endl;
+        //std::cerr << "UDPServer error: invalid address" << std::endl;
         return -1;
     }
 
     int bytesSent = sendto(fd, message.c_str(), message.size(), 0, (struct sockaddr *)&clientAddr, sizeof(clientAddr));
     if (bytesSent < 0)
     {
-        // std::cerr << "UDPClient error: send failed" << std::endl;
-        perror("sendto");
+        // //std::cerr << "UDPClient error: send failed" << std::endl;
+        //perror("sendto");
         return -1;
     }
 
@@ -119,7 +119,7 @@ int UDPServer::receiveFrom(std::string &message, size_t bytes, URI &clientURI)
 {
     if (!bound)
     {
-        std::cerr << "UDPServer error: not bound" << std::endl;
+        //std::cerr << "UDPServer error: not bound" << std::endl;
         return -1;
     }
 
@@ -136,7 +136,7 @@ int UDPServer::receiveFrom(std::string &message, size_t bytes, URI &clientURI)
             return 0;
         }
         else {
-            perror("recvfrom");
+            //perror("recvfrom");
             return -1;
         }
     }

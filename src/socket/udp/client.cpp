@@ -15,14 +15,14 @@ int UDPClient::open(bool nonblocking)
 {
     if (opened)
     {
-        std::cerr << "UDPClient error: already open" << std::endl;
+        //std::cerr << "UDPClient error: already open" << std::endl;
         return -1;
     }
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0)
     {
-        std::cerr << "UDPClient error: socket creation failed" << std::endl;
+        //std::cerr << "UDPClient error: socket creation failed" << std::endl;
         return -1;
     }
 
@@ -30,7 +30,7 @@ int UDPClient::open(bool nonblocking)
     {
         if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
         {
-            std::cerr << "UDPClient error: failed to set non-blocking" << std::endl;
+            //std::cerr << "UDPClient error: failed to set non-blocking" << std::endl;
             ::close(fd);
             return -1;
         }
@@ -44,7 +44,7 @@ int UDPClient::sendTo(const std::string &message, const URI &serverURI)
 {
     if (!opened)
     {
-        std::cerr << "UDPClient error: not open" << std::endl;
+        //std::cerr << "UDPClient error: not open" << std::endl;
         return -1;
     }
 
@@ -54,15 +54,15 @@ int UDPClient::sendTo(const std::string &message, const URI &serverURI)
 
     if (inet_aton(serverURI.ip.c_str(), &server.sin_addr) == 0)
     {
-        std::cerr << "UDPClient error: invalid server address" << std::endl;
+        //std::cerr << "UDPClient error: invalid server address" << std::endl;
         return -1;
     }
 
     int bytesSent = sendto(fd, message.c_str(), message.size(), 0, (struct sockaddr *)&server, sizeof(server));
     if (bytesSent < 0)
     {
-        // std::cerr << "UDPClient error: send failed" << std::endl;
-        perror("sendto");
+        // //std::cerr << "UDPClient error: send failed" << std::endl;
+        //perror("sendto");
         return -1;
     }
 
@@ -73,7 +73,7 @@ int UDPClient::receiveFrom(std::string &message, size_t bytes, URI &serverURI)
 {
     if (!opened)
     {
-        std::cerr << "UDPClient error: not open" << std::endl;
+        //std::cerr << "UDPClient error: not open" << std::endl;
         return -1;
     }
 
@@ -90,7 +90,7 @@ int UDPClient::receiveFrom(std::string &message, size_t bytes, URI &serverURI)
             return 0;
         }
         else {
-            std::cerr << "UDPClient error: receive failed" << std::endl;
+            //std::cerr << "UDPClient error: receive failed" << std::endl;
             return -1;
         }
     }

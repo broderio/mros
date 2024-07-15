@@ -14,7 +14,7 @@ TCPClient::~TCPClient() {
 
 int TCPClient::open(const URI &uri, bool nonblocking) {
     if (opened) {
-        std::cerr << "TCPClient error: already open" << std::endl;
+        //std::cerr << "TCPClient error: already open" << std::endl;
         return -1;
     }
 
@@ -26,7 +26,7 @@ int TCPClient::open(const URI &uri, bool nonblocking) {
 
     // inet_aton() converts the address from a string to a binary representation
     if (inet_aton(uri.ip.c_str(), &server.sin_addr) == 0) {
-        std::cerr << "TCPClient error: invalid address" << std::endl;
+        //std::cerr << "TCPClient error: invalid address" << std::endl;
         return -1;
     }
 
@@ -35,7 +35,7 @@ int TCPClient::open(const URI &uri, bool nonblocking) {
     // SOCK_STREAM specifies that we are using the TCP protocol
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
-        std::cerr << "TCPClient error: failed to create socket" << std::endl;
+        //std::cerr << "TCPClient error: failed to create socket" << std::endl;
         return -1;
     }
 
@@ -43,13 +43,13 @@ int TCPClient::open(const URI &uri, bool nonblocking) {
     if (nonblocking) {
         int flags = fcntl(fd, F_GETFL, 0);
         if (flags < 0) {
-            std::cerr << "TCPClient error: failed to get flags" << std::endl;
+            //std::cerr << "TCPClient error: failed to get flags" << std::endl;
             ::close(fd);
             return -1;
         }
         flags |= O_NONBLOCK;
         if (fcntl(fd, F_SETFL, flags) < 0) {
-            std::cerr << "TCPClient error: failed to set flags" << std::endl;
+            //std::cerr << "TCPClient error: failed to set flags" << std::endl;
             ::close(fd);
             return -1;
         }
@@ -63,7 +63,7 @@ int TCPClient::open(const URI &uri, bool nonblocking) {
 // TODO: Add comments for this function
 int TCPClient::connect(int timeout) {
     if (connected) {
-        std::cerr << "TCPClient error: already connected" << std::endl;
+        //std::cerr << "TCPClient error: already connected" << std::endl;
         return -1;
     }
 
@@ -75,7 +75,7 @@ int TCPClient::connect(int timeout) {
             connected = true;
             return 2;
         }
-        perror("TCPClient connect");
+        //perror("TCPClient connect");
         return -1;
     }
     connected = true;
@@ -85,14 +85,14 @@ int TCPClient::connect(int timeout) {
 int TCPClient::send(const std::string& message) {
     // If a connection to the server has not been made yet
     if (!connected) {
-        std::cerr << "TCPClient error: not connected" << std::endl;
+        //std::cerr << "TCPClient error: not connected" << std::endl;
         return -1;
     }
 
     // Send the message
     if (::send(fd, message.c_str(), message.size(), 0) < 0) {
         close();
-        std::cerr << "TCPClient error: send failed" << std::endl;
+        //std::cerr << "TCPClient error: send failed" << std::endl;
         return -1;
     }
     return 0;
@@ -101,7 +101,7 @@ int TCPClient::send(const std::string& message) {
 int TCPClient::receive(std::string& message, size_t bytes) {
     // If a connection to the server has not been made yet
     if (!connected) {
-        std::cerr << "TCPClient error: not connected" << std::endl;
+        //std::cerr << "TCPClient error: not connected" << std::endl;
         return -1;
     }
 
@@ -114,7 +114,7 @@ int TCPClient::receive(std::string& message, size_t bytes) {
             // No data available to read
             return 0;
         } else {
-            perror("TCPClient error: receive failed");
+            //perror("TCPClient error: receive failed");
             return -1;
         }
     }

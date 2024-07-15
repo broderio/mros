@@ -18,7 +18,7 @@ int TCPServer::open(const URI &uri, bool nonblocking, int maxConnections)
 {
     if (opened)
     {
-        std::cerr << "TCPServer error: already open" << std::endl;
+        //std::cerr << "TCPServer error: already open" << std::endl;
         return -1;
     }
 
@@ -30,7 +30,7 @@ int TCPServer::open(const URI &uri, bool nonblocking, int maxConnections)
 
     if (inet_pton(AF_INET, uri.ip.c_str(), &(server.sin_addr)) <= 0)
     {
-        std::cerr << "TCPServer error: Invalid address/ Address not supported" << std::endl;
+        //std::cerr << "TCPServer error: Invalid address/ Address not supported" << std::endl;
         return -1;
     }
 
@@ -40,7 +40,7 @@ int TCPServer::open(const URI &uri, bool nonblocking, int maxConnections)
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0)
     {
-        std::cerr << "TCPServer error: failed to create socket" << std::endl;
+        //std::cerr << "TCPServer error: failed to create socket" << std::endl;
         return -1;
     }
 
@@ -50,14 +50,14 @@ int TCPServer::open(const URI &uri, bool nonblocking, int maxConnections)
         int flags = fcntl(fd, F_GETFL, 0);
         if (flags < 0)
         {
-            std::cerr << "TCPServer error: failed to get flags" << std::endl;
+            //std::cerr << "TCPServer error: failed to get flags" << std::endl;
             ::close(fd);
             return -1;
         }
         flags |= O_NONBLOCK;
         if (fcntl(fd, F_SETFL, flags) < 0)
         {
-            std::cerr << "TCPServer error: failed to set flags" << std::endl;
+            //std::cerr << "TCPServer error: failed to set flags" << std::endl;
             ::close(fd);
             return -1;
         }
@@ -73,20 +73,20 @@ int TCPServer::bind()
 {
     if (!opened)
     {
-        std::cerr << "TCPServer error: not open" << std::endl;
+        //std::cerr << "TCPServer error: not open" << std::endl;
         return -1;
     }
 
     if (bound)
     {
-        std::cerr << "TCPServer error: already bound" << std::endl;
+        //std::cerr << "TCPServer error: already bound" << std::endl;
         return 0;
     }
 
     // Bind the socket to the address and port
     if (::bind(fd, (struct sockaddr *)&server, sizeof(server)) < 0)
     {
-        std::cerr << "TCPServer error: bind failed" << std::endl;
+        //std::cerr << "TCPServer error: bind failed" << std::endl;
         ::close(fd);
         return -1;
     }
@@ -96,7 +96,7 @@ int TCPServer::bind()
     socklen_t len = sizeof(server);
     if (getsockname(fd, (struct sockaddr *)&server, &len) == -1)
     {
-        perror("getsockname");
+        //perror("getsockname");
         ::close(fd);
         return -1;
     }
@@ -108,20 +108,20 @@ int TCPServer::listen()
 {
     if (!bound)
     {
-        std::cerr << "TCPServer error: not bound" << std::endl;
+        //std::cerr << "TCPServer error: not bound" << std::endl;
         return -1;
     }
 
     if (listening)
     {
-        std::cerr << "TCPServer error: already listening" << std::endl;
+        //std::cerr << "TCPServer error: already listening" << std::endl;
         return 0;
     }
 
     // Listen for incoming connections
     if (::listen(fd, maxConnections) < 0)
     {
-        std::cerr << "TCPServer error: listen failed" << std::endl;
+        //std::cerr << "TCPServer error: listen failed" << std::endl;
         ::close(fd);
         return -1;
     }
@@ -134,14 +134,14 @@ int TCPServer::accept(TCPConnection &connection)
 {
     if (!listening)
     {
-        std::cerr << "TCPServer error: not listening" << std::endl;
+        //std::cerr << "TCPServer error: not listening" << std::endl;
         return -1;
     }
 
     // If maximum number of connections has been reached
     if (numConnections >= maxConnections)
     {
-        std::cerr << "TCPServer error: maximum number of connections reached" << std::endl;
+        //std::cerr << "TCPServer error: maximum number of connections reached" << std::endl;
         return -1;
     }
 
@@ -164,8 +164,8 @@ int TCPServer::accept(TCPConnection &connection)
         // Otherwise, there was an error
         else
         {
-            // std::cerr << "TCPServer error: accept failed" << std::endl;
-            perror("TCPServer accept");
+            // //std::cerr << "TCPServer error: accept failed" << std::endl;
+            //perror("TCPServer accept");
             return -1;
         }
     }
@@ -176,14 +176,14 @@ int TCPServer::accept(TCPConnection &connection)
         int flags = fcntl(client_fd, F_GETFL, 0);
         if (flags < 0)
         {
-            std::cerr << "TCPServer error: failed to get flags" << std::endl;
+            //std::cerr << "TCPServer error: failed to get flags" << std::endl;
             ::close(client_fd);
             return -1;
         }
         flags |= O_NONBLOCK;
         if (fcntl(client_fd, F_SETFL, flags) < 0)
         {
-            std::cerr << "TCPServer error: failed to set flags" << std::endl;
+            //std::cerr << "TCPServer error: failed to set flags" << std::endl;
             ::close(client_fd);
             return -1;
         }
@@ -246,14 +246,14 @@ int TCPConnection::send(const std::string &message)
     // If the connection is closed (i.e. this object was not created by a server)
     if (!opened)
     {
-        std::cerr << "TCPConnection error: connection is closed" << std::endl;
+        //std::cerr << "TCPConnection error: connection is closed" << std::endl;
         return -1;
     }
 
     // Send the message
     if (::send(fd, message.c_str(), message.size(), 0) < 0)
     {
-        std::cerr << "TCPConnection error: send failed" << std::endl;
+        //std::cerr << "TCPConnection error: send failed" << std::endl;
         return -1;
     }
     return 0;
@@ -264,7 +264,7 @@ int TCPConnection::receive(std::string &message, size_t bytes)
     // If the connection is closed (i.e. this object was not created by a server)
     if (!opened)
     {
-        std::cerr << "TCPConnection error: connection is closed" << std::endl;
+        //std::cerr << "TCPConnection error: connection is closed" << std::endl;
         message = "";
         return -1;
     }
@@ -282,7 +282,7 @@ int TCPConnection::receive(std::string &message, size_t bytes)
         }
         else
         {
-            perror("TCPClient error: receive failed");
+            //perror("TCPClient error: receive failed");
             return -1;
         }
     }

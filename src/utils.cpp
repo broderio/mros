@@ -25,11 +25,39 @@ void sleep(int milliseconds) {
     std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
 }
 
-int getTimeMs() {
+std::string DateTime::toString() const {
+    std::string year = std::to_string(this->year);
+    // Pad month, day, hour, minute, second with 0 if less than 10
+    std::string month = this->month < 10 ? "0" + std::to_string(this->month) : std::to_string(this->month);
+    std::string day = this->day < 10 ? "0" + std::to_string(this->day) : std::to_string(this->day);
+    std::string hour = this->hour < 10 ? "0" + std::to_string(this->hour) : std::to_string(this->hour);
+    std::string minute = this->minute < 10 ? "0" + std::to_string(this->minute) : std::to_string(this->minute);
+    std::string second = this->second < 10 ? "0" + std::to_string(this->second) : std::to_string(this->second);
+
+    return year + "-" + month + "-" + day + "_" + hour + ":" + minute + ":" + second;
+}
+
+DateTime getDateTime() {
+    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+    std::tm now_tm = *std::localtime(&now_c);
+
+    DateTime dt;
+    dt.year = now_tm.tm_year + 1900;
+    dt.month = now_tm.tm_mon + 1;
+    dt.day = now_tm.tm_mday;
+    dt.hour = now_tm.tm_hour;
+    dt.minute = now_tm.tm_min;
+    dt.second = now_tm.tm_sec;
+
+    return dt;
+}
+
+int64_t getTimeMilli() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
-int getTimeNano() {
+int64_t getTimeNano() {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 

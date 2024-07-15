@@ -41,7 +41,8 @@ namespace mros
             URI sender;
             if (publicServer.receiveFrom(inMsg, MAX_MSG_SIZE, sender) < 0)
             {
-                std::cerr << "Error receiving message from Subscriber" << std::endl;
+                // std::cerr << "Error receiving message from Subscriber" << std::endl;
+                Console::log(LogLevel::ERROR, "UDPServer::receiveFrom() failed");
             }
             else if (inMsg.size() > 0 && awaitingRequests.find(sender) != awaitingRequests.end())
             {
@@ -51,13 +52,15 @@ namespace mros
                 private_msgs::Request request;
                 if (!Parser::decode(inMsg, request))
                 {
-                    std::cerr << "Failed to decode message from Subscriber" << std::endl;
+                    // std::cerr << "Failed to decode message from Subscriber" << std::endl;
+                    Console::log(LogLevel::ERROR, "Failed to decode Request message from Subscriber");
                 }
                 else if (request.topic.data == topic)
                 {
                     if (request.protocol.data != "TCP")
                     {
-                        std::cerr << "Unsupported protocol" << std::endl;
+                        // std::cerr << "Unsupported protocol" << std::endl;
+                        Console::log(LogLevel::WARN, "Unsupported protocol in Request message from Subscriber at " + sender.toString());
                     }
                     else
                     {
@@ -85,7 +88,8 @@ namespace mros
 
             if (publicServer.sendTo(outMsg, uri) < 0)
             {
-                std::cerr << "Failed to send response to Subscriber" << std::endl;
+                // std::cerr << "Failed to send response to Subscriber" << std::endl;
+                Console::log(LogLevel::ERROR, "Failed to send Response message to Subscriber at " + uri.toString());
                 outgoingResponses.push(uri);
             }
             else
@@ -98,12 +102,16 @@ namespace mros
         if (awaitingAccept.size() > 0) 
         {
             std::shared_ptr<TCPConnection> connection = std::make_shared<TCPConnection>();
-            if (privateServer.accept(*connection) != 0)
+            int ret = privateServer.accept(*connection);
+            if (ret < 0)
             {
-                std::cerr << "Error accepting connection from Subscriber" << std::endl;
+                // std::cerr << "Error accepting connection from Subscriber" << std::endl;
+                Console::log(LogLevel::ERROR, "TCPServer::accept() failed");
             }
-            // This is the TCP Client's URI not the Subscriber's public URI
-            else{
+            else if (ret > 0) {
+                Console::log(LogLevel::WARN, "TCPServer::accept() would block");
+            }
+            else {
                 awaitingURI.push(connection);
             }
         }
@@ -116,7 +124,8 @@ namespace mros
             std::string inMsg;
             if (connection->receive(inMsg, MAX_MSG_SIZE) < 0)
             {
-                std::cerr << "Error receiving message from Subscriber" << std::endl;
+                // std::cerr << "Error receiving message from Subscriber" << std::endl;
+                Console::log(LogLevel::ERROR, "TCPConnection::receive() failed");
                 awaitingURI.push(connection);
             }
             else if (inMsg.size() > 0)
@@ -124,7 +133,8 @@ namespace mros
                 private_msgs::URIStamped uriMsg;
                 if (!Parser::decode(inMsg, uriMsg))
                 {
-                    std::cerr << "Failed to decode message from Subscriber" << std::endl;
+                    // std::cerr << "Failed to decode message from Subscriber" << std::endl;
+                    Console::log(LogLevel::ERROR, "Failed to decode URIStamped message from Subscriber at " + connection->getClientURI().toString());
                 }
                 else
                 {
@@ -150,10 +160,12 @@ namespace mros
             msgQueue.pop();
             msgQueueMutex.unlock();
 
+            Console::log(LogLevel::INFO, "Publishing message to " + std::to_string(subs.size()) + " subscribers");
             for (auto &sub : subs)
             {
                 if (sub.second->send(msg) < 0) {
-                    std::cerr << "Failed to send message to Subscriber" << std::endl;
+                    // std::cerr << "Failed to send message to Subscriber" << std::endl;
+                    Console::log(LogLevel::ERROR, "Failed to send message to Subscriber at " + sub.first.toString());
                 }
             }
         }

@@ -4,6 +4,9 @@
 
 #define MAX_MSG_SIZE 2048
 
+#define PING_MSG 0xAB
+#define PONG_MSG 0xBA
+
 enum CORE_TOPICS
 {
     SUB_REGISTER = 80,
@@ -16,5 +19,6 @@ enum CORE_TOPICS
     PUB_DISCONNECT,
     SUB_REQUEST,
     PUB_RESPONSE,
-    SUB_RESPONSE
+    SUB_RESPONSE,
+    MED_TERMINATE
 };

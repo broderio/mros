@@ -25,9 +25,23 @@ std::ostream &operator<<(std::ostream &os, const URI &uri);
 
 void sleep(int milliseconds);
 
-int getTimeMs();
+struct DateTime {
+    int year;
+    int month;
+    int day;
+    int hour;
+    int minute;
+    int second;
+    int millisecond;
 
-int getTimeNano();
+    std::string toString() const;
+};
+
+DateTime getDateTime();
+
+int64_t getTimeMilli();
+
+int64_t getTimeNano();
 
 float degToRad(float deg);
 

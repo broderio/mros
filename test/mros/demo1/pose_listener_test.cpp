@@ -1,5 +1,7 @@
 #include "mros/node.hpp"
 #include "mros/subscriber.hpp"
+#include "mros/console.hpp"
+
 #include "utils.hpp"
 
 #include "messages/geometry_msgs/pose.hpp"
@@ -15,7 +17,14 @@ int main() {
     mros::Node node("pose_listener", uri);
 
     std::function<void(const geometry_msgs::PoseStamped&)> callback = [](const geometry_msgs::PoseStamped &msg) {
-        std::cout << msg << std::endl;
+        std::string x = std::to_string(msg.pose.position.x.data);
+        std::string y = std::to_string(msg.pose.position.y.data);
+        std::string z = std::to_string(msg.pose.position.z.data);
+        std::string qx = std::to_string(msg.pose.orientation.x.data);
+        std::string qy = std::to_string(msg.pose.orientation.y.data);
+        std::string qz = std::to_string(msg.pose.orientation.z.data);
+        std::string qw = std::to_string(msg.pose.orientation.w.data);
+        mros::Console::log(mros::LogLevel::DEBUG, "xyz: [" + x + ", " + y + ", " + z + "], q: [" + qx + ", " + qy + ", " + qz + ", " + qw + "]");
     };
 
      std::shared_ptr<mros::Subscriber> sub = node.subscribe("pose_topic", 10, callback);

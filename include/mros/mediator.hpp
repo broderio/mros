@@ -28,6 +28,7 @@
 
 #include "mros/common.hpp"
 #include "mros/signalHandler.hpp"
+#include "mros/console.hpp"
 
 namespace mros
 {
