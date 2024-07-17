@@ -22,7 +22,7 @@ Vector::Vector(const std::vector<float>& data) : data(data) {}
 
 Vector::Vector(const geometry_msgs::Vector3& v) : data({v.x.data, v.y.data, v.z.data}) {}
 
-geometry_msgs::Vector3 Vector::toVector3() const {
+geometry_msgs::Vector3 Vector::toMsg() const {
     return geometry_msgs::Vector3(data[0], data[1], data[2]);
 }
 

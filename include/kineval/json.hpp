@@ -1,5 +1,4 @@
-#ifndef JSON_HPP
-#define JSON_HPP
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -8,7 +7,7 @@
 #include <iterator>
 #include <memory>
 
-namespace json {
+namespace kineval {
 
 class JsonValue;
 
@@ -59,5 +58,3 @@ private:
     static std::shared_ptr<JsonValue> parseValue(const std::string& json, size_t& index);
 };
 } // namespace json
-
-#endif // JSON_HPP

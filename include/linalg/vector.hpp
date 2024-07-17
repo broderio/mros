@@ -21,7 +21,7 @@ public:
     Vector &operator=(const Vector& rhs);
     Vector(const geometry_msgs::Vector3& v);
 
-    geometry_msgs::Vector3 toVector3() const;
+    geometry_msgs::Vector3 toMsg() const;
 
     std::vector<float> getData() const;
     float get(size_t idx) const;
@@ -58,7 +58,7 @@ public:
     static Vector normalize(const Vector& v);
     static float angle(const Vector& lhs, const Vector& rhs);
 
-private:
+protected:
     std::vector<float> data;
 };
 

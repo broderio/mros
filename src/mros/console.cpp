@@ -14,6 +14,7 @@ namespace mros
     {
         if (initialized)
         {
+            Console::log(LogLevel::WARN, "Console already initialized");
             return;
         }
         initialized = true;
@@ -30,6 +31,12 @@ namespace mros
 
     void Console::log(LogLevel level, const std::string &msg)
     { 
+        if (!initialized)
+        {
+            std::cerr << "Console not initialized!\n";
+            return;
+        }
+
         // Format: [HH:MM:SS] [LEVEL] [NAME] MESSAGE
         int64_t ns_total = getTimeNano() - startTime;
 

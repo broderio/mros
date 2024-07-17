@@ -1,6 +1,6 @@
-#include "jrdf/json.hpp"
+#include "kineval/json.hpp"
 
-using namespace json;
+namespace kineval {
 
 // Recursive helper function
 std::shared_ptr<JsonValue> JsonParser::parseValue(const std::string& json, size_t& i) {
@@ -109,4 +109,6 @@ std::string JsonParser::stringify(const std::shared_ptr<JsonValue>& value) {
         }
     }
     return ""; // Should never reach here
+}
+
 }

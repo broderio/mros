@@ -8,17 +8,17 @@ Mediator::Mediator() : topicMap(), server(URI("0.0.0.0", MEDIATOR_PORT_NUM))
     server.bind();
     
     std::vector<std::string> ipAddrs = getLocalIPv4Addresses();
-    std::string ipList = "[";
+    std::string uriList = "[";
     for (const std::string &ip : ipAddrs)
     {
-        ipList += ip;
+        uriList += ip + ":" + std::to_string(MEDIATOR_PORT_NUM);
         if (ip != ipAddrs.back())
         {
-            ipList += ", ";
+            uriList += ", ";
         }
     }
-    ipList += "]";
-    Console::log(LogLevel::INFO, "Mediator started on IP addresses: " + ipList);
+    uriList += "]";
+    Console::log(LogLevel::INFO, "Mediator started with URIs: " + uriList);
 }
 
 Mediator::~Mediator()

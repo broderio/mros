@@ -1,10 +1,8 @@
-#ifndef MATRIX_HPP
-#define MATRIX_HPP
+#pragma once
 
 #include <iostream>
 #include <vector>
 #include <cmath>
-#include <algorithm>
 
 #include "linalg/vector.hpp"
 
@@ -33,6 +31,9 @@ public:
     size_t getRows() const;
     size_t getCols() const;
 
+    Matrix getSubmatrix(size_t startRow, size_t startCol, size_t endRow, size_t endCol) const;
+    Matrix setSubmatrix(size_t startRow, size_t startCol, const Matrix& m);
+
     Matrix operator+(const Matrix& rhs) const;
     Matrix operator+(const float& rhs) const;
 
@@ -58,10 +59,6 @@ public:
     Matrix operator/=(const float& rhs);
 
     static Matrix identity(size_t size);
-    static Matrix translation(float x, float y, float z);
-    static Matrix rotationX(float angle);
-    static Matrix rotationY(float angle);
-    static Matrix rotationZ(float angle);
 
     static Matrix multiply(const Vector& colVector, const Vector& rowVector);
     static Vector multiply(const Matrix& m, const Vector& colVector);
@@ -79,7 +76,7 @@ public:
     static Vector backwardSub(const Matrix& U, const Vector& b);
     static Vector forwardSub(const Matrix& L, const Vector& b);
 
-private:
+protected:
 
     size_t rows;
 
@@ -105,5 +102,3 @@ Vector linearSolve(const Matrix& A, const Vector& b, const bool& useLU = true);
 Vector polyfit(const Vector& x, const Vector& y, const size_t& order, const bool& useLU = true);
 
 } // namespace linalg
-
-#endif // MATRIX_HPP

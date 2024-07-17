@@ -115,6 +115,32 @@ size_t Matrix::getCols() const {
     return cols;
 }
 
+Matrix Matrix::getSubmatrix(size_t startRow, size_t startCol, size_t endRow, size_t endCol) const {
+    if (startRow >= rows || startCol >= cols || endRow >= rows || endCol >= cols) {
+        throw std::out_of_range("Index out of bounds.");
+    }
+
+    Matrix m(endRow - startRow + 1, endCol - startCol + 1);
+    for (size_t i = startRow; i <= endRow; ++i) {
+        for (size_t j = startCol; j <= endCol; ++j) {
+            m.data[i - startRow][j - startCol] = data[i][j];
+        }
+    }
+    return m;
+}
+
+Matrix Matrix::setSubmatrix(size_t startRow, size_t startCol, const Matrix& m) {
+    if (startRow + m.rows > rows || startCol + m.cols > cols) {
+        throw std::out_of_range("Index out of bounds.");
+    }
+
+    for (size_t i = startRow; i < startRow + m.rows; ++i) {
+        for (size_t j = startCol; j < startCol + m.cols; ++j) {
+            data[i][j] = m.data[i - startRow][j - startCol];
+        }
+    }
+    return *this;
+}
 
 Matrix Matrix::operator+(const Matrix& rhs) const {
     if (rows != rhs.rows || cols != rhs.cols) {
@@ -334,41 +360,6 @@ Matrix Matrix::identity(size_t size) {
     for (size_t i = 0; i < size; ++i) {
         m.data[i][i] = 1;
     }
-    return m;
-}
-
-Matrix Matrix::translation(float x, float y, float z) {
-    Matrix m = identity(4);
-    m.data[0][3] = x;
-    m.data[1][3] = y;
-    m.data[2][3] = z;
-    return m;
-}
-
-Matrix Matrix::rotationX(float angle) {
-    Matrix m = identity(4);
-    m.data[1][1] = std::cos(angle);
-    m.data[1][2] = -std::sin(angle);
-    m.data[2][1] = std::sin(angle);
-    m.data[2][2] = std::cos(angle);
-    return m;
-}
-
-Matrix Matrix::rotationY(float angle) {
-    Matrix m = identity(4);
-    m.data[0][0] = std::cos(angle);
-    m.data[0][2] = std::sin(angle);
-    m.data[2][0] = -std::sin(angle);
-    m.data[2][2] = std::cos(angle);
-    return m;
-}
-
-Matrix Matrix::rotationZ(float angle) {
-    Matrix m = identity(4);
-    m.data[0][0] = std::cos(angle);
-    m.data[0][1] = -std::sin(angle);
-    m.data[1][0] = std::sin(angle);
-    m.data[1][1] = std::cos(angle);
     return m;
 }
 

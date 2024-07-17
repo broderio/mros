@@ -53,7 +53,7 @@ namespace mros
                 throw std::runtime_error("MsgType must match the type of the Publisher");
             }
             
-            msgQueueMutex.lock();   
+            std::lock_guard<std::mutex> lock(msgQueueMutex);
             if (msgQueue.size() >= queueSize)
             {
                 msgQueue.pop();
@@ -61,7 +61,6 @@ namespace mros
 
             std::string msgStr = Parser::encode(msg, 0);
             msgQueue.push(msgStr);
-            msgQueueMutex.unlock();
         }
 
         int getNumSubscribers() const;

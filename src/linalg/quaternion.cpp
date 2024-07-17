@@ -76,8 +76,7 @@ Matrix Quaternion::toRotationMatrix(const Quaternion& q) {
     float yw = q.y * q.w;
     float zz = q.z * q.z;
     float zw = q.z * q.w;
-    return Matrix({{1 - 2 * (yy + zz), 2 * (xy - zw), 2 * (xz + yw), 0},
-                   {2 * (xy + zw), 1 - 2 * (xx + zz), 2 * (yz - xw), 0},
-                   {2 * (xz - yw), 2 * (yz + xw), 1 - 2 * (xx + yy), 0},
-                   {0,             0,             0,                 1}});
+    return Matrix({{1 - 2 * (yy + zz), 2 * (xy - zw), 2 * (xz + yw)},
+                   {2 * (xy + zw), 1 - 2 * (xx + zz), 2 * (yz - xw)},
+                   {2 * (xz - yw), 2 * (yz + xw), 1 - 2 * (xx + yy)}});
 }

@@ -7,7 +7,8 @@
 #include <iostream>
 #include <string>
 
-int main() {
+int main()
+{
     URI uri;
     uri.ip = "0.0.0.0";
     uri.port = MEDIATOR_PORT_NUM;
@@ -16,7 +17,8 @@ int main() {
 
     std::shared_ptr<mros::Publisher> pub = node.advertise<geometry_msgs::TwistStamped>("twist_topic", 10);
 
-    if (pub == nullptr) {
+    if (pub == nullptr)
+    {
         std::cout << "Failed to advertise topic" << std::endl;
         return 1;
     }
@@ -24,8 +26,8 @@ int main() {
     node.spin(true);
 
     int i = 0;
-    while (node.ok()) {
-
+    while (node.ok())
+    {
         geometry_msgs::TwistStamped msg;
         msg.header.frame_id = "robot";
         msg.twist.linear.x = 0.1 * (i % 6);

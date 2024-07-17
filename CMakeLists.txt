@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 
 project(mros)
 
@@ -51,15 +51,19 @@ target_link_libraries(socketlib utils)
 
 add_library(linalg STATIC src/linalg/vector.cpp
                           src/linalg/matrix.cpp
-                          src/linalg/quaternion.cpp)
+                          src/linalg/quaternion.cpp
+                          src/linalg/rotation.cpp)
 target_include_directories(linalg PRIVATE include)
-target_link_libraries(linalg utils messagelib)
+target_link_libraries(linalg messagelib)
 
-### JRDF ###
-add_library(jrdf STATIC src/jrdf/json.cpp
-                        src/jrdf/jrdf.cpp)
-target_include_directories(jrdf PRIVATE include)
-target_link_libraries(jrdf utils)
+### KINEVAL ###
+add_library(kineval STATIC src/kineval/joint.cpp
+                           src/kineval/json.cpp
+                           src/kineval/link.cpp
+                           src/kineval/transform.cpp
+                           src/kineval/tree.cpp)
+target_include_directories(kineval PRIVATE include)
+target_link_libraries(kineval linalg messagelib)
 
 ### MROS PRIVATE MESSAGES ###
 add_library(mros_priv_messages STATIC src/mros/private_msgs/disconnect.cpp
@@ -80,7 +84,7 @@ add_library(mros STATIC src/mros/mediator.cpp
                         src/mros/signalHandler.cpp
                         src/mros/console.cpp)
 target_include_directories(mros PRIVATE include)
-target_link_libraries(mros socketlib smemlib utils messagelib mros_priv_messages)
+target_link_libraries(mros socketlib smemlib messagelib mros_priv_messages)
 
 ### MROS TESTS ###
 
@@ -212,17 +216,9 @@ add_executable(quaternionTest test/linalg/quaternionTest.cpp)
 target_link_libraries(quaternionTest linalg)
 target_include_directories(quaternionTest PUBLIC include)
 
-### JRDF TESTS ###
-add_executable(jsonTest test/jrdf/jsonTest.cpp)
-target_link_libraries(jsonTest jrdf)
-target_include_directories(jsonTest PRIVATE include)
+### KINEVAL TESTS ###
 
-### COMBINED TESTS ###
-
-add_executable(jointStatePublisher test/simpleFK/jointStatePublisher.cpp)
-target_link_libraries(jointStatePublisher socketlib linalg utils messagelib)
-target_include_directories(jointStatePublisher PRIVATE include)
-
-add_executable(jointStateSubscription test/simpleFK/jointStateSubscription.cpp)
-target_link_libraries(jointStateSubscription socketlib linalg utils messagelib)
-target_include_directories(jointStateSubscription PRIVATE include)
+# Add kineval test
+add_executable(kinevalTest test/kineval/kinevalTest.cpp)
+target_link_libraries(kinevalTest kineval)
+target_include_directories(kinevalTest PUBLIC include)
