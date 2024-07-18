@@ -6,7 +6,7 @@
             "type": "revolute",
             "axis": [0, 0, 1],
             "origin": {
-                "xyz": [1, 0, 0],
+                "xyz": [1, 0.5, 0.5],
                 "rpy": [0, 0, 0]
             },
             "limits": [-3.14159, 3.14159],
@@ -16,7 +16,7 @@
             "type": "revolute",
             "axis": [0, 0, 1],
             "origin": {
-                "xyz": [1, 0, 0],
+                "xyz": [0.5, 0, 0],
                 "rpy": [0, 0, 0]
             },
             "limits": [-3.14159, 3.14159],
@@ -28,19 +28,31 @@
             "origin": {
                 "xyz": [0, 0, 0],
                 "rpy": [0, 0, 0]
+            },
+            "shape": {
+                "type": "box",
+                "size": [1, 1, 1]
             }
         },
         "upper_arm": {
             "origin": {
-                "xyz": [1, 0, 0],
+                "xyz": [0.5, 0, 0],
                 "rpy": [0, 0, 0]
+            },
+            "shape": {
+                "type": "box",
+                "size": [1, 0.2, 0.2]
             },
             "parentJoint": "shoulder"
         },
         "forearm": {
             "origin": {
-                "xyz": [1, 0, 0],
+                "xyz": [0.5, 0, 0],
                 "rpy": [0, 0, 0]
+            },
+            "shape": {
+                "type": "box",
+                "size": [1, 0.2, 0.2]
             },
             "parentJoint": "elbow"
         }

@@ -35,14 +35,9 @@ namespace kineval
         t.at(1) = origin.get(1);
         t.at(2) = origin.get(2);
 
-        linalg::Vector rpy(3);
-        rpy.at(0) = origin.get(3);
-        rpy.at(1) = origin.get(4);
-        rpy.at(2) = origin.get(5);
+        linalg::Quaternion r = linalg::Quaternion::fromRPY(origin.get(3), origin.get(4), origin.get(5));
 
-        linalg::Rotation R = linalg::Rotation::fromRPY(rpy);
-
-        return Transform(t, R);
+        return Transform(t, r);
     }
 
     linalg::Vector Link::getOrigin() const

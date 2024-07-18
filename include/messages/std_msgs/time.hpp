@@ -27,6 +27,8 @@ namespace std_msgs
         std::string encode() const override;
 
         bool decode(const std::string &msg) override;
+
+        static Time getTimeNow();
     };
 
 }

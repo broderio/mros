@@ -9,8 +9,9 @@ namespace mros
     int64_t Console::startTime;
     std::mutex Console::mutex;
     std::ofstream Console::logFile;
+    bool Console::logToFile = false;
 
-    void Console::init(const std::string &name)
+    void Console::init(const std::string &name, bool logToFile)
     {
         if (initialized)
         {
@@ -24,9 +25,15 @@ namespace mros
         DateTime dt = getDateTime();
         system(std::string("mkdir -p ~/.mros/"+name).c_str());
 
+        startTime = getTimeNano();
+
+        Console::logToFile = logToFile;
+        if (!logToFile)
+        {
+            return;
+        }
         std::string homeDir = getenv("HOME");
         logFile.open(homeDir + "/.mros/" + name + "/" + dt.toString() + ".log");
-        startTime = getTimeNano();
     }
 
     void Console::log(LogLevel level, const std::string &msg)
@@ -57,7 +64,10 @@ namespace mros
             std::cout << time << "\t[" << color << levelString << Console::defaultColor << "]\t[" << name << "]\t" << msg << '\n';
         }
 
-        logFile << time << "\t[" << levelString << "]\t[" << name << "]\t" << msg << '\n';
+        if (Console::logToFile)
+        {
+            logFile << time << "\t[" << levelString << "]\t[" << name << "]\t" << msg << '\n';
+        }
     }
 
     std::string Console::getLevelString(LogLevel level)

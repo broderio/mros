@@ -15,7 +15,7 @@ namespace kineval
     public:
         Transform();
 
-        Transform(const linalg::Vector &translation, const linalg::Rotation &rotation);
+        Transform(const linalg::Vector &translation, const linalg::Quaternion &rotation);
 
         Transform(const Transform &f);
 
@@ -23,24 +23,24 @@ namespace kineval
 
         void applyTranslation(const linalg::Vector &translation);
         
-        void applyRotation(const linalg::Rotation &rotation); // Extrinsic rotation
+        void applyRotation(const linalg::Quaternion &rotation); // Extrinsic rotation
 
         void applyTransform(const Transform &transform);
 
         linalg::Vector getTranslation() const;
 
-        linalg::Rotation getRotation() const;
+        linalg::Quaternion getRotation() const;
 
         linalg::Matrix getTransform() const;
 
         void setTranslation(const linalg::Vector &translation);
 
-        void setRotation(const linalg::Rotation &rotation);
+        void setRotation(const linalg::Quaternion &rotation);
 
     private:
 
         linalg::Vector translation;
-        linalg::Rotation rotation;
+        linalg::Quaternion rotation;
 
     };
 

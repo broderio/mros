@@ -6,7 +6,7 @@ namespace kineval
     {
     }
 
-    Transform::Transform(const linalg::Vector &translation, const linalg::Rotation &rotation)
+    Transform::Transform(const linalg::Vector &translation, const linalg::Quaternion &rotation)
     : translation(translation), rotation(rotation)
     {
         
@@ -31,9 +31,9 @@ namespace kineval
         return *this;
     }
 
-    void Transform::applyRotation(const linalg::Rotation &rotation)
+    void Transform::applyRotation(const linalg::Quaternion &rotation)
     {
-        this->rotation = linalg::Rotation::multiply(rotation, this->rotation);
+        this->rotation = linalg::Quaternion::multiply(rotation, this->rotation);
     }
 
     void Transform::applyTranslation(const linalg::Vector &translation)
@@ -43,8 +43,8 @@ namespace kineval
 
     void Transform::applyTransform(const Transform &transform)
     {
-        this->rotation = linalg::Rotation::multiply(transform.rotation, this->rotation);
-        this->translation = linalg::Rotation::multiply(transform.rotation, this->translation) + transform.translation;
+        this->rotation = linalg::Quaternion::multiply(this->rotation, transform.rotation);
+        this->translation = linalg::Quaternion::rotate(this->translation, transform.rotation) + transform.translation;
     }
 
     linalg::Vector Transform::getTranslation() const
@@ -52,7 +52,7 @@ namespace kineval
         return translation;
     }
 
-    linalg::Rotation Transform::getRotation() const
+    linalg::Quaternion Transform::getRotation() const
     {
         return rotation;
     }
@@ -60,7 +60,7 @@ namespace kineval
     linalg::Matrix Transform::getTransform() const
     {
         linalg::Matrix T(4, 4);
-        T.setSubmatrix(0, 0, rotation);
+        T.setSubmatrix(0, 0, linalg::Quaternion::toRotationMatrix(rotation));
         T.at(0, 3) = translation.get(0);
         T.at(1, 3) = translation.get(1);
         T.at(2, 3) = translation.get(2);
@@ -73,7 +73,7 @@ namespace kineval
         this->translation = translation;
     }
 
-    void Transform::setRotation(const linalg::Rotation &rotation)
+    void Transform::setRotation(const linalg::Quaternion &rotation)
     {
         this->rotation = rotation;
     }

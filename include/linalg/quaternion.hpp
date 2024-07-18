@@ -1,5 +1,4 @@
-#ifndef QUATERNION_HPP
-#define QUATERNION_HPP
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -23,12 +22,24 @@ public:
 
     geometry_msgs::Quaternion toMsg() const;
 
+    Quaternion operator+(const Quaternion &rhs) const;
+    Quaternion operator+(const float &rhs) const;
+    Quaternion operator-(const Quaternion &rhs) const;
+    Quaternion operator-(const float &rhs) const;
+    Quaternion operator*(const float &rhs) const;
+    Quaternion operator/(const float &rhs) const;
+
     float norm() const;
+    Quaternion inverse() const;
+
+    static Quaternion identity();
     static Quaternion fromRPY(const float& roll, const float& pitch, const float& yaw);
     static Quaternion normalize(const Quaternion& q);
+    static float dot(const Quaternion& q1, const Quaternion& q2);
     static Quaternion multiply(const Quaternion& q1, const Quaternion& q2);
+    static Vector rotate(const Vector &v, const Quaternion &q); // Passive rotation
     static Matrix toRotationMatrix(const Quaternion& q);
-    
+    static Quaternion SLERP(const Quaternion &q1, const Quaternion &q2, float t);
     
 private:
     float x;
@@ -37,6 +48,8 @@ private:
     float w;
 };
 
-} // namespace linalg
+Quaternion operator+(const float &lhs, const Quaternion &rhs);
+Quaternion operator-(const float &lhs, const Quaternion &rhs);
+Quaternion operator*(const float &lhs, const Quaternion &rhs);
 
-#endif // QUATERNION_HPP
+} // namespace linalg

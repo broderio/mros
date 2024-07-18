@@ -61,9 +61,9 @@ bool Transform::decode(const std::string& msg) {
 
 TransformStamped::TransformStamped() : header(), transform() {}
 
-TransformStamped::TransformStamped(const Header& header, const Transform& transform) : header(header), transform(transform) {}
+TransformStamped::TransformStamped(const Header& header, const String& child_frame_id, const Transform& transform) : header(header), child_frame_id(child_frame_id), transform(transform) {}
 
-TransformStamped::TransformStamped(const TransformStamped& other) : header(other.header), transform(other.transform) {}
+TransformStamped::TransformStamped(const TransformStamped& other) : header(other.header), child_frame_id(other.child_frame_id), transform(other.transform) {}
 
 TransformStamped::~TransformStamped() {}
 
@@ -72,6 +72,7 @@ TransformStamped& TransformStamped::operator=(const TransformStamped& other) {
         return *this;
     }
     header = other.header;
+    child_frame_id = other.child_frame_id;
     transform = other.transform;
     return *this;
 }

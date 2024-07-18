@@ -1,5 +1,7 @@
 #include "kineval/tree.hpp"
 
+#include "messages/message.hpp"
+
 int main() {
     std::ifstream file("/Users/broderio/Repositories/simple_pubsub/robots/simpleBot.json");
 
@@ -18,9 +20,11 @@ int main() {
     linalg::Matrix t = T.getTransform();
     std::cout << "End Effector Transform:\n" << t << std::endl;
 
-
     kt.setJointState("elbow", M_PI / 2);
     T = kt.getGlobalLinkTransform(kt.getEndEffector());
     t = T.getTransform();
-    std::cout << "End Effector Transform:\n" << t << std::endl;
+    std::cout << "End Effector Transform (elbow.q == 90 deg):\n" << t << std::endl;
+
+    geometry_msgs::TF tf = kt.TF();
+    std::cout << tf << std::endl;
 }

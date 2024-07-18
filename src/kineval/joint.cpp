@@ -39,23 +39,19 @@ namespace kineval
         t.at(1) = origin.get(1);
         t.at(2) = origin.get(2);
 
-        linalg::Vector rpy(3);
-        rpy.at(0) = origin.get(3);
-        rpy.at(1) = origin.get(4);
-        rpy.at(2) = origin.get(5);
-        linalg::Rotation R = linalg::Rotation::fromRPY(rpy);
+        linalg::Quaternion r = linalg::Quaternion::fromRPY(origin.get(3), origin.get(4), origin.get(5));
 
         switch (type)
         {
         case REVOLUTE:
-            R = linalg::Rotation::multiply(linalg::Rotation::fromAxisAngle(axis, q), R);
+            r = linalg::Quaternion::multiply(r, linalg::Quaternion(axis, q));
             break;
         case PRISMATIC:
             t += q * axis;
             break;
         }
 
-        return Transform(t, R);
+        return Transform(t, r);
     }
 
     linalg::Vector Joint::getAxis() const

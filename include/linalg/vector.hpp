@@ -1,5 +1,4 @@
-#ifndef VECTOR_HPP
-#define VECTOR_HPP
+#pragma once 
 
 #include <iostream>
 #include <vector>
@@ -57,6 +56,8 @@ public:
     static float norm(const Vector& v);
     static Vector normalize(const Vector& v);
     static float angle(const Vector& lhs, const Vector& rhs);
+    static Vector LERP(const Vector& v1, const Vector& v2, float t);
+    static Vector SLERP(const Vector& v1, const Vector& v2, float t);
 
 protected:
     std::vector<float> data;
@@ -71,5 +72,3 @@ Vector operator*(const float& lhs, const Vector& rhs);
 std::ostream &operator<<(std::ostream &os, const Vector& v);
 
 } // namespace linalg
-
-#endif // VECTOR_HPP

@@ -66,4 +66,13 @@ namespace std_msgs
         return true;
     }
 
+    Time Time::getTimeNow()
+    {
+        Time t;
+        int64_t now = getTimeNano();
+        t.sec = now / 1000000000;
+        t.nsec = now % 1000000000;
+        return t;
+    }
+
 } // namespace std_msgs

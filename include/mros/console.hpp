@@ -30,12 +30,14 @@ namespace mros
     public:
         ~Console();
 
-        static void init(const std::string &name);
+        static void init(const std::string &name, bool logToFile = false);
         static void log(LogLevel level, const std::string &msg);
 
     private:
 
         static bool initialized;
+
+        static bool logToFile;
 
         static std::string name;
 

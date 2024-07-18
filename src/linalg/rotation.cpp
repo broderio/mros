@@ -318,6 +318,7 @@ namespace linalg
             euler.at(1) = std::atan2(std::sqrt(std::pow(get(2, 0), 2) + std::pow(get(2, 1), 2)), get(2, 2));
             euler.at(2) = std::atan2(get(2, 1), -get(2, 0));
         }
+        return euler;
     }
 
     Vector Rotation::getEulerZYX() const

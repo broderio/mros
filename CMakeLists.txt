@@ -133,6 +133,31 @@ add_executable(console_test test/mros/console_test.cpp)
 target_link_libraries(console_test mros)
 target_include_directories(console_test PRIVATE include)
 
+# Add joint state publisher test
+add_executable(joint_state_publisher test/mros/demo2/jointStatePublisher.cpp)
+target_link_libraries(joint_state_publisher mros)
+target_include_directories(joint_state_publisher PRIVATE include)
+
+# Add robot state publisher test
+add_executable(robot_state_publisher test/mros/demo2/robotStatePublisher.cpp)
+target_link_libraries(robot_state_publisher mros kineval)
+target_include_directories(robot_state_publisher PRIVATE include)
+
+# Add robot state listener test
+add_executable(robot_state_listener test/mros/demo2/robotStateListener.cpp)
+target_link_libraries(robot_state_listener mros kineval)
+target_include_directories(robot_state_listener PRIVATE include)
+
+# Add joint group 1 publisher test
+add_executable(joint_group_1 test/mros/demo2/jointGroup1.cpp)
+target_link_libraries(joint_group_1 mros kineval)
+target_include_directories(joint_group_1 PRIVATE include)
+
+# Add joint group 2 publisher test
+add_executable(joint_group_2 test/mros/demo2/jointGroup2.cpp)
+target_link_libraries(joint_group_2 mros kineval)
+target_include_directories(joint_group_2 PRIVATE include)
+
 ### SOCKET TESTS ###
 
 # Add socket client test
@@ -220,5 +245,5 @@ target_include_directories(quaternionTest PUBLIC include)
 
 # Add kineval test
 add_executable(kinevalTest test/kineval/kinevalTest.cpp)
-target_link_libraries(kinevalTest kineval)
+target_link_libraries(kinevalTest kineval linalg)
 target_include_directories(kinevalTest PUBLIC include)

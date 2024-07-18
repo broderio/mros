@@ -41,7 +41,7 @@ public:
 
     TransformStamped();
 
-    TransformStamped(const Header& header, const Transform& transform);
+    TransformStamped(const Header& header, const String& child_frame_id, const Transform& transform);
 
     TransformStamped(const TransformStamped& other);
 
@@ -58,7 +58,7 @@ public:
     bool decode(const std::string& msg) override;
 };
 
-class TF : IMessage {
+class TF : public IMessage {
 public:
     std::vector<TransformStamped> transforms;
 

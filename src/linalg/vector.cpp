@@ -300,6 +300,21 @@ float Vector::angle(const Vector& lhs, const Vector& rhs) {
     return std::acos(Vector::dot(lhs, rhs) / (std::pow(Vector::norm(lhs), 2)));
 }
 
+
+Vector LERP(const Vector& v1, const Vector& v2, float t)
+{
+    return v1 + (v2 - v1) * t;
+}
+
+Vector SLERP(const Vector& v1, const Vector& v2, float t)
+{
+    float angle = Vector::angle(v1, v2);
+    float s_angle = std::sin(angle);
+    float s1 = std::sin((1 - t) * angle) / s_angle;
+    float s2 = std::sin(t * angle) / s_angle;
+    return s1 * v1 + s2 * v2;
+}
+
 std::ostream &linalg::operator<<(std::ostream &os, const Vector& v) {
     os << "[";
     for (size_t i = 0; i < v.getSize(); ++i) {

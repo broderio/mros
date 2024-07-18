@@ -218,16 +218,19 @@ namespace kineval
         }
 
         // If the parent joint doesn't exist, add it
-        if (jointNames.find(parent) == jointNames.end())
+        if (!parent.empty())
         {
-            jointNames.insert(parent);
-            JointNode j;
-            j.name = parent;
-            j.parent = "";
-            joints[parent] = j;
-        }
+            if (jointNames.find(parent) == jointNames.end())
+            {
+                jointNames.insert(parent);
+                JointNode j;
+                j.name = parent;
+                j.parent = "";
+                joints[parent] = j;
+            }
 
-        joints[parent].child = name;
+            joints[parent].child = name;
+        }
     }
 
     void KinematicTree::setRoot(const std::string &name)
@@ -383,6 +386,54 @@ namespace kineval
         return T;
     }
 
+    std::map<std::string, Transform> KinematicTree::getJointTransforms() const
+    {
+        std::map<std::string, Transform> transforms;
+
+        for (const auto &j : joints)
+        {
+            transforms[j.first] = getJointTransform(j.first);
+        }
+
+        return transforms;
+    }
+
+    std::map<std::string, Transform> KinematicTree::getLinkTransforms() const
+    {
+        std::map<std::string, Transform> transforms;
+
+        for (const auto &l : links)
+        {
+            transforms[l.first] = getLinkTransform(l.first);
+        }
+
+        return transforms;
+    }
+
+    std::map<std::string, Transform> KinematicTree::getGlobalJointTransforms() const
+    {
+        std::map<std::string, Transform> transforms;
+
+        for (const auto &j : joints)
+        {
+            transforms[j.first] = getGlobalJointTransform(j.first);
+        }
+
+        return transforms;
+    }
+
+    std::map<std::string, Transform> KinematicTree::getGlobalLinkTransforms() const
+    {
+        std::map<std::string, Transform> transforms;
+
+        for (const auto &l : links)
+        {
+            transforms[l.first] = getGlobalLinkTransform(l.first);
+        }
+
+        return transforms;
+    }
+
     geometry_msgs::TF KinematicTree::TF() const
     {
         std_msgs::Time stamp;
@@ -400,7 +451,8 @@ namespace kineval
             t.header.frame_id = j.second.name;
             t.child_frame_id = j.second.child;
             t.transform.translation = j.second.joint.getTransform().getTranslation().toMsg();
-            t.transform.rotation = j.second.joint.getTransform().getRotation().getQuaternion().toMsg();
+            t.transform.rotation = j.second.joint.getTransform().getRotation().toMsg();
+            tf.transforms.push_back(t);
         }
 
         return tf;

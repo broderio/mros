@@ -59,6 +59,12 @@ namespace kineval
         Transform getGlobalJointTransform(const std::string &name) const;
         Transform getGlobalLinkTransform(const std::string &name) const;
 
+        std::map<std::string, Transform> getJointTransforms() const;
+        std::map<std::string, Transform> getLinkTransforms() const;
+
+        std::map<std::string, Transform> getGlobalJointTransforms() const;
+        std::map<std::string, Transform> getGlobalLinkTransforms() const;
+
         geometry_msgs::TF TF() const;
 
     private:
