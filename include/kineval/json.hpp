@@ -4,8 +4,10 @@
 #include <string>
 #include <vector>
 #include <map>
+
 #include <iterator>
 #include <memory>
+#include <algorithm>
 
 namespace kineval {
 

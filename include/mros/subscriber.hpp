@@ -5,10 +5,12 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <queue>
+
+#include <functional>
 #include <memory>
 #include <thread>
 #include <chrono>
-#include <queue>
 
 #include "utils.hpp"
 

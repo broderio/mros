@@ -20,7 +20,7 @@ add_library(messagelib STATIC src/messages/message.cpp
                             src/messages/geometry_msgs/transform.cpp
                             src/messages/geometry_msgs/twist.cpp
                             src/messages/geometry_msgs/vector3.cpp
-                            src/messages/sensor_msgs/jointstate.cpp
+                            src/messages/sensor_msgs/jointState.cpp
                             src/messages/std_msgs/string.cpp
                             src/messages/std_msgs/time.cpp
                             src/messages/std_msgs/header.cpp

@@ -1,5 +1,4 @@
-#ifndef SMUTEX_HPP
-#define SMUTEX_HPP
+#pragma once
 
 #include <sys/shm.h>
 
@@ -23,5 +22,3 @@ private:
     SMem smem;
     pthread_mutex_t *mutex;
 };
-
-#endif // SMUTEX_HPP
