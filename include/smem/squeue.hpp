@@ -1,5 +1,4 @@
-#ifndef SQUEUE_HPP
-#define SQUEUE_HPP
+#pragma once
 
 #include <sys/shm.h>
 
@@ -76,5 +75,3 @@ private:
     SMem smem;
     SMutex smutex;
 };
-
-#endif // SQUEUE_HPP

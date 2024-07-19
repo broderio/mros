@@ -1,10 +1,11 @@
-#ifndef SMEM_HPP
-#define SMEM_HPP
+#pragma once
 
 #include <sys/shm.h>
 
 #include <iostream>
 #include <string>
+
+#include "utils.hpp"
 
 class SMem {
 public:
@@ -27,5 +28,3 @@ private:
 
     bool isAttached;
 };
-
-#endif // SMEM_HPP
