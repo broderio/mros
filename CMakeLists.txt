@@ -248,9 +248,19 @@ add_executable(kinevalTest test/kineval/kinevalTest.cpp)
 target_link_libraries(kinevalTest kineval linalg)
 target_include_directories(kinevalTest PUBLIC include)
 
+
+### INSTALL ###
+
 # Install libraries
 install(TARGETS utils messagelib smemlib socketlib linalg kineval mros_priv_messages mros
+        EXPORT mrosTargets
         ARCHIVE DESTINATION /usr/local/lib/mros)
 
 file(GLOB_RECURSE HEADER_FILES "${CMAKE_SOURCE_DIR}/include/*.hpp")
 install(FILES ${HEADER_FILES} DESTINATION /usr/local/include/mros)
+
+install(FILES mrosConfig.cmake DESTINATION /usr/local/lib/cmake/mros)
+
+install(EXPORT mrosTargets
+        FILE mrosTargets.cmake
+        DESTINATION /usr/local/lib/cmake/mros)
