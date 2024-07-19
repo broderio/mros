@@ -247,3 +247,10 @@ target_include_directories(quaternionTest PUBLIC include)
 add_executable(kinevalTest test/kineval/kinevalTest.cpp)
 target_link_libraries(kinevalTest kineval linalg)
 target_include_directories(kinevalTest PUBLIC include)
+
+# Install libraries
+install(TARGETS utils messagelib smemlib socketlib linalg kineval mros_priv_messages mros
+        ARCHIVE DESTINATION /usr/local/lib/mros)
+
+file(GLOB_RECURSE HEADER_FILES "${CMAKE_SOURCE_DIR}/include/*.hpp")
+install(FILES ${HEADER_FILES} DESTINATION /usr/local/include/mros)
