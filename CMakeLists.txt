@@ -13,7 +13,7 @@ target_include_directories(utils PRIVATE include)
 
 ### MESSAGES ###
 
-add_library(messagelib STATIC src/messages/message.cpp
+add_library(msgs STATIC src/messages/message.cpp
                             src/messages/geometry_msgs/point.cpp
                             src/messages/geometry_msgs/pose.cpp
                             src/messages/geometry_msgs/quaternion.cpp
@@ -27,25 +27,25 @@ add_library(messagelib STATIC src/messages/message.cpp
                             src/messages/std_msgs/integer.cpp
                             src/messages/std_msgs/float.cpp
                             src/messages/std_msgs/color.cpp)
-target_include_directories(messagelib PRIVATE include)
-target_link_libraries(messagelib utils)
+target_include_directories(msgs PRIVATE include)
+target_link_libraries(msgs utils)
 
 ### SHARED MEMORY ###
 
-add_library(smemlib STATIC src/smem/squeue.cpp
+add_library(smem STATIC src/smem/squeue.cpp
                            src/smem/smutex.cpp
                            src/smem/smem.cpp)
-target_include_directories(smemlib PRIVATE include)
-target_link_libraries(smemlib pthread utils)
+target_include_directories(smem PRIVATE include)
+target_link_libraries(smem pthread utils)
 
 ### SOCKET ###
 
-add_library(socketlib STATIC src/socket/tcp/client.cpp
+add_library(socket STATIC src/socket/tcp/client.cpp
                              src/socket/tcp/server.cpp
                              src/socket/udp/client.cpp
                              src/socket/udp/server.cpp)
-target_include_directories(socketlib PRIVATE include)
-target_link_libraries(socketlib utils)
+target_include_directories(socket PRIVATE include)
+target_link_libraries(socket utils)
 
 ### LINALG ###
 
@@ -54,7 +54,7 @@ add_library(linalg STATIC src/linalg/vector.cpp
                           src/linalg/quaternion.cpp
                           src/linalg/rotation.cpp)
 target_include_directories(linalg PRIVATE include)
-target_link_libraries(linalg messagelib)
+target_link_libraries(linalg msgs)
 
 ### KINEVAL ###
 add_library(kineval STATIC src/kineval/joint.cpp
@@ -63,17 +63,17 @@ add_library(kineval STATIC src/kineval/joint.cpp
                            src/kineval/transform.cpp
                            src/kineval/tree.cpp)
 target_include_directories(kineval PRIVATE include)
-target_link_libraries(kineval linalg messagelib)
+target_link_libraries(kineval linalg)
 
 ### MROS PRIVATE MESSAGES ###
-add_library(mros_priv_messages STATIC src/mros/private_msgs/disconnect.cpp
+add_library(mros_priv_msgs STATIC src/mros/private_msgs/disconnect.cpp
                                       src/mros/private_msgs/notify.cpp
                                       src/mros/private_msgs/register.cpp
                                       src/mros/private_msgs/request.cpp
                                       src/mros/private_msgs/response.cpp
                                       src/mros/private_msgs/uri.cpp)
-target_include_directories(mros_priv_messages PRIVATE include)
-target_link_libraries(mros_priv_messages messagelib)
+target_include_directories(mros_priv_msgs PRIVATE include)
+target_link_libraries(mros_priv_msgs msgs)
 
 ### MROS ###
 
@@ -84,7 +84,7 @@ add_library(mros STATIC src/mros/mediator.cpp
                         src/mros/signalHandler.cpp
                         src/mros/console.cpp)
 target_include_directories(mros PRIVATE include)
-target_link_libraries(mros socketlib smemlib messagelib mros_priv_messages)
+target_link_libraries(mros socket smem mros_priv_msgs)
 
 ### MROS TESTS ###
 
@@ -162,66 +162,66 @@ target_include_directories(joint_group_2 PRIVATE include)
 
 # Add socket client test
 add_executable(tcp_client_test test/socket/tcp/client_test.cpp)
-target_link_libraries(tcp_client_test socketlib)
+target_link_libraries(tcp_client_test socket)
 target_include_directories(tcp_client_test PRIVATE include)
 
 # Add socket server test
 add_executable(tcp_server_test test/socket/tcp/server_test.cpp)
-target_link_libraries(tcp_server_test socketlib)
+target_link_libraries(tcp_server_test socket)
 target_include_directories(tcp_server_test PRIVATE include)
 
 # Add socket client test
 add_executable(tcp_client_noblock_test test/socket/tcp/client_noblock_test.cpp)
-target_link_libraries(tcp_client_noblock_test socketlib)
+target_link_libraries(tcp_client_noblock_test socket)
 target_include_directories(tcp_client_noblock_test PRIVATE include)
 
 # Add socket server test
 add_executable(tcp_server_noblock_test test/socket/tcp/server_noblock_test.cpp)
-target_link_libraries(tcp_server_noblock_test socketlib)
+target_link_libraries(tcp_server_noblock_test socket)
 target_include_directories(tcp_server_noblock_test PRIVATE include)
 
 # Add UDP socket client test
 add_executable(udp_client_test test/socket/udp/client_test.cpp)
-target_link_libraries(udp_client_test socketlib)
+target_link_libraries(udp_client_test socket)
 target_include_directories(udp_client_test PRIVATE include)
 
 # Add UDP socket server test
 add_executable(udp_server_test test/socket/udp/server_test.cpp)
-target_link_libraries(udp_server_test socketlib)
+target_link_libraries(udp_server_test socket)
 target_include_directories(udp_server_test PRIVATE include)
 
 #Add UDP socket peer test
 add_executable(udp_peer_test test/socket/udp/peer_test.cpp)
-target_link_libraries(udp_peer_test socketlib)
+target_link_libraries(udp_peer_test socket)
 target_include_directories(udp_peer_test PRIVATE include)
 
 ### SHARED MEMORY TESTS ###
 
 # Add smem read test
 add_executable(smemReadTest test/smem/smemReadTest.cpp)
-target_link_libraries(smemReadTest smemlib)
+target_link_libraries(smemReadTest smem)
 target_include_directories(smemReadTest PUBLIC include)
 
 # Add smem write test
 add_executable(smemWriteTest test/smem/smemWriteTest.cpp)
-target_link_libraries(smemWriteTest smemlib)
+target_link_libraries(smemWriteTest smem)
 target_include_directories(smemWriteTest PUBLIC include)
 
 # Add smem mutex test
 add_executable(smemMutexTest test/smem/smemMutexTest.cpp)
-target_link_libraries(smemMutexTest smemlib)
+target_link_libraries(smemMutexTest smem)
 target_include_directories(smemMutexTest PUBLIC include)
 
 ### MESSAGES TESTS ###
 
 # Add pose messages test
 add_executable(poseTest test/messages/poseTest.cpp)
-target_link_libraries(poseTest messagelib)
+target_link_libraries(poseTest msgs)
 target_include_directories(poseTest PUBLIC include)
 
 # Add jointState messages test
 add_executable(jointStateTest test/messages/jointStateTest.cpp)
-target_link_libraries(jointStateTest messagelib)
+target_link_libraries(jointStateTest msgs)
 target_include_directories(jointStateTest PUBLIC include)
 
 ### LINALG TESTS ###
@@ -252,12 +252,14 @@ target_include_directories(kinevalTest PUBLIC include)
 ### INSTALL ###
 
 # Install libraries
-install(TARGETS utils messagelib smemlib socketlib linalg kineval mros_priv_messages mros
+install(TARGETS utils msgs smem socket linalg kineval mros_priv_msgs mros
         EXPORT mrosTargets
         ARCHIVE DESTINATION /usr/local/lib/mros)
 
-file(GLOB_RECURSE HEADER_FILES "${CMAKE_SOURCE_DIR}/include/*.hpp")
-install(FILES ${HEADER_FILES} DESTINATION /usr/local/include/mros)
+# Install header files while preserving directory structure
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ 
+        DESTINATION /usr/local/include/mros
+        FILES_MATCHING PATTERN "*.hpp")
 
 install(FILES mrosConfig.cmake DESTINATION /usr/local/lib/cmake/mros)
 
