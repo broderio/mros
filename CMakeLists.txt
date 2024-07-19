@@ -20,6 +20,13 @@ add_library(msgs STATIC src/messages/message.cpp
                             src/messages/geometry_msgs/transform.cpp
                             src/messages/geometry_msgs/twist.cpp
                             src/messages/geometry_msgs/vector3.cpp
+                            src/messages/mbot_msgs/encoders.cpp
+                            src/messages/mbot_msgs/mbotImu.cpp
+                            src/messages/mbot_msgs/motorPwm.cpp
+                            src/messages/mbot_msgs/motorVel.cpp
+                            src/messages/mbot_msgs/pose2D.cpp
+                            src/messages/mbot_msgs/timestamp.cpp
+                            src/messages/mbot_msgs/twist2D.cpp
                             src/messages/sensor_msgs/jointState.cpp
                             src/messages/std_msgs/string.cpp
                             src/messages/std_msgs/time.cpp
