@@ -3,7 +3,7 @@
 
 int main() {
     UDPClient client;
-    std::string ipAddr = getPublicIPv4Address();
+    std::string ipAddr = getLocalIP();
     URI serverURI(ipAddr, 8080);
 
     std::string message;

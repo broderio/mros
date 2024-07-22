@@ -5,7 +5,7 @@
 #include "socket/tcp/client.hpp"
 
 int main() {
-    std::string ipAddr = getPublicIPv4Address();
+    std::string ipAddr = getLocalIP();
     TCPClient client(URI(ipAddr, 8080), 0);
     int res = client.connect();
     if (res < 0) {

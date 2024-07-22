@@ -134,7 +134,6 @@ namespace mros
                 if (!Parser::decode(inMsg, uriMsg))
                 {
                     // std::cerr << "Failed to decode message from Subscriber" << std::endl;
-                    Console::log(LogLevel::ERROR, "Failed to decode URIStamped message from Subscriber at " + connection->getClientURI().toString());
                 }
                 else
                 {
@@ -160,7 +159,6 @@ namespace mros
             msgQueue.pop();
             msgQueueMutex.unlock();
 
-            Console::log(LogLevel::INFO, "Publishing message to " + std::to_string(subs.size()) + " subscribers");
             for (auto &sub : subs)
             {
                 if (sub.second->send(msg) < 0) {
@@ -172,7 +170,7 @@ namespace mros
     }
 
     Publisher::Publisher(const std::string &topic, const size_t &queueSize, const std::string& msgType)
-        : shutdownFlag(false), topic(topic), queueSize(queueSize), msgType(msgType), msgQueue(), publicServer(URI(getPublicIPv4Address(), 0)), privateServer(URI(getPublicIPv4Address(), 0)) {
+        : shutdownFlag(false), topic(topic), queueSize(queueSize), msgType(msgType), msgQueue(), publicServer(URI(getLocalIP(), 0)), privateServer(URI(getLocalIP(), 0)) {
             publicServer.bind();
             privateServer.bind();
             privateServer.listen();

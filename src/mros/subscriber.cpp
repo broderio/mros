@@ -157,7 +157,6 @@ namespace mros
                     msgQueue.pop();
                 }
                 msgQueue.push(inMsg);
-                Console::log(LogLevel::INFO, "Received message");
             }
         }
 

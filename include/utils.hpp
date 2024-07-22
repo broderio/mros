@@ -12,6 +12,10 @@
 #include <arpa/inet.h>
 #include "unistd.h"
 
+#include <sys/types.h>
+#include <ifaddrs.h>
+#include <string.h>
+
 #include <chrono>
 #include <thread>
 
@@ -52,8 +56,6 @@ float degToRad(float deg);
 
 float radToDeg(float rad);
 
-std::vector<std::string> getLocalIPv4Addresses();
-
-std::string getPublicIPv4Address();
+std::string getLocalIP();
 
 std::string addTab(const std::string &str, int tabCount);

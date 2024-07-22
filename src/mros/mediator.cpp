@@ -6,19 +6,9 @@ Mediator::Mediator() : topicMap(), server(URI("0.0.0.0", MEDIATOR_PORT_NUM))
 {
     Console::init("mediator");
     server.bind();
-    
-    std::vector<std::string> ipAddrs = getLocalIPv4Addresses();
-    std::string uriList = "[";
-    for (const std::string &ip : ipAddrs)
-    {
-        uriList += ip + ":" + std::to_string(MEDIATOR_PORT_NUM);
-        if (ip != ipAddrs.back())
-        {
-            uriList += ", ";
-        }
-    }
-    uriList += "]";
-    Console::log(LogLevel::INFO, "Mediator started with URIs: " + uriList);
+
+    std::string uri = getLocalIP() + ":" + std::to_string(MEDIATOR_PORT_NUM);
+    Console::log(LogLevel::INFO, "Mediator hosting on URI: " + uri);
 }
 
 Mediator::~Mediator()

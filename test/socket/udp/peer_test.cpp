@@ -2,14 +2,14 @@
 #include "socket/udp/server.hpp"
 
 int main() {
-    UDPServer server(URI(getPublicIPv4Address(), 8080));
+    UDPServer server(URI(getLocalIP(), 8080));
 
     int res = server.bind();
     if (res < 0) {
         return 1;
     }
 
-    std::string ipAddr = getPublicIPv4Address();
+    std::string ipAddr = getLocalIP();
     URI serverURI(ipAddr, 8080);
 
     std::string message;

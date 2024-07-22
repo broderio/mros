@@ -69,70 +69,28 @@ float radToDeg(float rad) {
     return rad * 180.0 / M_PI;
 }
 
-std::vector<std::string> getLocalIPv4Addresses() {
-    struct addrinfo hints, *info, *p;
-    int gai_result;
-    char hostname[1024];
-    char ipstr[INET_ADDRSTRLEN];
+std::string getLocalIP() {
+    struct ifaddrs * ifAddrStruct=NULL;
+    struct ifaddrs * ifa=NULL;
+    void * tmpAddrPtr=NULL;
 
-    hostname[1023] = '\0';
+    getifaddrs(&ifAddrStruct);
 
-    /*
-       These system calls are used to access or to change the system
-       hostname.  More precisely, they operate on the hostname
-       associated with the calling process's UTS namespace.
-       - https://man7.org/linux/man-pages/man2/gethostname.2.html
-    */
-    gethostname(hostname, 1023);
-
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_INET; // Use AF_INET to force IPv4
-    hints.ai_socktype = SOCK_STREAM;
-
-    /*
-       getaddrinfo() returns one or more addrinfo structures as a linked 
-       list (in the info struct), each of which contains an Internet 
-       address that can be specified in a call to bind(2) or connect(2).
-       - https://man7.org/linux/man-pages/man3/getaddrinfo.3.html
-    */
-    if ((gai_result = getaddrinfo(hostname, NULL, &hints, &info)) != 0) {
-        throw std::runtime_error(gai_strerror(gai_result));
-    }
-
-    std::vector<std::string> ipAddrs;
-    for(p = info; p != NULL; p = p->ai_next) {
-        if (p->ai_family == AF_INET) { // IPv4
-            struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
-            /*
-                This function converts the network address structure src in the
-                af address family into a character string. The resulting string
-                is copied to the buffer pointed to by dst, which must be a non-
-                null pointer.  The caller specifies the number of bytes available
-                in this buffer in the argument size.
-                - https://man7.org/linux/man-pages/man3/inet_ntop.3.html
-            */
-            inet_ntop(p->ai_family, &(ipv4->sin_addr), ipstr, sizeof ipstr);
-            ipAddrs.push_back(ipstr);
+    for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
+        if (!ifa->ifa_addr) {
+            continue;
+        }
+        if (ifa->ifa_addr->sa_family == AF_INET) { // check it is IP4
+            // is a valid IP4 Address
+            tmpAddrPtr=&((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+            char addressBuffer[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
+            if (strcmp(ifa->ifa_name,"wlan0")==0 && strcmp(addressBuffer,"127.0.1.1")!=0) { // Check it's not the loopback
+                return std::string(addressBuffer);
+            }
         }
     }
-
-    freeaddrinfo(info); // free the linked list
-
-    return ipAddrs;
-}
-
-std::string getPublicIPv4Address() {
-    std::vector<std::string> ipAddrs = getLocalIPv4Addresses();
-    if (ipAddrs.size() == 0) {
-        return "";
-    }
-
-    // Return first IP address not equal to loopback address
-    for (const std::string& ip : ipAddrs) {
-        if (ip != "127.0.0.1") {
-            return ip;
-        }
-    }
+    if (ifAddrStruct!=NULL) freeifaddrs(ifAddrStruct);
     return "";
 }
 

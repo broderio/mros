@@ -5,7 +5,7 @@
 #include "socket/tcp/server.hpp"
 
 int main() {
-    TCPServer server(URI(getPublicIPv4Address(), 8080));
+    TCPServer server(URI(getLocalIP(), 8080));
     TCPConnection connection;
     int res;
     do {
