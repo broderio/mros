@@ -65,13 +65,14 @@ void updateJointStates(kineval::KinematicTree &kt, const sensor_msgs::JointState
 class RobotStatePublisher
 {
 public:
-    RobotStatePublisher(const URI &uri, const std::string &jrdfPath);
+    RobotStatePublisher(const URI &uri, const std::string &jrdfPath, int hz);
 
-    void run(int hz);
+    void run();
 
 private:
     void jointStateCallback(const sensor_msgs::JointState &msg);
 
+    int hz;
     mros::Node node;
     std::shared_ptr<mros::Subscriber> jointStateSub;
     std::shared_ptr<mros::Publisher> tfPub;
@@ -88,8 +89,8 @@ void RobotStatePublisher::jointStateCallback(const sensor_msgs::JointState &msg)
     currJointState = msg;
 }
 
-RobotStatePublisher::RobotStatePublisher(const URI &uri, const std::string &jrdfPath)
-    : node("robot_state_publisher", uri)
+RobotStatePublisher::RobotStatePublisher(const URI &uri, const std::string &jrdfPath, int hz)
+    : node("robot_state_publisher", uri), hz(hz)
 {
     tfPub = node.advertise<geometry_msgs::TF>("tf", 10);
     jointStateSub = node.subscribe<sensor_msgs::JointState>("joint_states", 10, std::bind(&RobotStatePublisher::jointStateCallback, this, std::placeholders::_1));
@@ -99,7 +100,7 @@ RobotStatePublisher::RobotStatePublisher(const URI &uri, const std::string &jrdf
     kt = kineval::KinematicTree::fromJson(json->as_object());
 }
 
-void RobotStatePublisher::run(int hz)
+void RobotStatePublisher::run()
 {
     TCPClient client(URI("0.0.0.0", 9000), false);
     client.connect();
@@ -131,8 +132,8 @@ int main()
 
     std::string jrdfPath = "/Users/broderio/Repositories/simple_pubsub/robots/simpleBot.json";
 
-    RobotStatePublisher RSP(uri, jrdfPath);
-    RSP.run(20);
+    RobotStatePublisher RSP(uri, jrdfPath, 50);
+    RSP.run();
 
     return 0;
 }

@@ -33,13 +33,14 @@ struct JointStateObj
 class JointStatePublisher
 {
 public:
-    JointStatePublisher(const URI &uri, const std::vector<std::string> &jointStateTopics);
+    JointStatePublisher(const URI &uri, const std::vector<std::string> &jointStateTopics, int hz = 10);
 
-    void run(int hz);
+    void run();
 
 private:
     void jointStateCallback(const sensor_msgs::JointState &msg);
 
+    int hz;
     mros::Node node;
     std::vector<std::shared_ptr<mros::Subscriber>> jointStateSubs;
     std::shared_ptr<mros::Publisher> jointStatePub;
@@ -76,8 +77,8 @@ void JointStatePublisher::jointStateCallback(const sensor_msgs::JointState &msg)
     }
 }
 
-JointStatePublisher::JointStatePublisher(const URI &uri, const std::vector<std::string> &jointStateTopics)
-    : node("joint_state_publisher", uri)
+JointStatePublisher::JointStatePublisher(const URI &uri, const std::vector<std::string> &jointStateTopics, int hz)
+    : node("joint_state_publisher", uri), hz(hz)
 {
 
     jointStatePub = node.advertise<sensor_msgs::JointState>("joint_states", 10);
@@ -89,7 +90,7 @@ JointStatePublisher::JointStatePublisher(const URI &uri, const std::vector<std::
     }
 }
 
-void JointStatePublisher::run(int hz)
+void JointStatePublisher::run()
 {
     const int periodNs = (1 / (float)hz) * 1000000000;
 
@@ -128,8 +129,8 @@ int main()
 
     std::vector<std::string> jointStateTopics = {"joint_group_1", "joint_group_2"};
 
-    JointStatePublisher JSP(uri, jointStateTopics);
-    JSP.run(10);
+    JointStatePublisher JSP(uri, jointStateTopics, 25);
+    JSP.run();
 
     return 0;
 }
