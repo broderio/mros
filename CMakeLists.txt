@@ -90,7 +90,7 @@ add_library(mros STATIC src/mros/mediator.cpp
                         src/mros/subscriber.cpp
                         src/mros/signalHandler.cpp
                         src/mros/console.cpp
-                        src/mros/argparse.cpp)
+                        src/mros/optparse.cpp)
 target_include_directories(mros PRIVATE include)
 target_link_libraries(mros socket smem mros_priv_msgs)
 
@@ -142,9 +142,9 @@ target_link_libraries(console_test mros)
 target_include_directories(console_test PRIVATE include)
 
 # Add argparse test
-add_executable(argparse_test test/mros/argparse_test.cpp)
-target_link_libraries(argparse_test mros)
-target_include_directories(argparse_test PRIVATE include)
+add_executable(optparse_test test/mros/optparse_test.cpp)
+target_link_libraries(optparse_test mros)
+target_include_directories(optparse_test PRIVATE include)
 
 # Add joint state publisher test
 add_executable(joint_state_publisher test/mros/demo2/jointStatePublisher.cpp)

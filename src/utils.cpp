@@ -2,30 +2,36 @@
 
 URI::URI() : ip(""), port(0) {}
 
-URI::URI(const std::string& ip, int port) : ip(ip), port(port) {}
+URI::URI(const std::string &ip, int port) : ip(ip), port(port) {}
 
-bool URI::operator<(const URI& other) const {
+bool URI::operator<(const URI &other) const
+{
     return ip < other.ip || (ip == other.ip && port < other.port);
 }
 
-bool URI::operator==(const URI& other) const {
+bool URI::operator==(const URI &other) const
+{
     return ip == other.ip && port == other.port;
 }
 
-std::string URI::toString() const {
+std::string URI::toString() const
+{
     return ip + ":" + std::to_string(port);
 }
 
-std::ostream& operator<<(std::ostream& os, const URI& uri) {
+std::ostream &operator<<(std::ostream &os, const URI &uri)
+{
     os << uri.toString();
     return os;
 }
 
-void sleep(int milliseconds) {
+void sleep(int milliseconds)
+{
     std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
 }
 
-std::string DateTime::toString() const {
+std::string DateTime::toString() const
+{
     std::string year = std::to_string(this->year);
     // Pad month, day, hour, minute, second with 0 if less than 10
     std::string month = this->month < 10 ? "0" + std::to_string(this->month) : std::to_string(this->month);
@@ -37,7 +43,8 @@ std::string DateTime::toString() const {
     return year + "-" + month + "-" + day + "_" + hour + ":" + minute + ":" + second;
 }
 
-DateTime getDateTime() {
+DateTime getDateTime()
+{
     std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
     std::time_t now_c = std::chrono::system_clock::to_time_t(now);
     std::tm now_tm = *std::localtime(&now_c);
@@ -53,53 +60,65 @@ DateTime getDateTime() {
     return dt;
 }
 
-int64_t getTimeMilli() {
+int64_t getTimeMilli()
+{
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
-int64_t getTimeNano() {
+int64_t getTimeNano()
+{
     return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
-float degToRad(float deg) {
+float degToRad(float deg)
+{
     return deg * M_PI / 180.0;
 }
 
-float radToDeg(float rad) {
+float radToDeg(float rad)
+{
     return rad * 180.0 / M_PI;
 }
 
-std::string getLocalIP() {
-    struct ifaddrs * ifAddrStruct=NULL;
-    struct ifaddrs * ifa=NULL;
-    void * tmpAddrPtr=NULL;
+std::string getLocalIP()
+{
+    struct ifaddrs *ifAddrStruct = NULL;
+    struct ifaddrs *ifa = NULL;
+    void *tmpAddrPtr = NULL;
 
     getifaddrs(&ifAddrStruct);
 
-    for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
-        if (!ifa->ifa_addr) {
+    for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next)
+    {
+        if (!ifa->ifa_addr)
+        {
             continue;
         }
-        if (ifa->ifa_addr->sa_family == AF_INET) { // check it is IP4
+        if (ifa->ifa_addr->sa_family == AF_INET)
+        { // check it is IP4
             // is a valid IP4 Address
-            tmpAddrPtr=&((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+            tmpAddrPtr = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
             char addressBuffer[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
-            if (strcmp(ifa->ifa_name,"wlan0")==0 && strcmp(addressBuffer,"127.0.1.1")!=0) { // Check it's not the loopback
+            if (strncmp(addressBuffer, "127", 3) != 0)
+            { // Check it's not the loopback
                 return std::string(addressBuffer);
             }
         }
     }
-    if (ifAddrStruct!=NULL) freeifaddrs(ifAddrStruct);
+    if (ifAddrStruct != NULL)
+        freeifaddrs(ifAddrStruct);
     return "";
 }
 
-std::string addTab(const std::string& str, int tabCount) {
+std::string addTab(const std::string &str, int tabCount)
+{
     // Insert tabCount number of tabs at the beginning of each line
     std::string tab(tabCount, '\t');
     std::string result = tab + str;
     size_t pos = 2;
-    while ((pos = result.find("\n", pos)) != std::string::npos) {
+    while ((pos = result.find("\n", pos)) != std::string::npos)
+    {
         result.replace(pos, 1, "\n" + tab);
         pos += tabCount + 1;
     }

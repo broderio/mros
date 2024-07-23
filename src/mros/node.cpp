@@ -123,7 +123,7 @@ namespace mros
             }
             else if ((uint8_t)inMsg[0] == PONG_MSG) {
                 // std::cout << "Received PONG from Mediator" << std::endl;
-                Console::log(LogLevel::INFO, "Received PONG from Mediator");
+                Console::log(LogLevel::DEBUG, "Received PONG from Mediator");
             }
         }
         else if (inMsg.size() > 0)
@@ -234,6 +234,14 @@ namespace mros
 
     void Node::handlePubNotify(const private_msgs::Notify &notify)
     {
+        std::string error = notify.error.data;
+        if (error.size() > 0)
+        {
+            // std::cerr << "Error: " << error << std::endl;
+            Console::log(LogLevel::ERROR, error);
+            shutdown();
+        }
+
         std::string topic = notify.topic.data;
         for (auto &pub : publishers[topic])
         {
@@ -246,6 +254,14 @@ namespace mros
 
     void Node::handleSubNotify(const private_msgs::Notify &notify)
     {
+        std::string error = notify.error.data;
+        if (error.size() > 0)
+        {
+            // std::cerr << "Error: " << error << std::endl;
+            Console::log(LogLevel::ERROR, error);
+            shutdown();
+        }
+
         std::string topic = notify.topic.data;
         for (auto &sub : subscribers[topic])
         {

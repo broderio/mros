@@ -103,7 +103,12 @@ void Mediator::registerPublisher(const private_msgs::Register &msg, const URI &c
     URIPair uriPair = {clientURI, uri};
 
     // Check if topic already exists
-    if (topicMap.find(topic) == topicMap.end())
+    if (topic.empty())
+    {
+        error = "Topic is an empty string";
+        Console::log(LogLevel::ERROR, "Received empty topic string in Register message from Publisher " + uri.toString());
+    }
+    else if (topicMap.find(topic) == topicMap.end())
     {
         // Topic does not exist, create new topic
         topicMap[topic] = Topic();
@@ -115,7 +120,7 @@ void Mediator::registerPublisher(const private_msgs::Register &msg, const URI &c
         if (topicMap[topic].msgType != msgType)
         {
             // Topic exists with different message type
-            error = "Topic " + topic + " already exists with different message type " + topicMap[topic].msgType;
+            error = "Topic \"" + topic + "\" already exists with different message type " + topicMap[topic].msgType;
             Console::log(LogLevel::ERROR, error);
         }
         else if (topicMap[topic].pubs.find(uriPair) != topicMap[topic].pubs.end())
@@ -131,7 +136,7 @@ void Mediator::registerPublisher(const private_msgs::Register &msg, const URI &c
     {
         // Add publisher to topic
         topicMap[topic].pubs.insert(uriPair);
-        Console::log(LogLevel::INFO, "Registered publisher " + uriPair.serverURI.toString() + " from node " + uriPair.clientURI.toString() + " on topic " + topic);
+        Console::log(LogLevel::INFO, "Registered publisher " + uriPair.serverURI.toString() + " from node " + uriPair.clientURI.toString() + " on topic \"" + topic + "\"");
 
         // Add existing subscribers to response
         for (const URIPair &subscriber : topicMap[topic].subs)
@@ -183,7 +188,12 @@ void Mediator::registerSubscriber(const private_msgs::Register &msg, const URI &
     URIPair uriPair = {clientURI, uri};
 
     // Check if topic already exists
-    if (topicMap.find(topic) == topicMap.end())
+    if (topic.empty())
+    {
+        error = "Topic is an empty string";
+        Console::log(LogLevel::ERROR, "Received empty topic string in Register message from Subscriber " + uri.toString());
+    }
+    else if (topicMap.find(topic) == topicMap.end())
     {
         // Topic does not exist, create new topic
         topicMap[topic] = Topic();
@@ -195,13 +205,13 @@ void Mediator::registerSubscriber(const private_msgs::Register &msg, const URI &
         if (topicMap[topic].msgType != msgType)
         {
             // Topic exists with different message type
-            error = "Topic " + topic + " already exists with different message type " + topicMap[topic].msgType;
+            error = "Topic \"" + topic + "\" already exists with different message type \"" + topicMap[topic].msgType + "\"";
             Console::log(LogLevel::ERROR, error);
         }
         else if (topicMap[topic].subs.find(uriPair) != topicMap[topic].subs.end())
         {
             // Subscriber already exists
-            error = "Subscriber " + uri.toString() + " already exists for topic " + topic;
+            error = "Subscriber " + uri.toString() + " already exists for topic \"" + topic + "\"";
             Console::log(LogLevel::ERROR, error);
         }
     }
@@ -211,7 +221,7 @@ void Mediator::registerSubscriber(const private_msgs::Register &msg, const URI &
     {
         // Add subscriber to topic
         topicMap[topic].subs.insert(uriPair);
-        Console::log(LogLevel::INFO, "Registered subscriber " + uriPair.serverURI.toString() + " from node " + uriPair.clientURI.toString() + " on topic " + topic);
+        Console::log(LogLevel::INFO, "Registered subscriber " + uriPair.serverURI.toString() + " from node " + uriPair.clientURI.toString() + " on topic \"" + topic + "\"");
 
         // Add existing publishers to response
         for (const URIPair &publisher : topicMap[topic].pubs)
@@ -262,7 +272,7 @@ void Mediator::deregisterPublisher(const private_msgs::Register &msg, const URI 
     // Check if topic exists
     if (topicMap.find(topic) == topicMap.end())
     {
-        Console::log(LogLevel::ERROR, "Topic " + topic + " not found.");
+        Console::log(LogLevel::ERROR, "Topic \"" + topic + "\" from Deregister message from Publisher " + uriPair.clientURI.toString() + " not found.");
         return;
     }
 
@@ -275,7 +285,7 @@ void Mediator::deregisterPublisher(const private_msgs::Register &msg, const URI 
 
     // Erase publisher from topic
     topicMap[topic].pubs.erase(uriPair);
-    Console::log(LogLevel::INFO, "Deregistered publisher " + uriPair.serverURI.toString() + " from node " + uriPair.clientURI.toString() + " on topic " + topic);
+    Console::log(LogLevel::INFO, "Deregistered publisher " + uriPair.serverURI.toString() + " from node " + uriPair.clientURI.toString() + " on topic \"" + topic + "\"");
 
     Time time;
     int t = getTimeNano();
@@ -309,7 +319,7 @@ void Mediator::deregisterSubscriber(const private_msgs::Register &msg, const URI
     // Check if topic exists
     if (topicMap.find(topic) == topicMap.end())
     {
-        Console::log(LogLevel::ERROR, "Topic " + topic + " not found.");
+        Console::log(LogLevel::ERROR, "Topic \"" + topic + "\" from Deregister message from Subscriber " + uriPair.clientURI.toString() + " not found.");
         return;
     }
 
@@ -322,7 +332,7 @@ void Mediator::deregisterSubscriber(const private_msgs::Register &msg, const URI
 
     // Erase subscriber from topic
     topicMap[topic].subs.erase(uriPair);
-    Console::log(LogLevel::INFO, "Deregistered subscriber " + uriPair.serverURI.toString() + " from node " + uriPair.clientURI.toString() + " on topic " + topic);
+    Console::log(LogLevel::INFO, "Deregistered subscriber " + uriPair.serverURI.toString() + " from node " + uriPair.clientURI.toString() + " on topic \"" + topic + "\"");
 
     Time time;
     int t = getTimeNano();

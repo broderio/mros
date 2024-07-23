@@ -24,8 +24,7 @@ int main() {
     mros::Node node("robot_state", uri);
 
     std::function<void(const geometry_msgs::TF &)> callback = [](const geometry_msgs::TF &msg) {
-        // mros::Console::log(mros::LogLevel::DEBUG, msg.toString());
-
+        mros::Console::log(mros::LogLevel::DEBUG, msg.toString());
     };
 
     std::shared_ptr<mros::Subscriber> sub = node.subscribe("tf", 10, callback);
