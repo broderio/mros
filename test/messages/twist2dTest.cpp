@@ -1,8 +1,7 @@
-#include <cassert>
-#include "messages/mbot_msgs/twist2d.hpp"
+#include "messages/mbot_msgs/twist2D.hpp"
 
 int main() {
-    Twist2d twist;
+    mbot_msgs::Twist2D twist;
     twist.utime = 123456789;
     twist.vx = 1.0;
     twist.vy = 2.0;
@@ -16,7 +15,7 @@ int main() {
 
     std::string msg = Parser::encode(twist, TOPIC_ID::MBOT_VEL_CMD);
 
-    Twist2d twist2;
+    mbot_msgs::Twist2D twist2;
     bool res = Parser::decode(msg, twist2);
     if (!res) return 1;
 

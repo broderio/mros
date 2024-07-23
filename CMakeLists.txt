@@ -6,12 +6,12 @@ set(CMAKE_CXX_STANDARD 11)
 
 find_library(PTHREAD pthread)
 
-### UTILS ###
+### UTILS LIBRARY ###
 
 add_library(utils STATIC src/utils.cpp)
 target_include_directories(utils PRIVATE include)
 
-### MESSAGES ###
+### MESSAGES LIBRARY ###
 
 add_library(msgs STATIC src/messages/message.cpp
                             src/messages/geometry_msgs/point.cpp
@@ -37,7 +37,7 @@ add_library(msgs STATIC src/messages/message.cpp
 target_include_directories(msgs PRIVATE include)
 target_link_libraries(msgs utils)
 
-### SHARED MEMORY ###
+### SHARED MEMORY LIBRARY ###
 
 add_library(smem STATIC src/smem/squeue.cpp
                            src/smem/smutex.cpp
@@ -45,7 +45,7 @@ add_library(smem STATIC src/smem/squeue.cpp
 target_include_directories(smem PRIVATE include)
 target_link_libraries(smem pthread utils)
 
-### SOCKET ###
+### SOCKET LIBRARY ###
 
 add_library(socket STATIC src/socket/tcp/client.cpp
                              src/socket/tcp/server.cpp
@@ -54,7 +54,7 @@ add_library(socket STATIC src/socket/tcp/client.cpp
 target_include_directories(socket PRIVATE include)
 target_link_libraries(socket utils)
 
-### LINALG ###
+### LINALG LIBRARY ###
 
 add_library(linalg STATIC src/linalg/vector.cpp
                           src/linalg/matrix.cpp
@@ -63,7 +63,7 @@ add_library(linalg STATIC src/linalg/vector.cpp
 target_include_directories(linalg PRIVATE include)
 target_link_libraries(linalg msgs)
 
-### KINEVAL ###
+### KINEVAL LIBRARY ###
 add_library(kineval STATIC src/kineval/joint.cpp
                            src/kineval/json.cpp
                            src/kineval/link.cpp
@@ -72,7 +72,7 @@ add_library(kineval STATIC src/kineval/joint.cpp
 target_include_directories(kineval PRIVATE include)
 target_link_libraries(kineval linalg)
 
-### MROS PRIVATE MESSAGES ###
+### MROS PRIVATE MESSAGES LIBRARY ###
 add_library(mros_priv_msgs STATIC src/mros/private_msgs/disconnect.cpp
                                       src/mros/private_msgs/notify.cpp
                                       src/mros/private_msgs/register.cpp
@@ -82,7 +82,7 @@ add_library(mros_priv_msgs STATIC src/mros/private_msgs/disconnect.cpp
 target_include_directories(mros_priv_msgs PRIVATE include)
 target_link_libraries(mros_priv_msgs msgs)
 
-### MROS ###
+### MROS LIBRARY ###
 
 add_library(mros STATIC src/mros/mediator.cpp
                         src/mros/node.cpp
@@ -97,52 +97,52 @@ target_link_libraries(mros socket smem mros_priv_msgs)
 ### MROS TESTS ###
 
 # Add core test
-add_executable(core_test test/mros/core_test.cpp)
+add_executable(core_test test/mros/coreTest.cpp)
 target_link_libraries(core_test mros)
 target_include_directories(core_test PRIVATE include)
 
 # Add publisher test
-add_executable(publisher_test test/mros/publisher_test.cpp)
+add_executable(publisher_test test/mros/publisherTest.cpp)
 target_link_libraries(publisher_test mros)
 target_include_directories(publisher_test PRIVATE include)
 
 # Add subscriber test
-add_executable(subscriber_test test/mros/subscriber_test.cpp)
+add_executable(subscriber_test test/mros/subscriberTest.cpp)
 target_link_libraries(subscriber_test mros)
 target_include_directories(subscriber_test PRIVATE include)
 
 # Add pubsub test
-add_executable(pubsub_test test/mros/pubsub_test.cpp)
+add_executable(pubsub_test test/mros/pubsubTest.cpp)
 target_link_libraries(pubsub_test mros)
 target_include_directories(pubsub_test PRIVATE include)
 
 # Add pose publisher test
-add_executable(pose_publisher_test test/mros/demo1/pose_publisher_test.cpp)
+add_executable(pose_publisher_test test/mros/demo1/posePublisherTest.cpp)
 target_link_libraries(pose_publisher_test mros linalg)
 target_include_directories(pose_publisher_test PRIVATE include)
 
 # Add twist publisher test
-add_executable(twist_publisher_test test/mros/demo1/twist_publisher_test.cpp)
+add_executable(twist_publisher_test test/mros/demo1/twistPublisherTest.cpp)
 target_link_libraries(twist_publisher_test mros linalg)
 target_include_directories(twist_publisher_test PRIVATE include)
 
 # Add pose listener test
-add_executable(pose_listener_test test/mros/demo1/pose_listener_test.cpp)
+add_executable(pose_listener_test test/mros/demo1/poseListenerTest.cpp)
 target_link_libraries(pose_listener_test mros linalg)
 target_include_directories(pose_listener_test PRIVATE include)
 
 # Add twist listener test
-add_executable(twist_listener_test test/mros/demo1/twist_listener_test.cpp)
+add_executable(twist_listener_test test/mros/demo1/twistListenerTest.cpp)
 target_link_libraries(twist_listener_test mros linalg)
 target_include_directories(twist_listener_test PRIVATE include)
 
 # Add console test
-add_executable(console_test test/mros/console_test.cpp)
+add_executable(console_test test/mros/consoleTest.cpp)
 target_link_libraries(console_test mros)
 target_include_directories(console_test PRIVATE include)
 
 # Add argparse test
-add_executable(optparse_test test/mros/optparse_test.cpp)
+add_executable(optparse_test test/mros/optparseTest.cpp)
 target_link_libraries(optparse_test mros)
 target_include_directories(optparse_test PRIVATE include)
 
@@ -174,92 +174,92 @@ target_include_directories(joint_group_2 PRIVATE include)
 ### SOCKET TESTS ###
 
 # Add socket client test
-add_executable(tcp_client_test test/socket/tcp/client_test.cpp)
+add_executable(tcp_client_test test/socket/tcp/clientTest.cpp)
 target_link_libraries(tcp_client_test socket)
 target_include_directories(tcp_client_test PRIVATE include)
 
 # Add socket server test
-add_executable(tcp_server_test test/socket/tcp/server_test.cpp)
+add_executable(tcp_server_test test/socket/tcp/serverTest.cpp)
 target_link_libraries(tcp_server_test socket)
 target_include_directories(tcp_server_test PRIVATE include)
 
 # Add socket client test
-add_executable(tcp_client_noblock_test test/socket/tcp/client_noblock_test.cpp)
+add_executable(tcp_client_noblock_test test/socket/tcp/clientNoBlockTest.cpp)
 target_link_libraries(tcp_client_noblock_test socket)
 target_include_directories(tcp_client_noblock_test PRIVATE include)
 
 # Add socket server test
-add_executable(tcp_server_noblock_test test/socket/tcp/server_noblock_test.cpp)
+add_executable(tcp_server_noblock_test test/socket/tcp/serverNoBlockTest.cpp)
 target_link_libraries(tcp_server_noblock_test socket)
 target_include_directories(tcp_server_noblock_test PRIVATE include)
 
 # Add UDP socket client test
-add_executable(udp_client_test test/socket/udp/client_test.cpp)
+add_executable(udp_client_test test/socket/udp/clientTest.cpp)
 target_link_libraries(udp_client_test socket)
 target_include_directories(udp_client_test PRIVATE include)
 
 # Add UDP socket server test
-add_executable(udp_server_test test/socket/udp/server_test.cpp)
+add_executable(udp_server_test test/socket/udp/serverTest.cpp)
 target_link_libraries(udp_server_test socket)
 target_include_directories(udp_server_test PRIVATE include)
 
-#Add UDP socket peer test
-add_executable(udp_peer_test test/socket/udp/peer_test.cpp)
+# Add UDP socket peer test
+add_executable(udp_peer_test test/socket/udp/peerTest.cpp)
 target_link_libraries(udp_peer_test socket)
 target_include_directories(udp_peer_test PRIVATE include)
 
 ### SHARED MEMORY TESTS ###
 
 # Add smem read test
-add_executable(smemReadTest test/smem/smemReadTest.cpp)
-target_link_libraries(smemReadTest smem)
-target_include_directories(smemReadTest PUBLIC include)
+add_executable(smem_read_test test/smem/smemReadTest.cpp)
+target_link_libraries(smem_read_test smem)
+target_include_directories(smem_read_test PUBLIC include)
 
 # Add smem write test
-add_executable(smemWriteTest test/smem/smemWriteTest.cpp)
-target_link_libraries(smemWriteTest smem)
-target_include_directories(smemWriteTest PUBLIC include)
+add_executable(smem_write_test test/smem/smemWriteTest.cpp)
+target_link_libraries(smem_write_test smem)
+target_include_directories(smem_write_test PUBLIC include)
 
 # Add smem mutex test
-add_executable(smemMutexTest test/smem/smemMutexTest.cpp)
-target_link_libraries(smemMutexTest smem)
-target_include_directories(smemMutexTest PUBLIC include)
+add_executable(smem_mutex_test test/smem/smemMutexTest.cpp)
+target_link_libraries(smem_mutex_test smem)
+target_include_directories(smem_mutex_test PUBLIC include)
 
 ### MESSAGES TESTS ###
 
 # Add pose messages test
-add_executable(poseTest test/messages/poseTest.cpp)
-target_link_libraries(poseTest msgs)
-target_include_directories(poseTest PUBLIC include)
+add_executable(pose_test test/messages/poseTest.cpp)
+target_link_libraries(pose_test msgs)
+target_include_directories(pose_test PUBLIC include)
 
 # Add jointState messages test
-add_executable(jointStateTest test/messages/jointStateTest.cpp)
-target_link_libraries(jointStateTest msgs)
-target_include_directories(jointStateTest PUBLIC include)
+add_executable(joint_state_test test/messages/jointStateTest.cpp)
+target_link_libraries(joint_state_test msgs)
+target_include_directories(joint_state_test PUBLIC include)
 
 ### LINALG TESTS ###
 
 # Add linalg vector test
-add_executable(vectorTest test/linalg/vectorTest.cpp)
-target_link_libraries(vectorTest linalg)
-target_include_directories(vectorTest PUBLIC include)
+add_executable(vector_test test/linalg/vectorTest.cpp)
+target_link_libraries(vector_test linalg)
+target_include_directories(vector_test PUBLIC include)
 
 # Add linalg matrix test
-add_executable(matrixTest test/linalg/matrixTest.cpp)
-target_link_libraries(matrixTest linalg)
-target_include_directories(matrixTest PUBLIC include)
+add_executable(matrix_test test/linalg/matrixTest.cpp)
+target_link_libraries(matrix_test linalg)
+target_include_directories(matrix_test PUBLIC include)
 
 # Add linalg quaternion test
-add_executable(quaternionTest test/linalg/quaternionTest.cpp)
-target_link_libraries(quaternionTest linalg)
-target_include_directories(quaternionTest PUBLIC include)
+add_executable(quaternion_test test/linalg/quaternionTest.cpp)
+target_link_libraries(quaternion_test linalg)
+target_include_directories(quaternion_test PUBLIC include)
 
 ### KINEVAL TESTS ###
 
 # Add kineval test
-add_executable(kinevalTest test/kineval/kinevalTest.cpp)
-target_link_libraries(kinevalTest kineval linalg)
-target_include_directories(kinevalTest PUBLIC include)
+add_executable(tree_test test/kineval/treeTest.cpp)
+target_link_libraries(tree_test kineval linalg)
+target_include_directories(tree_test PUBLIC include)
 
 
 ### INSTALL ###
