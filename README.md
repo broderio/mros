@@ -37,3 +37,17 @@ To install the MROS libraries locally, run:
 ```bash
 sudo make install
 ```
+
+## Using MROS
+
+Once the MROS libraries have been installed locally, the following can be used as an example to include the MROS header files and libraries into your own CMake project:
+
+```cmake
+
+find_package(mros REQUIRED)
+
+add_executable(example example.cpp)
+target_include_directories(example PRIVATE ${MROS_INCLUDE_DIRS})
+target_link_libraries(example ${MROS_LIBRARIES})
+
+```
