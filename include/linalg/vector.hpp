@@ -15,6 +15,7 @@ public:
     Vector();
     Vector(size_t size);
     Vector(size_t size, float val);
+    Vector(const std::initializer_list<float>& data);
     Vector(const std::vector<float>& data);
     Vector(const Vector& v);
     Vector &operator=(const Vector& rhs);

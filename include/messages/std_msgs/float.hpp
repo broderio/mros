@@ -18,6 +18,8 @@ namespace std_msgs
 
         Float32 &operator=(const Float32 &other);
 
+        operator float() const;
+
         uint16_t getMsgLen() const override;
 
         std::string toString() const override;
@@ -39,6 +41,8 @@ namespace std_msgs
         Float64(const Float64 &other);
 
         Float64 &operator=(const Float64 &other);
+
+        operator double() const;
 
         uint16_t getMsgLen() const override;
 

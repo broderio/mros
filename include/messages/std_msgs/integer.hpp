@@ -18,6 +18,8 @@ namespace std_msgs
 
         Char &operator=(const Char &other);
 
+        operator char() const;
+
         uint16_t getMsgLen() const override;
 
         std::string toString() const override;
@@ -39,6 +41,8 @@ namespace std_msgs
         Int8(const Int8 &other);
 
         Int8 &operator=(const Int8 &other);
+
+        operator int8_t() const;
 
         uint16_t getMsgLen() const override;
 
@@ -62,6 +66,8 @@ namespace std_msgs
 
         Int16 &operator=(const Int16 &other);
 
+        operator int16_t() const;
+
         uint16_t getMsgLen() const override;
 
         std::string toString() const override;
@@ -83,6 +89,8 @@ namespace std_msgs
         Int32(const Int32 &other);
 
         Int32 &operator=(const Int32 &other);
+
+        operator int32_t() const;
 
         uint16_t getMsgLen() const override;
 
@@ -106,6 +114,8 @@ namespace std_msgs
 
         Int64 &operator=(const Int64 &other);
 
+        operator int64_t() const;
+
         uint16_t getMsgLen() const override;
 
         std::string toString() const override;
@@ -127,6 +137,8 @@ namespace std_msgs
         UInt8(const UInt8 &other);
 
         UInt8 &operator=(const UInt8 &other);
+
+        operator uint8_t() const;
 
         uint16_t getMsgLen() const override;
 
@@ -150,6 +162,8 @@ namespace std_msgs
 
         UInt16 &operator=(const UInt16 &other);
 
+        operator uint16_t() const;
+
         uint16_t getMsgLen() const override;
 
         std::string toString() const override;
@@ -172,6 +186,8 @@ namespace std_msgs
 
         UInt32 &operator=(const UInt32 &other);
 
+        operator uint32_t() const;
+
         uint16_t getMsgLen() const override;
 
         std::string toString() const override;
@@ -193,6 +209,8 @@ namespace std_msgs
         UInt64(const UInt64 &other);
 
         UInt64 &operator=(const UInt64 &other);
+
+        operator uint64_t() const;
 
         uint16_t getMsgLen() const override;
 

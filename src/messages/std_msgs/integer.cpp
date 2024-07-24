@@ -21,6 +21,11 @@ namespace std_msgs
         return *this;
     }
 
+    Char::operator char() const
+    {
+        return data;
+    }
+
     uint16_t Char::getMsgLen() const
     {
         return sizeof(data);
@@ -67,6 +72,11 @@ namespace std_msgs
         }
         data = other.data;
         return *this;
+    }
+
+    Int8::operator int8_t() const
+    {
+        return data;
     }
 
     uint16_t Int8::getMsgLen() const
@@ -117,6 +127,11 @@ namespace std_msgs
         return *this;
     }
 
+    Int16::operator int16_t() const
+    {
+        return data;
+    }
+
     uint16_t Int16::getMsgLen() const
     {
         return sizeof(data);
@@ -163,6 +178,11 @@ namespace std_msgs
         }
         data = other.data;
         return *this;
+    }
+
+    Int32::operator int32_t() const
+    {
+        return data;
     }
 
     uint16_t Int32::getMsgLen() const
@@ -213,6 +233,11 @@ namespace std_msgs
         return *this;
     }
 
+    Int64::operator int64_t() const
+    {
+        return data;
+    }
+
     uint16_t Int64::getMsgLen() const
     {
         return sizeof(data);
@@ -259,6 +284,11 @@ namespace std_msgs
         }
         data = other.data;
         return *this;
+    }
+
+    UInt8::operator uint8_t() const
+    {
+        return data;
     }
 
     uint16_t UInt8::getMsgLen() const
@@ -309,6 +339,11 @@ namespace std_msgs
         return *this;
     }
 
+    UInt16::operator uint16_t() const
+    {
+        return data;
+    }
+
     uint16_t UInt16::getMsgLen() const
     {
         return sizeof(data);
@@ -357,6 +392,11 @@ namespace std_msgs
         return *this;
     }
 
+    UInt32::operator uint32_t() const
+    {
+        return data;
+    }
+
     uint16_t UInt32::getMsgLen() const
     {
         return sizeof(data);
@@ -403,6 +443,11 @@ namespace std_msgs
         }
         data = other.data;
         return *this;
+    }
+
+    UInt64::operator uint64_t() const
+    {
+        return data;
     }
 
     uint16_t UInt64::getMsgLen() const

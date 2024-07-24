@@ -1,6 +1,6 @@
-#include "mros/node.hpp"
-#include "mros/publisher.hpp"
-#include "mros/console.hpp"
+#include "mros/core/node.hpp"
+#include "mros/core/publisher.hpp"
+#include "mros/utils/console.hpp"
 #include "utils.hpp"
 
 #include "messages/sensor_msgs/jointState.hpp"
@@ -19,6 +19,7 @@ int main() {
     uri.port = MEDIATOR_PORT_NUM;
 
     mros::Node node("publisher_node", uri);
+    mros::Console::setLevel(mros::LogLevel::DEBUG);
 
     std::shared_ptr<mros::Publisher> pub = node.advertise<sensor_msgs::JointState>("joint_group_1", 10);
 

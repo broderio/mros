@@ -40,6 +40,18 @@ geometry_msgs::Quaternion Quaternion::toMsg() const
     return geometry_msgs::Quaternion(x, y, z, w);
 }
 
+void Quaternion::toAxisAngle(Vector &axis, float &angle) const
+{
+    axis = Vector(3);
+    float halfAngle = std::acos(w);
+    angle = 2 * halfAngle;
+    if (halfAngle < 1e-6)
+    {
+        return;
+    }
+    axis = Vector({x, y, z}) / std::sin(halfAngle);
+}
+
 Quaternion Quaternion::operator+(const Quaternion &rhs) const
 {
     return Quaternion(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w);

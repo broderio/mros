@@ -17,6 +17,7 @@
 #include "linalg/rotation.hpp"
 
 #include "messages/geometry_msgs/transform.hpp"
+#include "messages/sensor_msgs/jointState.hpp"
 
 namespace kineval
 {
@@ -28,6 +29,7 @@ namespace kineval
         KinematicTree(const std::string &name);
         KinematicTree(const KinematicTree &t);
         KinematicTree &operator=(const KinematicTree &t);
+
         static KinematicTree fromJson(const JsonObject &json);
 
         std::string getName() const;
@@ -66,6 +68,8 @@ namespace kineval
         std::map<std::string, Transform> getGlobalLinkTransforms() const;
 
         geometry_msgs::TF TF() const;
+
+        sensor_msgs::JointState inverseKinematics(const Transform &goal, const sensor_msgs::JointState &q0, float tol, int maxIter) const;
 
     private:
         struct LinkNode;

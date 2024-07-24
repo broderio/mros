@@ -15,6 +15,11 @@ namespace std_msgs
         return *this;
     }
 
+    String::operator std::string() const
+    {
+        return data;
+    }
+
     uint16_t String::getMsgLen() const
     {
         return 4 + data.size();

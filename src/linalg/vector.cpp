@@ -8,6 +8,8 @@ Vector::Vector(size_t size) : data(size) {}
 
 Vector::Vector(size_t size, float val) : data(size, val) {}
 
+Vector::Vector(const std::initializer_list<float>& data) : data(data) {}
+
 Vector::Vector(const Vector& v) : data(v.data) {}
 
 Vector &Vector::operator=(const Vector& rhs) {

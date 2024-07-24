@@ -22,6 +22,11 @@ namespace std_msgs
         return *this;
     }
 
+    Float32::operator float() const
+    {
+        return data;
+    }
+
     uint16_t Float32::getMsgLen() const
     {
         return sizeof(float);
@@ -68,6 +73,11 @@ namespace std_msgs
         }
         data = other.data;
         return *this;
+    }
+
+    Float64::operator double() const
+    {
+        return data;
     }
 
     uint16_t Float64::getMsgLen() const

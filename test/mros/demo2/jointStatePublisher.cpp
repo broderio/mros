@@ -1,6 +1,6 @@
-#include "mros/node.hpp"
-#include "mros/subscriber.hpp"
-#include "mros/optparse.hpp"
+#include "mros/core/node.hpp"
+#include "mros/core/subscriber.hpp"
+#include "mros/utils/argParser.hpp"
 #include "utils.hpp"
 
 #include "messages/sensor_msgs/jointState.hpp"
@@ -91,9 +91,10 @@ JointStatePublisher::JointStatePublisher(const URI &uri, const std::vector<std::
 
     jointStatePub = node.advertise<sensor_msgs::JointState>("joint_states", 10);
 
+    auto callback = std::bind(&JointStatePublisher::jointStateCallback, this, std::placeholders::_1);
     for (std::string topic : jointStateTopics)
     {
-        auto jointStateSub = node.subscribe<sensor_msgs::JointState>(topic, 10, std::bind(&JointStatePublisher::jointStateCallback, this, std::placeholders::_1));
+        auto jointStateSub = node.subscribe<sensor_msgs::JointState>(topic, 10, callback);
         jointStateSubs.push_back(jointStateSub);
     }
 }
@@ -131,22 +132,24 @@ void JointStatePublisher::run()
 int main(int argc, char **argv)
 {
 
-    mros::OptionParser::init("joint_state_publisher", "Publishes interpolated joint states");
-    mros::OptionParser::addOption({"topics", "t", "Joint state topics", "", "", '+', true});
-    mros::OptionParser::addOption({"ip", "i", "Core IP address", "0.0.0.0", "", '1', false});
-    mros::OptionParser::addOption({"freq", "f", "Publish rate in Hz", "25", "", '1', false});
-    mros::OptionParser::addOption({"delta-time", "d", "Time threshold to stop interpolation", "0.1", "", '1', false});
+    mros::ArgParser::init("joint_state_publisher", "Publishes interpolated joint states");
+    mros::ArgParser::addArg({"topics", "Joint state topics", '+'});
 
-    mros::OptionParser::parse(argc, argv);
+    mros::ArgParser::addOpt({"ip", "i", "Core IP address", "0.0.0.0", "", '1'});
+    mros::ArgParser::addOpt({"freq", "f", "Publish rate in Hz", "25", "", '1'});
+    mros::ArgParser::addOpt({"delta-time", "d", "Time threshold to stop interpolation", "0.1", "", '1'});
+
+    mros::ArgParser::parse(argc, argv);
 
     URI uri;
-    uri.ip = mros::OptionParser::getOption("ip")[0];
+    uri.ip = mros::ArgParser::getOpt("ip")[0];
     uri.port = MEDIATOR_PORT_NUM;
-    int freq = std::stoi(mros::OptionParser::getOption("freq")[0]);
-    float timeThreshold = std::stof(mros::OptionParser::getOption("delta-time")[0]);
-    std::vector<std::string> topics = mros::OptionParser::getOption("topics");
+    int freq = std::stoi(mros::ArgParser::getOpt("freq")[0]);
+    float timeThreshold = std::stof(mros::ArgParser::getOpt("delta-time")[0]);
+    std::vector<std::string> topics = mros::ArgParser::getArg("topics");
 
     JointStatePublisher JSP(uri, topics, freq, timeThreshold);
+    mros::Console::setLevel(mros::LogLevel::DEBUG);
     JSP.run();
 
     return 0;

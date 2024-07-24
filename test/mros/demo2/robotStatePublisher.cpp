@@ -4,10 +4,10 @@
 
 #include "socket/tcp/client.hpp"
 
-#include "mros/node.hpp"
-#include "mros/subscriber.hpp"
-#include "mros/console.hpp"
-#include "mros/optparse.hpp"
+#include "mros/core/node.hpp"
+#include "mros/core/subscriber.hpp"
+#include "mros/utils/console.hpp"
+#include "mros/utils/argParser.hpp"
 #include "utils.hpp"
 
 #include "messages/sensor_msgs/jointState.hpp"
@@ -144,23 +144,26 @@ void RobotStatePublisher::run()
 
 int main(int argc, char **argv)
 {
-    mros::OptionParser::init("robot_state_publisher", "Publishes interpolated transforms based on joint states");
-    mros::OptionParser::addOption({"jrdf", "j", "Path to JRDF file", "", "", '1', true});
-    mros::OptionParser::addOption({"ip", "i", "Core IP address", "0.0.0.0", "", '1', false});
-    mros::OptionParser::addOption({"freq", "f", "Publish rate in Hz", "25", "", '1', false});
-    mros::OptionParser::addOption({"delta-time", "d", "Time threshold to stop interpolation", "0.1", "", '1', false});
+    mros::ArgParser::init("robot_state_publisher", "Publishes interpolated transforms based on joint states");
 
-    mros::OptionParser::parse(argc, argv);
+    mros::ArgParser::addArg({"jrdf", "Path to JRDF file", '1'});
 
-    std::string jrdfPath = mros::OptionParser::getOption("jrdf")[0];
+    mros::ArgParser::addOpt({"ip", "i", "Core IP address", "0.0.0.0", "", '1'});
+    mros::ArgParser::addOpt({"freq", "f", "Publish rate in Hz", "25", "", '1'});
+    mros::ArgParser::addOpt({"delta-time", "d", "Time threshold to stop interpolation", "0.1", "", '1'});
+
+    mros::ArgParser::parse(argc, argv);
+
+    std::string jrdfPath = mros::ArgParser::getArg("jrdf")[0];
 
     URI uri;
-    uri.ip = mros::OptionParser::getOption("ip")[0];
+    uri.ip = mros::ArgParser::getOpt("ip")[0];
     uri.port = MEDIATOR_PORT_NUM;
 
-    int freq = std::stoi(mros::OptionParser::getOption("freq")[0]);
+    int freq = std::stoi(mros::ArgParser::getOpt("freq")[0]);
 
-    float timeThreshold = std::stof(mros::OptionParser::getOption("delta-time")[0]);
+    float timeThreshold = std::stof(mros::ArgParser::getOpt("delta-time")[0]);
+
 
     RobotStatePublisher RSP(uri, jrdfPath, freq, timeThreshold);
     RSP.run();

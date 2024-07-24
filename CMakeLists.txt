@@ -84,13 +84,14 @@ target_link_libraries(mros_priv_msgs msgs)
 
 ### MROS LIBRARY ###
 
-add_library(mros STATIC src/mros/mediator.cpp
-                        src/mros/node.cpp
-                        src/mros/publisher.cpp
-                        src/mros/subscriber.cpp
-                        src/mros/signalHandler.cpp
-                        src/mros/console.cpp
-                        src/mros/optparse.cpp)
+add_library(mros STATIC src/mros/core/mediator.cpp
+                        src/mros/core/node.cpp
+                        src/mros/core/publisher.cpp
+                        src/mros/core/subscriber.cpp
+                        src/mros/core/service.cpp
+                        src/mros/utils/signalHandler.cpp
+                        src/mros/utils/console.cpp
+                        src/mros/utils/argParser.cpp)
 target_include_directories(mros PRIVATE include)
 target_link_libraries(mros socket smem mros_priv_msgs)
 
@@ -110,6 +111,16 @@ target_include_directories(publisher_test PRIVATE include)
 add_executable(subscriber_test test/mros/subscriberTest.cpp)
 target_link_libraries(subscriber_test mros)
 target_include_directories(subscriber_test PRIVATE include)
+
+# Add service test
+add_executable(service_test test/mros/serviceTest.cpp)
+target_link_libraries(service_test mros)
+target_include_directories(service_test PRIVATE include)
+
+# Add service call test
+add_executable(service_call_test test/mros/serviceCallTest.cpp)
+target_link_libraries(service_call_test mros)
+target_include_directories(service_call_test PRIVATE include)
 
 # Add pubsub test
 add_executable(pubsub_test test/mros/pubsubTest.cpp)
@@ -142,9 +153,9 @@ target_link_libraries(console_test mros)
 target_include_directories(console_test PRIVATE include)
 
 # Add argparse test
-add_executable(optparse_test test/mros/optparseTest.cpp)
-target_link_libraries(optparse_test mros)
-target_include_directories(optparse_test PRIVATE include)
+add_executable(argparse_test test/mros/argParserTest.cpp)
+target_link_libraries(argparse_test mros)
+target_include_directories(argparse_test PRIVATE include)
 
 # Add joint state publisher test
 add_executable(joint_state_publisher test/mros/demo2/jointStatePublisher.cpp)

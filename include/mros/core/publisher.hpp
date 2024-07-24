@@ -29,7 +29,7 @@
 #include "mros/private_msgs/uri.hpp"
 
 #include "mros/common.hpp"
-#include "mros/console.hpp"
+#include "mros/utils/console.hpp"
 
 namespace mros
 {

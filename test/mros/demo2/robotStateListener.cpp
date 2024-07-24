@@ -2,9 +2,9 @@
 #include <string>
 #include <mutex>
 
-#include "mros/node.hpp"
-#include "mros/subscriber.hpp"
-#include "mros/console.hpp"
+#include "mros/core/node.hpp"
+#include "mros/core/subscriber.hpp"
+#include "mros/utils/console.hpp"
 #include "utils.hpp"
 
 #include "messages/sensor_msgs/jointState.hpp"
@@ -22,6 +22,7 @@ int main() {
     uri.port = MEDIATOR_PORT_NUM;
 
     mros::Node node("robot_state", uri);
+    mros::Console::setLevel(mros::LogLevel::DEBUG);
 
     std::function<void(const geometry_msgs::TF &)> callback = [](const geometry_msgs::TF &msg) {
         mros::Console::log(mros::LogLevel::DEBUG, msg.toString());

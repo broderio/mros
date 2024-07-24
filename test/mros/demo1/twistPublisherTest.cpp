@@ -1,5 +1,5 @@
-#include "mros/node.hpp"
-#include "mros/publisher.hpp"
+#include "mros/core/node.hpp"
+#include "mros/core/publisher.hpp"
 #include "utils.hpp"
 
 #include "messages/geometry_msgs/twist.hpp"

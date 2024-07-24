@@ -1,4 +1,4 @@
-#include "mros/node.hpp"
+#include "mros/core/node.hpp"
 
 namespace mros
 {
@@ -35,7 +35,7 @@ namespace mros
         {
             for (auto &pub : topic.second)
             {
-                contactMediator(topic.first, pub->msgType, pub->publicServer.getURI(), CORE_TOPICS::PUB_DEREGISTER);
+                deregisterPublisher(pub);
             }
         }
         publishers.clear();
@@ -44,10 +44,19 @@ namespace mros
         {
             for (auto &sub : topic.second)
             {
-                contactMediator(topic.first, sub->msgType, sub->publicServer.getURI(), CORE_TOPICS::SUB_DEREGISTER);
+                deregisterSubscriber(sub);
             }
         }
         subscribers.clear();
+
+        for (auto &srv : services)
+        {
+            for (auto &service : srv.second)
+            {
+                deregisterService(service);
+            }
+        }
+        services.clear();
 
         client.close();
     }
@@ -107,6 +116,7 @@ namespace mros
 
     void Node::runOnce()
     {
+        clientMutex.lock();
          // Check if any messages have been sent to our UDP server
         std::string inMsg;
         URI sender;
@@ -122,7 +132,6 @@ namespace mros
                 client.sendTo(std::string(1, PONG_MSG), sender);
             }
             else if ((uint8_t)inMsg[0] == PONG_MSG) {
-                // std::cout << "Received PONG from Mediator" << std::endl;
                 Console::log(LogLevel::DEBUG, "Received PONG from Mediator");
             }
         }
@@ -174,62 +183,211 @@ namespace mros
                 }
             }
         }
+        clientMutex.unlock();
 
-        // Run each publisher and subscriber
-        std::vector<std::pair<std::string, std::shared_ptr<Publisher>>> toDeletePub;
+        // Run each publisher, subscriber, and service
+        std::vector<std::shared_ptr<Publisher>> toDeletePub;
         for (auto &topic : publishers)
         {
             for (auto &pub : topic.second)
             {
                 if (pub->shutdownFlag)
                 {
-                    contactMediator(topic.first, pub->msgType, pub->publicServer.getURI(), CORE_TOPICS::PUB_DEREGISTER);
-                    toDeletePub.push_back(std::make_pair(topic.first, pub));
+                    deregisterPublisher(pub);
+                    toDeletePub.push_back(pub);
                     continue;
                 }
                 pub->runOnce();
             }
         }
-        for (auto &pair : toDeletePub)
+        for (auto &pub : toDeletePub)
         {
-            publishers[pair.first].erase(pair.second);
+            publishers[pub->getTopic()].erase(pub);
         }
 
-        std::vector<std::pair<std::string, std::shared_ptr<Subscriber>>> toDeleteSub;
+        std::vector<std::shared_ptr<Subscriber>> toDeleteSub;
         for (auto &topic : subscribers)
         {
             for (auto &sub : topic.second)
             {
                 if (sub->shutdownFlag)
                 {
-                    contactMediator(topic.first, sub->msgType, sub->publicServer.getURI(), CORE_TOPICS::SUB_DEREGISTER);
-                    toDeleteSub.push_back(std::make_pair(topic.first, sub));
+                    deregisterSubscriber(sub);
+                    toDeleteSub.push_back(sub);
                     continue;
                 }
                 sub->runOnce();
             }
         }
-        for (auto &pair : toDeleteSub)
+        for (auto &sub : toDeleteSub)
         {
-            subscribers[pair.first].erase(pair.second);
+            subscribers[sub->getTopic()].erase(sub);
+        }
+
+        std::vector<std::shared_ptr<Service>> toDeleteSrv;
+        for (auto &srv : services)
+        {
+            for (auto &service : srv.second)
+            {
+                if (service->shutdownFlag)
+                {
+                    deregisterService(service);
+                    toDeleteSrv.push_back(service);
+                    continue;
+                }
+                service->runOnce();
+            }
+        }
+        for (auto &service : toDeleteSrv)
+        {
+            services[service->getService()].erase(service);
         }
     }
 
-    bool Node::contactMediator(const std::string &topic, const std::string &msgType, const URI &publicURI, const uint16_t &id)
+    void Node::registerPublisher(std::shared_ptr<Publisher> pub)
     {
         private_msgs::Register msg;
-        Header header;
-        header.stamp.sec = getTimeNano() / 1000000000;
-        header.stamp.nsec = getTimeNano() % 1000000000;
-        header.frame_id = name;
-        msg.header = header;
-        msg.topic = topic;
-        msg.msgType = msgType;
-        msg.uri = private_msgs::URI(publicURI.ip, publicURI.port);
+        msg.header.stamp = Time::getTimeNow();
+        msg.header.frame_id = name;
+        msg.topic = pub->topic;
+        msg.msgType = pub->msgType;
+        URI uri = pub->publicServer.getURI();
+        msg.uri = private_msgs::URI(uri.ip, uri.port);
 
-        client.sendTo(Parser::encode(msg, id), coreURI);
+        client.sendTo(Parser::encode(msg, CORE_TOPICS::PUB_REGISTER), coreURI);
+    }
 
+    void Node::registerSubscriber(std::shared_ptr<Subscriber> sub)
+    {
+        private_msgs::Register msg;
+        msg.header.stamp = Time::getTimeNow();
+        msg.header.frame_id = name;
+        msg.topic = sub->topic;
+        msg.msgType = sub->msgType;
+        URI uri = sub->publicServer.getURI();
+        msg.uri = private_msgs::URI(uri.ip, uri.port);
+
+        client.sendTo(Parser::encode(msg, CORE_TOPICS::SUB_REGISTER), coreURI);
+    }
+
+    void Node::registerService(std::shared_ptr<Service> srv)
+    {
+        private_msgs::Register msg;
+        msg.header.stamp = Time::getTimeNow();
+        msg.header.frame_id = name;
+        msg.topic = srv->service;
+        msg.msgType = srv->inMsgType + "," + srv->outMsgType;
+        URI uri = srv->publicServer.getURI();
+        msg.uri = private_msgs::URI(uri.ip, uri.port);
+
+        client.sendTo(Parser::encode(msg, CORE_TOPICS::SRV_REGISTER), coreURI);
+    }
+
+    void Node::deregisterPublisher(std::shared_ptr<Publisher> pub)
+    {
+        private_msgs::Register msg;
+        msg.header.stamp = Time::getTimeNow();
+        msg.header.frame_id = name;
+        msg.topic = pub->topic;
+        msg.msgType = pub->msgType;
+        URI uri = pub->publicServer.getURI();
+        msg.uri = private_msgs::URI(uri.ip, uri.port);
+
+        client.sendTo(Parser::encode(msg, CORE_TOPICS::PUB_DEREGISTER), coreURI);
+    }
+
+    void Node::deregisterSubscriber(std::shared_ptr<Subscriber> sub)
+    {
+        private_msgs::Register msg;
+        msg.header.stamp = Time::getTimeNow();
+        msg.header.frame_id = name;
+        msg.topic = sub->topic;
+        msg.msgType = sub->msgType;
+        URI uri = sub->publicServer.getURI();
+        msg.uri = private_msgs::URI(uri.ip, uri.port);
+
+        client.sendTo(Parser::encode(msg, CORE_TOPICS::SUB_DEREGISTER), coreURI);
+    }
+
+    void Node::deregisterService(std::shared_ptr<Service> srv)
+    {
+        private_msgs::Register msg;
+        msg.header.stamp = Time::getTimeNow();
+        msg.header.frame_id = name;
+        msg.topic = srv->service;
+        msg.msgType = srv->inMsgType + "," + srv->outMsgType;
+        URI uri = srv->publicServer.getURI();
+        msg.uri = private_msgs::URI(uri.ip, uri.port);
+
+        client.sendTo(Parser::encode(msg, CORE_TOPICS::SRV_DEREGISTER), coreURI);
+    }
+
+    bool Node::requestServiceAddress(const std::string &service, URI &serviceURI, const std::string &inMsgType, const std::string &outMsgType)
+    {
+        clientMutex.lock();
+
+        std_msgs::String msg = service;
+
+        client.sendTo(Parser::encode(msg, CORE_TOPICS::SRV_REQUEST), coreURI);
+
+        std::string inMsg;
+        URI sender;
+        while (inMsg.size() == 0 && ok())
+        {
+            if (client.receiveFrom(inMsg, MAX_MSG_SIZE, sender) < 0)
+            {
+                Console::log(LogLevel::ERROR, "Failed to receive message from Mediator");
+                return false;
+            }
+        }
+
+        clientMutex.unlock();
+
+        private_msgs::Response response;
+        if (!Parser::decode(inMsg, response))
+        {
+            Console::log(LogLevel::ERROR, "Could not decode message");
+            return false;
+        }
+
+        if (response.error.data.size() > 0)
+        {
+            Console::log(LogLevel::WARN, response.error.data);
+            return false;
+        }
+
+        std::string msgTypes = response.protocol.data;
+        std::string inMsgTypeIn = msgTypes.substr(0, msgTypes.find(","));
+        std::string outMsgTypeIn = msgTypes.substr(msgTypes.find(",") + 1);
+
+        if (inMsgTypeIn != inMsgType || outMsgTypeIn != outMsgType)
+        {
+            Console::log(LogLevel::WARN, "Service message types do not match");
+            return false;
+        }
+
+        serviceURI = response.uri.toURI();
         return true;
+    }
+
+    std::string Node::callService(const URI &serviceURI, const std::string &request)
+    {
+        clientMutex.lock();
+        client.sendTo(request, serviceURI);
+
+        std::string inMsg;
+        URI sender;
+        while (inMsg.size() == 0 && ok())
+        {
+            if (client.receiveFrom(inMsg, MAX_MSG_SIZE, sender) < 0)
+            {
+                Console::log(LogLevel::ERROR, "Failed to receive message from Mediator");
+                return "";
+            }
+        }
+        clientMutex.unlock();
+
+        return inMsg;
     }
 
     void Node::handlePubNotify(const private_msgs::Notify &notify)

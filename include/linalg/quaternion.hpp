@@ -21,6 +21,7 @@ public:
     Quaternion(const Vector& axis, const float& angle);
 
     geometry_msgs::Quaternion toMsg() const;
+    void toAxisAngle(Vector& axis, float& angle) const;
 
     Quaternion operator+(const Quaternion &rhs) const;
     Quaternion operator+(const float &rhs) const;

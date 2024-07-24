@@ -14,10 +14,10 @@
 
 namespace mros {
 
-class OptionParser
+class ArgParser
 {
 public:
-    struct Option
+    struct Opt
     {
         std::string name;
         std::string shortName;
@@ -25,20 +25,33 @@ public:
         std::string defaultVal; // value if not specified
         std::string constVal; // value if specified without argument
         char nargs;
-        bool required;
 
-        bool operator<(const Option &other) const
+        bool operator<(const Opt &other) const
+        {
+            return name < other.name;
+        }
+    };
+
+    struct Arg
+    {
+        std::string name;
+        std::string description;
+        char nargs;
+
+        bool operator<(const Arg &other) const
         {
             return name < other.name;
         }
     };
 
     static void init(const std::string &name, const std::string &description);
-    static void addOption(const Option &option);
+    static void addOpt(const Opt &option);
+    static void addArg(const Arg &argument);
 
     static void parse(int argc, char **argv);
 
-    static std::vector<std::string> getOption(const std::string &name);
+    static std::vector<std::string> getOpt(const std::string &name);
+    static std::vector<std::string> getArg(const std::string &name);
 
     static std::string getHelp();
     static std::string getUsage();
@@ -51,7 +64,10 @@ private:
     static std::string description;
 
     static std::map<std::string, std::string> shortToLong; // short name to long name
-    static std::map<std::string, std::pair<Option, std::vector<std::string>>> options;
+    static std::map<std::string, std::pair<Opt, std::vector<std::string>>> options;
+
+    static std::vector<std::string> argNames;
+    static std::map<std::string, std::pair<Arg, std::vector<std::string>>> arguments;
 };
 
 } // namespace mros

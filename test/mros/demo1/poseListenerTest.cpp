@@ -1,6 +1,6 @@
-#include "mros/node.hpp"
-#include "mros/subscriber.hpp"
-#include "mros/console.hpp"
+#include "mros/core/node.hpp"
+#include "mros/core/subscriber.hpp"
+#include "mros/utils/console.hpp"
 
 #include "utils.hpp"
 

@@ -30,8 +30,9 @@ namespace mros
     public:
         ~Console();
 
-        static void init(const std::string &name, bool logToFile = false);
+        static void init(const std::string &name, LogLevel level = LogLevel::INFO, bool logToFile = false);
         static void log(LogLevel level, const std::string &msg);
+        static void setLevel(LogLevel level);
 
     private:
 
@@ -40,6 +41,8 @@ namespace mros
         static bool logToFile;
 
         static std::string name;
+
+        static LogLevel level;
 
         const static std::string defaultColor; // Reset color
 

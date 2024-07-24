@@ -1,4 +1,4 @@
-#include "mros/mediator.hpp"
+#include "mros/core/mediator.hpp"
 
 using namespace mros;
 
@@ -14,7 +14,7 @@ Mediator::Mediator() : topicMap(), server(URI("0.0.0.0", MEDIATOR_PORT_NUM))
 Mediator::~Mediator()
 {
     std_msgs::String msg;
-    msg.data = "Mediator shutting down";
+    msg = "Mediator shutting down";
     std::string outMsg = Parser::encode(msg, CORE_TOPICS::MED_TERMINATE);
 
     for (auto &topic : topicMap)
@@ -27,6 +27,11 @@ Mediator::~Mediator()
         {
             server.sendTo(outMsg, subscriber.clientURI);
         }
+    }
+
+    for (auto &service : serviceMap)
+    {
+        server.sendTo(outMsg, service.second.srv.clientURI);
     }
 }
 
@@ -69,20 +74,36 @@ void Mediator::run()
         Parser::getTopicID(inMsg, topicId);
 
         private_msgs::Register registerMsg;
-        Parser::decode(inMsg, registerMsg);
+        std_msgs::String serviceRequest;
         switch (topicId)
         {
         case CORE_TOPICS::PUB_REGISTER:
+            Parser::decode(inMsg, registerMsg);
             registerPublisher(registerMsg, clientURI);
             break;
         case CORE_TOPICS::SUB_REGISTER:
+            Parser::decode(inMsg, registerMsg);
             registerSubscriber(registerMsg, clientURI);
             break;
+        case CORE_TOPICS::SRV_REGISTER:
+            Parser::decode(inMsg, registerMsg);
+            registerService(registerMsg, clientURI);
+            break;
         case CORE_TOPICS::PUB_DEREGISTER:
+            Parser::decode(inMsg, registerMsg);
             deregisterPublisher(registerMsg, clientURI);
             break;
         case CORE_TOPICS::SUB_DEREGISTER:
+            Parser::decode(inMsg, registerMsg);
             deregisterSubscriber(registerMsg, clientURI);
+            break;
+        case CORE_TOPICS::SRV_DEREGISTER:
+            Parser::decode(inMsg, registerMsg);
+            deregisterService(registerMsg, clientURI);
+            break;
+        case CORE_TOPICS::SRV_REQUEST:
+            Parser::decode(inMsg, serviceRequest);
+            handleServiceRequest(serviceRequest, clientURI);
             break;
         default:
             Console::log(LogLevel::ERROR, "Unknown topic ID: " + std::to_string(topicId));
@@ -93,8 +114,8 @@ void Mediator::run()
 
 void Mediator::registerPublisher(const private_msgs::Register &msg, const URI &clientURI)
 {
-    std::string topic = msg.topic.data;
-    std::string msgType = msg.msgType.data;
+    std::string topic = msg.topic;
+    std::string msgType = msg.msgType;
     URI uri = msg.uri.toURI(); // URI that will be sent to existing subscribers
 
     std::vector<private_msgs::URI> subURIs; // URIs that will be sent to newly registered publisher
@@ -145,16 +166,8 @@ void Mediator::registerPublisher(const private_msgs::Register &msg, const URI &c
         }
     }
 
-    Time time;
-    int t = getTimeNano();
-    time.sec = t / 1000000000;
-    time.nsec = t % 1000000000;
-
-    Header header;
-    header.stamp = time;
-
     private_msgs::Notify response;
-    response.header = header;
+    response.header.stamp = Time::getTimeNow();
     response.error = error;
     response.topic = String(topic);
     response.uris = subURIs;
@@ -178,8 +191,8 @@ void Mediator::registerPublisher(const private_msgs::Register &msg, const URI &c
 
 void Mediator::registerSubscriber(const private_msgs::Register &msg, const URI &clientURI)
 {
-    std::string topic = msg.topic.data;
-    std::string msgType = msg.msgType.data;
+    std::string topic = msg.topic;
+    std::string msgType = msg.msgType;
     URI uri = msg.uri.toURI(); // URI that will be sent to existing publishers
 
     std::vector<private_msgs::URI> pubURIs; // URIs that will be sent to newly registered subscriber
@@ -230,16 +243,8 @@ void Mediator::registerSubscriber(const private_msgs::Register &msg, const URI &
         }
     }
 
-    Time time;
-    int t = getTimeNano();
-    time.sec = t / 1000000000;
-    time.nsec = t % 1000000000;
-
-    Header header;
-    header.stamp = time;
-
     private_msgs::Notify response;
-    response.header = header;
+    response.header.stamp = Time::getTimeNow();
     response.error = error;
     response.topic = String(topic);
     response.uris = pubURIs;
@@ -261,10 +266,53 @@ void Mediator::registerSubscriber(const private_msgs::Register &msg, const URI &
     }
 }
 
+void Mediator::registerService(const private_msgs::Register &msg, const URI &clientURI)
+{
+    std::string service = msg.topic;
+    std::string msgTypes = msg.msgType;
+    std::string inMsgType = msgTypes.substr(0, msgTypes.find(','));
+    std::string outMsgType = msgTypes.substr(msgTypes.find(',') + 1);
+    
+    URI uri = msg.uri.toURI(); // URI that will be used in the remote procedure call
+
+    std::string error = "";
+
+    if (service.empty())
+    {
+        error = "Service is an empty string";
+        Console::log(LogLevel::ERROR, "Received empty service string in Register message from Service " + uri.toString());
+    }
+    else if (serviceMap.find(service) == serviceMap.end())
+    {
+        // Service does not exist, create new service
+        serviceMap[service] = Service();
+        serviceMap[service].srv.clientURI = clientURI;
+        serviceMap[service].srv.serverURI = uri;
+        serviceMap[service].inMsgType = inMsgType;
+        serviceMap[service].outMsgType = outMsgType;
+        Console::log(LogLevel::INFO, "Registered service \"" + service + "\" from node " + clientURI.toString());
+    }
+    else
+    {
+        // Service already exists
+        error = "Service \"" + service + "\" already exists";
+        Console::log(LogLevel::ERROR, error);
+    }
+
+    private_msgs::Notify response;
+    response.header.stamp = Time::getTimeNow();
+    response.error = error;
+    response.topic = service;
+
+    // Send response to service
+    std::string outMsg = Parser::encode(response, CORE_TOPICS::SRV_NOTIFY);
+    server.sendTo(outMsg, clientURI);
+}
+
 void Mediator::deregisterPublisher(const private_msgs::Register &msg, const URI &clientURI)
 {
-    std::string topic = msg.topic.data;
-    std::string msgType = msg.msgType.data;
+    std::string topic = msg.topic;
+    std::string msgType = msg.msgType;
     URI uri = msg.uri.toURI(); // URI that will be deleted from map and sent to subscribers
 
     URIPair uriPair = {clientURI, uri};
@@ -287,16 +335,8 @@ void Mediator::deregisterPublisher(const private_msgs::Register &msg, const URI 
     topicMap[topic].pubs.erase(uriPair);
     Console::log(LogLevel::INFO, "Deregistered publisher " + uriPair.serverURI.toString() + " from node " + uriPair.clientURI.toString() + " on topic \"" + topic + "\"");
 
-    Time time;
-    int t = getTimeNano();
-    time.sec = t / 1000000000;
-    time.nsec = t % 1000000000;
-
-    Header header;
-    header.stamp = time;
-
     private_msgs::Disconnect response;
-    response.header = header;
+    response.header.stamp = Time::getTimeNow();
     response.uri = msg.uri;
     response.topic = msg.topic;
 
@@ -310,8 +350,8 @@ void Mediator::deregisterPublisher(const private_msgs::Register &msg, const URI 
 
 void Mediator::deregisterSubscriber(const private_msgs::Register &msg, const URI &clientURI)
 {
-    std::string topic = msg.topic.data;
-    std::string msgType = msg.msgType.data;
+    std::string topic = msg.topic;
+    std::string msgType = msg.msgType;
     URI uri = msg.uri.toURI(); // URI that will be deleted from map and sent to publishers
 
     URIPair uriPair = {clientURI, uri};
@@ -334,16 +374,8 @@ void Mediator::deregisterSubscriber(const private_msgs::Register &msg, const URI
     topicMap[topic].subs.erase(uriPair);
     Console::log(LogLevel::INFO, "Deregistered subscriber " + uriPair.serverURI.toString() + " from node " + uriPair.clientURI.toString() + " on topic \"" + topic + "\"");
 
-    Time time;
-    int t = getTimeNano();
-    time.sec = t / 1000000000;
-    time.nsec = t % 1000000000;
-
-    Header header;
-    header.stamp = time;
-
     private_msgs::Disconnect response;
-    response.header = header;
+    response.header.stamp = Time::getTimeNow();
     response.uri = msg.uri;
     response.topic = msg.topic;
 
@@ -353,6 +385,65 @@ void Mediator::deregisterSubscriber(const private_msgs::Register &msg, const URI
     {
         server.sendTo(outMsg, publisher.clientURI);
     }
+}
+
+void Mediator::deregisterService(const private_msgs::Register &msg, const URI &clientURI)
+{
+    std::string service = msg.topic;
+    std::string msgTypes = msg.msgType;
+    std::string inMsgType = msgTypes.substr(0, msgTypes.find(','));
+    std::string outMsgType = msgTypes.substr(msgTypes.find(',') + 1);
+
+    URI uri = msg.uri.toURI(); // URI that will be deleted from map
+
+    // Check if service exists
+    if (serviceMap.find(service) == serviceMap.end())
+    {
+        Console::log(LogLevel::ERROR, "Service \"" + service + "\" from Deregister message from Service " + uri.toString() + " not found.");
+        return;
+    }
+
+    // Check if service URI matches
+    if (serviceMap[service].srv.serverURI != uri || serviceMap[service].srv.clientURI != clientURI)
+    {
+        Console::log(LogLevel::ERROR, "Service URI " + uri.toString() + " does not match registered URI " + serviceMap[service].srv.serverURI.toString());
+        return;
+    }
+
+    // Erase service from map
+    serviceMap.erase(service);
+    Console::log(LogLevel::INFO, "Deregistered service " + uri.toString() + " from node " + clientURI.toString());
+}
+
+void Mediator::handleServiceRequest(const std_msgs::String &msg, const URI &clientURI)
+{
+    std::string service = msg;
+    std::string error = "";
+
+    // Check if service exists
+    if (serviceMap.find(service) == serviceMap.end())
+    {
+        error = "Service \"" + service + "\" not found";
+        Console::log(LogLevel::WARN, error);
+    }
+
+    private_msgs::Response response;
+    if (error.size() == 0)
+    {
+        response.header.stamp = Time::getTimeNow();
+        response.topic = service;
+        response.protocol = serviceMap[service].inMsgType + "," + serviceMap[service].outMsgType;
+
+        URI serviceURI = serviceMap[service].srv.serverURI;
+        response.uri = private_msgs::URI(serviceURI.ip, serviceURI.port);
+    }
+    else
+    {
+        response.error = String(error);
+    }
+
+    std::string outMsg = Parser::encode(response, CORE_TOPICS::SRV_REQUEST);
+    server.sendTo(outMsg, clientURI);
 }
 
 bool Mediator::URIPair::operator<(const URIPair &other) const

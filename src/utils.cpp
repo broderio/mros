@@ -14,6 +14,11 @@ bool URI::operator==(const URI &other) const
     return ip == other.ip && port == other.port;
 }
 
+bool URI::operator!=(const URI &other) const
+{
+    return !(*this == other);
+}
+
 std::string URI::toString() const
 {
     return ip + ":" + std::to_string(port);

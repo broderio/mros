@@ -22,8 +22,11 @@
 struct URI {
     URI();
     URI(const std::string& ip, int port);
+    
     bool operator<(const URI& other) const;
     bool operator==(const URI& other) const;
+    bool operator!=(const URI& other) const;
+
     std::string toString() const;
     
     std::string ip;

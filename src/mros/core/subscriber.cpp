@@ -1,4 +1,4 @@
-#include "mros/subscriber.hpp"
+#include "mros/core/subscriber.hpp"
 
 namespace mros
 {

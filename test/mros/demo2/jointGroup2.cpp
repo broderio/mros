@@ -1,7 +1,11 @@
-#include "mros/node.hpp"
-#include "mros/publisher.hpp"
-#include "mros/console.hpp"
+#include <iostream>
+#include <string>
+
 #include "utils.hpp"
+
+#include "mros/core/node.hpp"
+#include "mros/core/publisher.hpp"
+#include "mros/utils/console.hpp"
 
 #include "messages/sensor_msgs/jointState.hpp"
 
@@ -10,15 +14,13 @@
 #include "kineval/link.hpp"
 #include "kineval/tree.hpp"
 
-#include <iostream>
-#include <string>
-
 int main() {
     URI uri;
     uri.ip = "0.0.0.0";
     uri.port = MEDIATOR_PORT_NUM;
 
     mros::Node node("publisher_node", uri);
+    mros::Console::setLevel(mros::LogLevel::DEBUG);
 
     std::shared_ptr<mros::Publisher> pub = node.advertise<sensor_msgs::JointState>("joint_group_2", 10);
 

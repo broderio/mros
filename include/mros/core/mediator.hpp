@@ -27,8 +27,8 @@
 #include "mros/private_msgs/uri.hpp"
 
 #include "mros/common.hpp"
-#include "mros/signalHandler.hpp"
-#include "mros/console.hpp"
+#include "mros/utils/signalHandler.hpp"
+#include "mros/utils/console.hpp"
 
 namespace mros
 {
@@ -57,16 +57,26 @@ namespace mros
             std::string msgType;
         };
 
+        struct Service
+        {
+            URIPair srv;
+            std::string inMsgType;
+            std::string outMsgType;
+        };
+
         std::map<std::string, Topic> topicMap;
+        std::map<std::string, Service> serviceMap;
 
         SignalHandler signalHandler;
 
         void run();
         void registerPublisher(const private_msgs::Register &msg, const URI &clientURI);
         void registerSubscriber(const private_msgs::Register &msg, const URI &clientURI);
+        void registerService(const private_msgs::Register &msg, const URI &clientURI);
         void deregisterPublisher(const private_msgs::Register &msg, const URI &clientURI);
         void deregisterSubscriber(const private_msgs::Register &msg, const URI &clientURI);
-        void notifySubscribers(const std::string &topic);
+        void deregisterService(const private_msgs::Register &msg, const URI &clientURI);
+        void handleServiceRequest(const std_msgs::String &msg, const URI &clientURI);
     };
 
 }

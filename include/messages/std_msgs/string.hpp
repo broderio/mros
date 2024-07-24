@@ -18,6 +18,8 @@ namespace std_msgs
 
         String operator=(const std::string &data);
 
+        operator std::string() const;
+
         uint16_t getMsgLen() const override;
 
         std::string toString() const override;

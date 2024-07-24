@@ -1,17 +1,18 @@
-#include "mros/console.hpp"
+#include "mros/utils/console.hpp"
 
 namespace mros
 {
 
     bool Console::initialized = false;
     std::string Console::name;
+    LogLevel Console::level;
     const std::string Console::defaultColor = "\033[0m"; // Reset color
     int64_t Console::startTime;
     std::mutex Console::mutex;
     std::ofstream Console::logFile;
     bool Console::logToFile = false;
 
-    void Console::init(const std::string &name, bool logToFile)
+    void Console::init(const std::string &name, LogLevel level, bool logToFile)
     {
         if (initialized)
         {
@@ -22,8 +23,9 @@ namespace mros
 
         Console::name = name;
 
+        Console::level = level;
+
         DateTime dt = getDateTime();
-        system(std::string("mkdir -p ~/.mros/"+name).c_str());
 
         startTime = getTimeNano();
 
@@ -32,6 +34,7 @@ namespace mros
         {
             return;
         }
+        system(std::string("mkdir -p ~/.mros/"+name).c_str());
         std::string homeDir = getenv("HOME");
         logFile.open(homeDir + "/.mros/" + name + "/" + dt.toString() + ".log");
     }
@@ -41,6 +44,11 @@ namespace mros
         if (!initialized)
         {
             std::cerr << "Console not initialized!\n";
+            return;
+        }
+
+        if (level < Console::level)
+        {
             return;
         }
 
@@ -68,6 +76,17 @@ namespace mros
         {
             logFile << time << "\t[" << levelString << "]\t[" << name << "]\t" << msg << '\n';
         }
+    }
+
+    void Console::setLevel(LogLevel level)
+    {
+        if (!initialized)
+        {
+            std::cerr << "Console not initialized!\n";
+            return;
+        }
+        
+        Console::level = level;
     }
 
     std::string Console::getLevelString(LogLevel level)
