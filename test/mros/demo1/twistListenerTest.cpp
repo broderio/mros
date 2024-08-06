@@ -18,7 +18,7 @@ int main() {
         std::string vx = std::to_string(msg.twist.linear.x.data);
         std::string vy = std::to_string(msg.twist.linear.y.data);
         std::string wz = std::to_string(msg.twist.angular.z.data);
-        mros::Console::log(mros::LogLevel::DEBUG, "vx: " + vx + ", vy: " + vy + ", wz: " + wz);
+        mros::Console::log(mros::LogLevel::INFO, "vx: " + vx + ", vy: " + vy + ", wz: " + wz);
     };
 
      std::shared_ptr<mros::Subscriber> sub = node.subscribe("twist_topic", 10, callback);

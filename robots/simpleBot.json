@@ -1,60 +1,127 @@
 {
     "name": "simpleBot",
-    "endeffector": "forearm",
-    "joints": {
-        "shoulder": {
-            "type": "revolute",
-            "axis": [0, 0, 1],
-            "origin": {
-                "xyz": [1, 0.5, 0.5],
-                "rpy": [0, 0, 0]
-            },
-            "limits": [-3.14159, 3.14159],
-            "parentLink": "base"
+    "endeffector": "tool",
+    "base": "base",
+    "joints": [
+        {
+            "name": "waist",
+            "parent": "base",
+            "child": "torso",
+            "type": "continuous",
+            "axis": [0, 0, 1]
         },
-        "elbow": {
+        {
+            "name": "shoulder",
+            "parent": "torso",
+            "child": "upper_arm",
             "type": "revolute",
-            "axis": [0, 0, 1],
+            "axis": [0, 1, 0],
             "origin": {
-                "xyz": [0.5, 0, 0],
+                "xyz": [0.25, 0, 0],
                 "rpy": [0, 0, 0]
             },
-            "limits": [-3.14159, 3.14159],
-            "parentLink": "upper_arm"
-        }
-    },
-    "links": {
-        "base": {
-            "origin": {
-                "xyz": [0, 0, 0],
-                "rpy": [0, 0, 0]
-            },
-            "shape": {
-                "type": "box",
-                "size": [1, 1, 1]
+            "limits": {
+                "lower": -1.5708,
+                "upper": 1.5708
             }
         },
-        "upper_arm": {
+        {
+            "name": "elbow",
+            "parent": "upper_arm",
+            "child": "forearm",
+            "type": "revolute",
+            "axis": [0, 1, 0],
             "origin": {
-                "xyz": [0.5, 0, 0],
+                "xyz": [0.25, 0, 0],
                 "rpy": [0, 0, 0]
             },
-            "shape": {
-                "type": "box",
-                "size": [1, 0.2, 0.2]
-            },
-            "parentJoint": "shoulder"
+            "limits": {
+                "lower": -1.5708,
+                "upper": 1.5708
+            }
         },
-        "forearm": {
+        {
+            "name": "wrist",
+            "parent": "forearm",
+            "child": "tool",
+            "type": "fixed",
             "origin": {
-                "xyz": [0.5, 0, 0],
+                "xyz": [0.25, 0, 0],
                 "rpy": [0, 0, 0]
-            },
-            "shape": {
-                "type": "box",
-                "size": [1, 0.2, 0.2]
-            },
-            "parentJoint": "elbow"
+            }
         }
-    }
+    ],
+    "links": [
+        {
+            "name": "base",
+            "visual": {
+                "shape": {
+                    "type": "box",
+                    "size": [0.75, 0.75, 0.1],
+                    "rgb": "#ff0000"
+                },
+                "origin": {
+                    "xyz": [0, 0, 0.05],
+                    "rpy": [0, 0, 0]
+                }
+            }
+        },
+        {
+            "name": "torso",
+            "visual": {
+                "shape": {
+                    "type": "box",
+                    "size": [0.5, 0.5, 0.5],
+                    "rgb": "#ff0000"
+                },
+                "origin": {
+                    "xyz": [0, 0, 0.25],
+                    "rpy": [0, 0, 0]
+                }
+            }
+        },
+        {
+            "name": "upper_arm",
+            "visual": {
+                "shape": {
+                    "type": "box",
+                    "size": [0.5, 0.1, 0.1],
+                    "rgb": "#ff0000"
+                },
+                "origin": {
+                    "xyz": [0.25, 0, 0],
+                    "rpy": [0, 0, 0]
+                }
+            }
+        },
+        {
+            "name": "forearm",
+            "visual": {
+                "shape": {
+                    "type": "box",
+                    "size": [0.5, 0.1, 0.1],
+                    "rgb": "#ff0000"
+                },
+                "origin": {
+                    "xyz": [0.25, 0, 0],
+                    "rpy": [0, 0, 0]
+                }
+            }
+        },
+        {
+            "name": "tool",
+            "visual": {
+                "shape": {
+                    "type": "cylinder",
+                    "len": 0.1,
+                    "rad": 0.05,
+                    "rgb": "#ff0000"
+                },
+                "origin": {
+                    "xyz": [0.05, 0, 0],
+                    "rpy": [0, -1.5708, 0]
+                }
+            }
+        }
+    ]
 }

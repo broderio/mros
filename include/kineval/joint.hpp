@@ -12,6 +12,8 @@ namespace kineval
 {
     enum JointType
     {
+        FIXED,
+        CONTINUOUS,
         REVOLUTE,
         PRISMATIC
     };
@@ -29,11 +31,24 @@ namespace kineval
         linalg::Vector getOrigin() const;
         JointType getType() const;
 
-        float q;
+        void setLimits(double lowerBound, double upperBound);
+        bool getLimits(double &lowerBound, double &upperBound) const;
+        bool hasLimits() const;
+        bool inLimits(double q) const;
+        void removeLimits();
+
+        void setState(double q);
+        double getState() const;
 
     private:
         linalg::Vector axis;
         linalg::Vector origin;
         JointType type;
+
+        bool limited;
+        double lowerBound;
+        double upperBound;
+
+        double q;
     };
 } // namespace kineval

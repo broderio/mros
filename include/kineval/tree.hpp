@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <stack>
 
 #include "kineval/json.hpp"
 #include "kineval/transform.hpp"
@@ -34,8 +35,11 @@ namespace kineval
 
         std::string getName() const;
 
-        void addJoint(const std::string &name, const std::string &parent, const Joint &joint);
-        void addLink(const std::string &name, const std::string &parent, const Link &link);
+        Joint getJoint(const std::string &name) const;
+        Link getLink(const std::string &name) const;
+
+        void addJoint(const std::string &name, const std::string &parent, const std::string &child, const Joint &joint);
+        void addLink(const std::string &name, const Link &link);
 
         void setRoot(const std::string &name);
         std::string getRoot() const;
@@ -43,8 +47,8 @@ namespace kineval
         void setEndEffector(const std::string &name);
         std::string getEndEffector() const;
 
-        const std::set<std::string> &getJointNames() const;
-        const std::set<std::string> &getLinkNames() const;
+        std::vector<std::string> getJointNames() const;
+        std::vector<std::string> getLinkNames() const;
 
         const std::string &getParentJoint(const std::string &name) const;
         const std::string &getParentLink(const std::string &name) const;
@@ -52,8 +56,16 @@ namespace kineval
         const std::vector<std::string> &getChildJoints(const std::string &name) const;
         const std::string &getChildLink(const std::string &name) const;
 
-        void setJointState(const std::string &name, float q);
-        float getJointState(const std::string &name) const;
+        void setJointState(const std::string &name, double q);
+        void setJointStates(const sensor_msgs::JointState &q);
+        void setJointStates(const std::vector<double> &q);
+        void setJointStates(const std::map<std::string, double> &q);
+
+        double getJointState(const std::string &name) const;
+
+        std::vector<double> getJointStates() const;
+        std::map<std::string, double> getJointStatesMap() const;
+        sensor_msgs::JointState getJointStateMsg() const;
 
         Transform getJointTransform(const std::string &name) const;
         Transform getLinkTransform(const std::string &name) const;
@@ -64,14 +76,22 @@ namespace kineval
         std::map<std::string, Transform> getJointTransforms() const;
         std::map<std::string, Transform> getLinkTransforms() const;
 
-        std::map<std::string, Transform> getGlobalJointTransforms() const;
-        std::map<std::string, Transform> getGlobalLinkTransforms() const;
+        void getGlobalTransforms(std::map<std::string, Transform> &jointTransforms, std::map<std::string, Transform> &linkTransforms) const;
 
         geometry_msgs::TF TF() const;
+        geometry_msgs::TF globalTF() const;
 
-        sensor_msgs::JointState inverseKinematics(const Transform &goal, const sensor_msgs::JointState &q0, float tol, int maxIter) const;
+        linalg::Matrix getJacobian(const std::string &endEffector) const;
+        bool solveIK(sensor_msgs::JointState &js, const Transform &endEffectorGoal, double tol, int &maxIter);
 
     private:
+
+        void getGlobalJointTransform(const std::string &name, const Transform &transform, geometry_msgs::TF &tf, std_msgs::Header header) const;
+        void getGlobalLinkTransform(const std::string &name, const Transform &transform, geometry_msgs::TF &tf, std_msgs::Header header) const;
+
+        void getGlobalJointTransform(const std::string &name, const Transform &transform, std::map<std::string, Transform> &jointTransforms, std::map<std::string, Transform> &linkTransforms) const;
+        void getGlobalLinkTransform(const std::string &name, const Transform &transform, std::map<std::string, Transform> &jointTransforms, std::map<std::string, Transform> &linkTransforms) const;
+
         struct LinkNode;
 
         struct JointNode

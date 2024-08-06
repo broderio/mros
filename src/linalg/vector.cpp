@@ -6,9 +6,9 @@ Vector::Vector() : data() {}
 
 Vector::Vector(size_t size) : data(size) {}
 
-Vector::Vector(size_t size, float val) : data(size, val) {}
+Vector::Vector(size_t size, double val) : data(size, val) {}
 
-Vector::Vector(const std::initializer_list<float>& data) : data(data) {}
+Vector::Vector(const std::initializer_list<double>& data) : data(data) {}
 
 Vector::Vector(const Vector& v) : data(v.data) {}
 
@@ -20,7 +20,7 @@ Vector &Vector::operator=(const Vector& rhs) {
     return *this;
 }
 
-Vector::Vector(const std::vector<float>& data) : data(data) {}
+Vector::Vector(const std::vector<double>& data) : data(data) {}
 
 Vector::Vector(const geometry_msgs::Vector3& v) : data({v.x.data, v.y.data, v.z.data}) {}
 
@@ -28,11 +28,11 @@ geometry_msgs::Vector3 Vector::toMsg() const {
     return geometry_msgs::Vector3(data[0], data[1], data[2]);
 }
 
-std::vector<float> Vector::getData() const {
+std::vector<double> Vector::getData() const {
     return data;
 }
 
-float Vector::get(size_t idx) const {
+double Vector::get(size_t idx) const {
     if (idx >= data.size()) {
         throw std::out_of_range("Index out of bounds.");
     }
@@ -40,7 +40,7 @@ float Vector::get(size_t idx) const {
     return data[idx];
 }
 
-float &Vector::at(size_t idx) {
+double &Vector::at(size_t idx) {
     if (idx >= data.size()) {
         throw std::out_of_range("Index out of bounds.");
     }
@@ -48,7 +48,7 @@ float &Vector::at(size_t idx) {
     return data[idx];
 }
 
-void Vector::set(size_t idx, float val) {
+void Vector::set(size_t idx, double val) {
     if (idx >= data.size()) {
         throw std::out_of_range("Index out of bounds.");
     }
@@ -60,10 +60,25 @@ size_t Vector::getSize() const {
     return data.size();
 }
 
+void Vector::push_back(double val) {
+    data.push_back(val);
+}
+
+void Vector::pop_back() {
+    data.pop_back();
+}
+
+Vector Vector::subvec(size_t start, size_t size) const {
+    if (start >= data.size() || (start + size - 1) >= data.size()) {
+        throw std::out_of_range("Index out of bounds.");
+    }
+
+    return Vector(std::vector<double>(data.begin() + start, data.begin() + start + size));
+}
 
 Vector Vector::operator-() const {
     Vector v(*this);
-    std::for_each(v.data.begin(), v.data.end(), [](float& f) { f = -f; });
+    std::for_each(v.data.begin(), v.data.end(), [](double& f) { f = -f; });
     return v;
 }
 
@@ -80,7 +95,7 @@ Vector Vector::operator+(const Vector& rhs) const {
     return v;
 }
 
-Vector Vector::operator+(const float& rhs) const {
+Vector Vector::operator+(const double& rhs) const {
     Vector v(data.size());
     for (size_t i = 0; i < data.size(); ++i) {
         v.data[i] = data[i] + rhs;
@@ -101,7 +116,7 @@ Vector Vector::operator-(const Vector& rhs) const {
     return v;
 }
 
-Vector Vector::operator-(const float& rhs) const {
+Vector Vector::operator-(const double& rhs) const {
     Vector v(data.size());
     for (size_t i = 0; i < data.size(); ++i) {
         v.data[i] = data[i] - rhs;
@@ -122,7 +137,7 @@ Vector Vector::operator*(const Vector& rhs) const {
     return v;
 }
 
-Vector Vector::operator*(const float& rhs) const {
+Vector Vector::operator*(const double& rhs) const {
     Vector v(data.size());
     for (size_t i = 0; i < data.size(); ++i) {
         v.data[i] = data[i] * rhs;
@@ -143,7 +158,7 @@ Vector Vector::operator/(const Vector& rhs) const {
     return v;
 }
 
-Vector Vector::operator/(const float& rhs) const {
+Vector Vector::operator/(const double& rhs) const {
     Vector v(data.size());
     for (size_t i = 0; i < data.size(); ++i) {
         v.data[i] = data[i] / rhs;
@@ -163,7 +178,7 @@ Vector Vector::operator+=(const Vector& rhs) {
     return *this;
 }
 
-Vector Vector::operator+=(const float& rhs) {
+Vector Vector::operator+=(const double& rhs) {
     for (size_t i = 0; i < data.size(); ++i) {
         data[i] += rhs;
     }
@@ -182,7 +197,7 @@ Vector Vector::operator-=(const Vector& rhs) {
     return *this;
 }
 
-Vector Vector::operator-=(const float& rhs) {
+Vector Vector::operator-=(const double& rhs) {
     for (size_t i = 0; i < data.size(); ++i) {
         data[i] -= rhs;
     }
@@ -201,7 +216,7 @@ Vector Vector::operator*=(const Vector& rhs) {
     return *this;
 }
 
-Vector Vector::operator*=(const float& rhs) {
+Vector Vector::operator*=(const double& rhs) {
     for (size_t i = 0; i < data.size(); ++i) {
         data[i] *= rhs;
     }
@@ -220,7 +235,7 @@ Vector Vector::operator/=(const Vector& rhs) {
     return *this;
 }
 
-Vector Vector::operator/=(const float& rhs) {
+Vector Vector::operator/=(const double& rhs) {
     for (size_t i = 0; i < data.size(); ++i) {
         data[i] /= rhs;
     }
@@ -247,25 +262,25 @@ bool Vector::operator!=(const Vector& rhs) const {
 }
 
 
-Vector linalg::operator+(const float& lhs, const Vector& rhs) {
+Vector linalg::operator+(const double& lhs, const Vector& rhs) {
     return rhs + lhs;
 }
 
-Vector linalg::operator-(const float& lhs, const Vector& rhs) {
+Vector linalg::operator-(const double& lhs, const Vector& rhs) {
     return -rhs + lhs;
 }
 
-Vector linalg::operator*(const float& lhs, const Vector& rhs) {
+Vector linalg::operator*(const double& lhs, const Vector& rhs) {
     return rhs * lhs;
 }
 
 
-float Vector::dot(const Vector& lhs, const Vector& rhs) {
+double Vector::dot(const Vector& lhs, const Vector& rhs) {
     if (lhs.getSize() != rhs.getSize()) {
         throw std::invalid_argument("Cannot take dot product of vectors of different sizes.");
     }
 
-    float result = 0;
+    double result = 0;
     for (size_t i = 0; i < lhs.getSize(); ++i) {
         result += lhs.get(i) * rhs.get(i);
     }
@@ -278,7 +293,7 @@ Vector Vector::cross(const Vector& lhs, const Vector& rhs) {
         throw std::invalid_argument("Cross product is only defined for 3D vectors.");
     }
 
-    std::vector<float> result(3);
+    std::vector<double> result(3);
     result[0] = lhs.data[1] * rhs.data[2] - lhs.data[2] * rhs.data[1];
     result[1] = lhs.data[2] * rhs.data[0] - lhs.data[0] * rhs.data[2];
     result[2] = lhs.data[0] * rhs.data[1] - lhs.data[1] * rhs.data[0];
@@ -286,7 +301,7 @@ Vector Vector::cross(const Vector& lhs, const Vector& rhs) {
     return Vector(result);
 }
 
-float Vector::norm(const Vector& v) {
+double Vector::norm(const Vector& v) {
     return std::sqrt(Vector::dot(v, v));
 }
 
@@ -294,7 +309,7 @@ Vector Vector::normalize(const Vector& v) {
     return v / Vector::norm(v);
 }
 
-float Vector::angle(const Vector& lhs, const Vector& rhs) {
+double Vector::angle(const Vector& lhs, const Vector& rhs) {
     if (lhs.getSize() != rhs.getSize()) {
         throw std::invalid_argument("Cannot calculate angle between vectors of different sizes.");
     }
@@ -303,17 +318,17 @@ float Vector::angle(const Vector& lhs, const Vector& rhs) {
 }
 
 
-Vector LERP(const Vector& v1, const Vector& v2, float t)
+Vector LERP(const Vector& v1, const Vector& v2, double t)
 {
     return v1 + (v2 - v1) * t;
 }
 
-Vector SLERP(const Vector& v1, const Vector& v2, float t)
+Vector SLERP(const Vector& v1, const Vector& v2, double t)
 {
-    float angle = Vector::angle(v1, v2);
-    float s_angle = std::sin(angle);
-    float s1 = std::sin((1 - t) * angle) / s_angle;
-    float s2 = std::sin(t * angle) / s_angle;
+    double angle = Vector::angle(v1, v2);
+    double s_angle = std::sin(angle);
+    double s1 = std::sin((1 - t) * angle) / s_angle;
+    double s2 = std::sin(t * angle) / s_angle;
     return s1 * v1 + s2 * v2;
 }
 

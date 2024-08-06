@@ -16,7 +16,7 @@ namespace linalg
         return Matrix::identity(3);
     }
 
-    Rotation Rotation::X(const float &angle)
+    Rotation Rotation::X(const double &angle)
     {
         Rotation r = Rotation::identity();
         r.data[1][1] = std::cos(angle);
@@ -26,7 +26,7 @@ namespace linalg
         return r;
     }
 
-    Rotation Rotation::Y(const float &angle)
+    Rotation Rotation::Y(const double &angle)
     {
         Rotation r = Rotation::identity();
         r.data[0][0] = std::cos(angle);
@@ -36,7 +36,7 @@ namespace linalg
         return r;
     }
 
-    Rotation Rotation::Z(const float &angle)
+    Rotation Rotation::Z(const double &angle)
     {
         Rotation r = Rotation::identity();
         r.data[0][0] = std::cos(angle);
@@ -65,7 +65,7 @@ namespace linalg
         return Rotation::multiply(RZ, Rotation::multiply(RY, RX));
     }
 
-    Rotation Rotation::fromAxisAngle(const Vector &axis, const float &angle)
+    Rotation Rotation::fromAxisAngle(const Vector &axis, const double &angle)
     {
         if (axis.getSize() != 3)
         {
@@ -73,14 +73,14 @@ namespace linalg
         }
 
         Vector anorm = Vector::normalize(axis);
-        float kx = anorm.get(0);
-        float ky = anorm.get(1);
-        float kz = anorm.get(2);
-        float c = std::cos(angle);
-        float s = std::sin(angle);
-        float v = 1 - c;
+        double kx = anorm.get(0);
+        double ky = anorm.get(1);
+        double kz = anorm.get(2);
+        double c = std::cos(angle);
+        double s = std::sin(angle);
+        double v = 1 - c;
 
-        std::vector<std::vector<float>> m = {
+        std::vector<std::vector<double>> m = {
             {kx * kx * v + c, kx * ky * v - kz * s, kx * kz * v + ky * s},
             {kx * ky * v + kz * s, ky * ky * v + c, ky * kz * v - kx * s},
             {kx * kz * v - ky * s, ky * kz * v + kx * s, kz * kz * v + c}};
@@ -95,9 +95,9 @@ namespace linalg
             throw std::invalid_argument("Euler vector must have 3 elements");
         }
 
-        float alpha = euler.get(0);
-        float beta = euler.get(1);
-        float gamma = euler.get(2);
+        double alpha = euler.get(0);
+        double beta = euler.get(1);
+        double gamma = euler.get(2);
 
         Matrix R1 = Rotation::X(alpha);
         Matrix R2 = Rotation::Y(beta);
@@ -113,9 +113,9 @@ namespace linalg
             throw std::invalid_argument("Euler vector must have 3 elements");
         }
         
-        float alpha = euler.get(0);
-        float beta = euler.get(1);
-        float gamma = euler.get(2);
+        double alpha = euler.get(0);
+        double beta = euler.get(1);
+        double gamma = euler.get(2);
 
         Rotation R1 = Rotation::X(alpha);
         Rotation R2 = Rotation::Y(beta);
@@ -126,7 +126,7 @@ namespace linalg
 
     Rotation Rotation::multiply(const Rotation &r1, const Rotation &r2)
     {
-        std::vector<std::vector<float>> m = {{r1.data[0][0] * r2.data[0][0] + r1.data[0][1] * r2.data[1][0] + r1.data[0][2] * r2.data[2][0],
+        std::vector<std::vector<double>> m = {{r1.data[0][0] * r2.data[0][0] + r1.data[0][1] * r2.data[1][0] + r1.data[0][2] * r2.data[2][0],
                                               r1.data[0][0] * r2.data[0][1] + r1.data[0][1] * r2.data[1][1] + r1.data[0][2] * r2.data[2][1],
                                               r1.data[0][0] * r2.data[0][2] + r1.data[0][1] * r2.data[1][2] + r1.data[0][2] * r2.data[2][2]},
                                              {r1.data[1][0] * r2.data[0][0] + r1.data[1][1] * r2.data[1][0] + r1.data[1][2] * r2.data[2][0],
@@ -145,7 +145,7 @@ namespace linalg
             throw std::invalid_argument("Matrix must be 3x3");
         }
 
-        std::vector<std::vector<float>> mNew = {{r.data[0][0] * m.get(0, 0) + r.data[0][1] * m.get(1, 0) + r.data[0][2] * m.get(2, 0),
+        std::vector<std::vector<double>> mNew = {{r.data[0][0] * m.get(0, 0) + r.data[0][1] * m.get(1, 0) + r.data[0][2] * m.get(2, 0),
                                               r.data[0][0] * m.get(0, 1) + r.data[0][1] * m.get(1, 1) + r.data[0][2] * m.get(2, 1),
                                               r.data[0][0] * m.get(0, 2) + r.data[0][1] * m.get(1, 2) + r.data[0][2] * m.get(2, 2)},
                                              {r.data[1][0] * m.get(0, 0) + r.data[1][1] * m.get(1, 0) + r.data[1][2] * m.get(2, 0),
@@ -164,7 +164,7 @@ namespace linalg
             throw std::invalid_argument("Vector must have 3 elements");
         }
 
-        std::vector<float> vNew = {r.data[0][0] * v.get(0) + r.data[0][1] * v.get(1) + r.data[0][2] * v.get(2),
+        std::vector<double> vNew = {r.data[0][0] * v.get(0) + r.data[0][1] * v.get(1) + r.data[0][2] * v.get(2),
                                 r.data[1][0] * v.get(0) + r.data[1][1] * v.get(1) + r.data[1][2] * v.get(2),
                                 r.data[2][0] * v.get(0) + r.data[2][1] * v.get(1) + r.data[2][2] * v.get(2)};
         return Vector(vNew);
@@ -262,13 +262,13 @@ namespace linalg
         return rpy;
     }
 
-    void Rotation::getAxisAngle(Vector &axis, float &angle) const
+    void Rotation::getAxisAngle(Vector &axis, double &angle) const
     {
         axis = Vector(3);
-        float f = (get(0, 0) + get(1, 1) + get(2, 2) - 1) / 2;
-        angle = acos(std::max(-1.0f, std::min(1.0f, f)));
+        double f = (get(0, 0) + get(1, 1) + get(2, 2) - 1) / 2;
+        angle = acos(std::max(-1.0, std::min(1.0, f)));
 
-        float s = 2 * std::sin(angle);
+        double s = 2 * std::sin(angle);
         axis.at(0) = (get(2, 1) - get(1, 2)) / s;
         axis.at(1) = (get(0, 2) - get(2, 0)) / s;
         axis.at(2) = (get(1, 0) - get(0, 1)) / s;

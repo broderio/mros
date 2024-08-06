@@ -6,6 +6,8 @@
 
 int main() {
     TCPServer server(URI(getLocalIP(), 8080));
+    server.bind();
+    server.listen();
     TCPConnection connection;
     int res;
     do {

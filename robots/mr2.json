@@ -1,0 +1,148 @@
+{
+    "name": "simpleBot",
+    "endeffector": "forearm_right",
+    "base": "base",
+    "joints": [
+        {
+            "name": "clavicle_right_yaw",
+            "parent": "base",
+            "child": "clavicle_right",
+            "type": "revolute",
+            "axis": [0.0, 0.0, -1.0],
+            "origin": {
+                "xyz": [0.3, 0.4, 0.0],
+                "rpy": [-1.5708, 0, 0]
+            }
+        },
+        {
+            "name": "shoulder_right_yaw",
+            "parent": "clavicle_right",
+            "child": "shoulder_right",
+            "type": "revolute",
+            "axis": [0.0, 0.707, 0.707],
+            "origin": {
+                "xyz": [0.0, -0.15, 0.85],
+                "rpy": [1.5708,0,0]
+            }
+        },
+        {
+            "name": "upperarm_right_pitch",
+            "parent": "shoulder_right",
+            "child": "upperarm_right",
+            "type": "revolute",
+            "axis": [0.0, 1.0, 0.0],
+            "origin": {
+                "xyz": [0.0, 0.0, 0.7],
+                "rpy": [0, 0, 0]
+            }
+        },
+        {
+            "name": "forearm_right_yaw",
+            "parent": "upperarm_right",
+            "child": "forearm_right",
+            "type": "revolute",
+            "axis": [1.0, 0.0, 0.0],
+            "origin": {
+                "xyz": [0.0, 0.0, 0.7],
+                "rpy": [0, 0, 0]
+            }
+        },
+        {
+            "name": "clavicle_left_roll",
+            "parent": "base",
+            "child": "clavicle_left",
+            "type": "revolute",
+            "axis": [0.0, 0.0, 1.0],
+            "origin": {
+                "xyz": [0.25, 0, 0],
+                "rpy": [0, 0, 0]
+            }
+        }
+    ],
+    "links": [
+        {
+            "name": "base",
+            "visual": {
+                "shape": {
+                    "type": "box",
+                    "size": [1, 1, 0.4],
+                    "rgb": "#ff0000"
+                },
+                "origin": {
+                    "xyz": [0, 0, 0.2],
+                    "rpy": [0, 0, 0]
+                }
+            }
+        },
+        {
+            "name": "clavicle_right",
+            "visual": {
+                "shape": {
+                    "type": "box",
+                    "size": [0.3, 1, 0.3],
+                    "rgb": "#ff0000"
+                },
+                "origin": {
+                    "xyz": [0, 0.5, 0],
+                    "rpy": [0, 0, 0]
+                }
+            }
+        },
+        {
+            "name": "clavicle_left",
+            "visual": {
+                "shape": {
+                    "type": "box",
+                    "size": [0.3, 1, 0.3],
+                    "rgb": "#ff0000"
+                },
+                "origin": {
+                    "xyz": [0, 0.5, 0],
+                    "rpy": [0, 0, 0]
+                }
+            }
+        },
+        {
+            "name": "shoulder_right",
+            "visual": {
+                "shape": {
+                    "type": "box",
+                    "size": [0.3, 0.7, 0.3],
+                    "rgb": "#ff0000"
+                },
+                "origin": {
+                    "xyz": [0, 0.35, 0],
+                    "rpy": [0, 0, 0]
+                }
+            }
+        },
+        {
+            "name": "upperarm_right",
+            "visual": {
+                "shape": {
+                    "type": "box",
+                    "size": [0.3, 0.7, 0.3],
+                    "rgb": "#ff0000"
+                },
+                "origin": {
+                    "xyz": [0, 0.35, 0],
+                    "rpy": [0, 0, 0]
+                }
+            }
+        },
+        {
+            "name": "forearm_right",
+            "visual": {
+                "shape": {
+                    "type": "box",
+                    "size": [0.3, 0.5, 0.3],
+                    "rgb": "#ff0000"
+                },
+                "origin": {
+                    "xyz": [0, 0.25, 0],
+                    "rpy": [0, 0, 0]
+                }
+            }
+        }
+    ]
+}

@@ -1,5 +1,4 @@
-#ifndef UDP_SERVER_HPP
-#define UDP_SERVER_HPP
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -53,5 +52,3 @@ private:
     
     sockaddr_in server;
 };
-
-#endif // UDP_SERVER_HPP

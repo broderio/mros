@@ -1,5 +1,4 @@
-#ifndef TCP_CLIENT_HPP
-#define TCP_CLIENT_HPP
+#pragma once
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -52,5 +51,3 @@ private:
     sockaddr_in server;
 
 };
-
-#endif // TCP_CLIENT_HPP

@@ -13,21 +13,28 @@ public:
     
     Matrix();
     Matrix(size_t rows, size_t cols);
-    Matrix(size_t rows, size_t cols, float val);
-    Matrix(const std::vector<std::vector<float>>& data);
+    Matrix(size_t rows, size_t cols, double val);
+    Matrix(const std::vector<std::vector<double>>& data);
     Matrix(const Vector& v, bool column = true);
     Matrix(const Matrix& m);
 
     Matrix &operator=(const Matrix& rhs);
 
-    std::vector<std::vector<float>> getData() const;
-    float get(size_t row, size_t col) const;
-    float &at(size_t row, size_t col);
-    void set(size_t row, size_t col, float val);
+    std::vector<std::vector<double>> getData() const;
+
+    double get(size_t row, size_t col) const;
+    double &at(size_t row, size_t col);
+    void set(size_t row, size_t col, double val);
+
+    void pushRow(const Vector &row);
+    void pushCol(const Vector &col);
+
     Vector getRow(size_t row) const;
     Vector getCol(size_t col) const;
+
     void setRow(size_t row, const Vector& v);
     void setCol(size_t col, const Vector& v);
+
     size_t getRows() const;
     size_t getCols() const;
 
@@ -35,28 +42,28 @@ public:
     Matrix setSubmatrix(size_t startRow, size_t startCol, const Matrix& m);
 
     Matrix operator+(const Matrix& rhs) const;
-    Matrix operator+(const float& rhs) const;
+    Matrix operator+(const double& rhs) const;
 
     Matrix operator-(const Matrix& rhs) const;
-    Matrix operator-(const float& rhs) const;
+    Matrix operator-(const double& rhs) const;
 
     Matrix operator*(const Matrix& rhs) const; // Element-wise multiplication
-    Matrix operator*(const float& rhs) const;
+    Matrix operator*(const double& rhs) const;
 
     Matrix operator/(const Matrix& rhs) const; // Element-wise division
-    Matrix operator/(const float& rhs) const;
+    Matrix operator/(const double& rhs) const;
 
     Matrix operator+=(const Matrix& rhs);
-    Matrix operator+=(const float& rhs);
+    Matrix operator+=(const double& rhs);
 
     Matrix operator-=(const Matrix& rhs);
-    Matrix operator-=(const float& rhs);
+    Matrix operator-=(const double& rhs);
 
     Matrix operator*=(const Matrix& rhs);
-    Matrix operator*=(const float& rhs);
+    Matrix operator*=(const double& rhs);
 
     Matrix operator/=(const Matrix& rhs);
-    Matrix operator/=(const float& rhs);
+    Matrix operator/=(const double& rhs);
 
     static Matrix identity(size_t size);
 
@@ -82,22 +89,22 @@ protected:
 
     size_t cols;
 
-    std::vector<std::vector<float>> data;
+    std::vector<std::vector<double>> data;
 
 };
 
 
-Matrix operator+(const float& lhs, const Matrix& rhs);
+Matrix operator+(const double& lhs, const Matrix& rhs);
 
-Matrix operator-(const float& lhs, const Matrix& rhs);
+Matrix operator-(const double& lhs, const Matrix& rhs);
 
-Matrix operator*(const float& lhs, const Matrix& rhs);
+Matrix operator*(const double& lhs, const Matrix& rhs);
 
 std::ostream &operator<<(std::ostream& os, const Matrix& m);
 
-bool approx(const float& lhs, const float& rhs, const float& eps = 1e-6);
+bool approx(const double& lhs, const double& rhs, const double& eps = 1e-6);
 
-Vector linearSolve(const Matrix& A, const Vector& b, const bool& useLU = true);
+Vector linearSolve(Matrix A, const Vector& b, const bool& useLU = true);
 
 Vector polyfit(const Vector& x, const Vector& y, const size_t& order, const bool& useLU = true);
 

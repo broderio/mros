@@ -19,19 +19,21 @@ namespace kineval
 
         Transform(const Transform &f);
 
+        static Transform identity();
+
         Transform &operator=(const Transform &f);
 
-        void applyTranslation(const linalg::Vector &translation);
+        Transform applyTranslation(const linalg::Vector &translation) const;
         
-        void applyRotation(const linalg::Quaternion &rotation); // Extrinsic rotation
+        Transform applyRotation(const linalg::Quaternion &rotation) const;
 
-        void applyTransform(const Transform &transform);
+        Transform applyTransform(const Transform &transform) const;
 
         linalg::Vector getTranslation() const;
 
         linalg::Quaternion getRotation() const;
 
-        linalg::Matrix getTransform() const;
+        linalg::Matrix getMatrix() const;
 
         void setTranslation(const linalg::Vector &translation);
 

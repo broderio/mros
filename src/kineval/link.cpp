@@ -11,19 +11,19 @@ namespace kineval
     {
     }
 
-    Link::Link(const Link &j)
+    Link::Link(const Link &other)
     {
-        origin = j.origin;
+        origin = other.origin;
     }
 
-    Link &Link::operator=(const Link &j)
+    Link &Link::operator=(const Link &other)
     {
-        if (this == &j)
+        if (this == &other)
         {
             return *this;
         }
 
-        origin = j.origin;
+        origin = other.origin;
 
         return *this;
     }

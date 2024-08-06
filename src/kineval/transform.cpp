@@ -3,48 +3,66 @@
 namespace kineval
 {
     Transform::Transform()
+    : translation(3, 0), rotation(linalg::Quaternion::identity())
     {
     }
 
     Transform::Transform(const linalg::Vector &translation, const linalg::Quaternion &rotation)
-    : translation(translation), rotation(rotation)
     {
-        
+        if (translation.getSize() != 3)
+        {
+            throw std::invalid_argument("Translation vector must have size 3");
+        }
+
+        this->translation = translation;
+        this->rotation = rotation;
     }
 
-    Transform::Transform(const Transform &f)
+    Transform::Transform(const Transform &other)
     {
-        translation = f.translation;
-        rotation = f.rotation;    
+        translation = other.translation;
+        rotation = other.rotation;
     }
 
-    Transform &Transform::operator=(const Transform &f)
+    Transform Transform::identity()
     {
-        if (this == &f)
+        return Transform(linalg::Vector(3, 0), linalg::Quaternion::identity());
+    }
+
+    Transform &Transform::operator=(const Transform &other)
+    {
+        if (this == &other)
         {
             return *this;
         }
 
-        translation = f.translation;
-        rotation = f.rotation;
+        translation = other.translation;
+        rotation = other.rotation;
 
         return *this;
     }
 
-    void Transform::applyRotation(const linalg::Quaternion &rotation)
+    Transform Transform::applyRotation(const linalg::Quaternion &rotation) const
     {
-        this->rotation = linalg::Quaternion::multiply(rotation, this->rotation);
+        linalg::Vector t = linalg::Quaternion::rotate(this->translation, rotation);
+        linalg::Quaternion r = linalg::Quaternion::multiply(this->rotation, rotation);
+        return Transform(t, r);
     }
 
-    void Transform::applyTranslation(const linalg::Vector &translation)
+    Transform Transform::applyTranslation(const linalg::Vector &translation) const
     {
-        this->translation += translation;
+        if (translation.getSize() != 3)
+        {
+            throw std::invalid_argument("Translation vector must have size 3");
+        }
+        return Transform(this->translation + translation, this->rotation);
     }
 
-    void Transform::applyTransform(const Transform &transform)
+    Transform Transform::applyTransform(const Transform &transform) const
     {
-        this->rotation = linalg::Quaternion::multiply(this->rotation, transform.rotation);
-        this->translation = linalg::Quaternion::rotate(this->translation, transform.rotation) + transform.translation;
+        linalg::Vector t = this->translation + linalg::Quaternion::rotate(transform.translation, this->rotation);
+        linalg::Quaternion r = linalg::Quaternion::multiply(this->rotation, transform.rotation);
+        return Transform(t, r);
     }
 
     linalg::Vector Transform::getTranslation() const
@@ -57,7 +75,7 @@ namespace kineval
         return rotation;
     }
 
-    linalg::Matrix Transform::getTransform() const
+    linalg::Matrix Transform::getMatrix() const
     {
         linalg::Matrix T(4, 4);
         T.setSubmatrix(0, 0, linalg::Quaternion::toRotationMatrix(rotation));

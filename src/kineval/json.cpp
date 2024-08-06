@@ -78,7 +78,7 @@ std::string JsonParser::stringify(const std::shared_ptr<JsonValue>& value) {
         case JsonValue::Type::String:
             return "\"" + value->as_string() + "\"";
         case JsonValue::Type::Float:
-            return std::to_string(value->as_float());
+            return std::to_string(value->as_double());
         case JsonValue::Type::Boolean:
             return value->as_boolean() ? "true" : "false";
         case JsonValue::Type::Array: {

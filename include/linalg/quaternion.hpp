@@ -14,43 +14,43 @@ namespace linalg {
 class Quaternion {
 public:
     Quaternion();
-    Quaternion(float x, float y, float z, float w);
+    Quaternion(double x, double y, double z, double w);
     Quaternion(const geometry_msgs::Quaternion& q);
     Quaternion(const Quaternion& q);
     Quaternion &operator=(const Quaternion& rhs);
-    Quaternion(const Vector& axis, const float& angle);
+    Quaternion(const Vector& axis, const double& angle);
 
     geometry_msgs::Quaternion toMsg() const;
-    void toAxisAngle(Vector& axis, float& angle) const;
+    void toAxisAngle(Vector& axis, double& angle) const;
 
     Quaternion operator+(const Quaternion &rhs) const;
-    Quaternion operator+(const float &rhs) const;
+    Quaternion operator+(const double &rhs) const;
     Quaternion operator-(const Quaternion &rhs) const;
-    Quaternion operator-(const float &rhs) const;
-    Quaternion operator*(const float &rhs) const;
-    Quaternion operator/(const float &rhs) const;
+    Quaternion operator-(const double &rhs) const;
+    Quaternion operator*(const double &rhs) const;
+    Quaternion operator/(const double &rhs) const;
 
-    float norm() const;
+    double norm() const;
     Quaternion inverse() const;
 
     static Quaternion identity();
-    static Quaternion fromRPY(const float& roll, const float& pitch, const float& yaw);
+    static Quaternion fromRPY(const double& roll, const double& pitch, const double& yaw);
     static Quaternion normalize(const Quaternion& q);
-    static float dot(const Quaternion& q1, const Quaternion& q2);
+    static double dot(const Quaternion& q1, const Quaternion& q2);
     static Quaternion multiply(const Quaternion& q1, const Quaternion& q2);
     static Vector rotate(const Vector &v, const Quaternion &q); // Passive rotation
     static Matrix toRotationMatrix(const Quaternion& q);
-    static Quaternion SLERP(const Quaternion &q1, const Quaternion &q2, float t);
+    static Quaternion SLERP(const Quaternion &q1, const Quaternion &q2, double t);
     
 private:
-    float x;
-    float y;
-    float z;
-    float w;
+    double x;
+    double y;
+    double z;
+    double w;
 };
 
-Quaternion operator+(const float &lhs, const Quaternion &rhs);
-Quaternion operator-(const float &lhs, const Quaternion &rhs);
-Quaternion operator*(const float &lhs, const Quaternion &rhs);
+Quaternion operator+(const double &lhs, const Quaternion &rhs);
+Quaternion operator-(const double &lhs, const Quaternion &rhs);
+Quaternion operator*(const double &lhs, const Quaternion &rhs);
 
 } // namespace linalg

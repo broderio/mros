@@ -16,8 +16,8 @@ namespace kineval
     public:
         Link();
         Link(const linalg::Vector &origin);
-        Link(const Link &j);
-        Link &operator=(const Link &j);
+        Link(const Link &other);
+        Link &operator=(const Link &other);
 
         Transform getTransform() const;
         linalg::Vector getOrigin() const;

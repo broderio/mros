@@ -31,6 +31,7 @@ namespace mros
     Node::~Node()
     {
         shutdown();
+
         for (auto &topic : publishers)
         {
             for (auto &pub : topic.second)
@@ -324,24 +325,18 @@ namespace mros
 
     bool Node::requestServiceAddress(const std::string &service, URI &serviceURI, const std::string &inMsgType, const std::string &outMsgType)
     {
-        clientMutex.lock();
-
+        UDPClient tmpClient(false);
         std_msgs::String msg = service;
 
-        client.sendTo(Parser::encode(msg, CORE_TOPICS::SRV_REQUEST), coreURI);
+        tmpClient.sendTo(Parser::encode(msg, CORE_TOPICS::SRV_REQUEST), coreURI);
 
         std::string inMsg;
         URI sender;
-        while (inMsg.size() == 0 && ok())
+        if (tmpClient.receiveFrom(inMsg, MAX_MSG_SIZE, sender) < 0)
         {
-            if (client.receiveFrom(inMsg, MAX_MSG_SIZE, sender) < 0)
-            {
-                Console::log(LogLevel::ERROR, "Failed to receive message from Mediator");
-                return false;
-            }
+            Console::log(LogLevel::ERROR, "Failed to receive message from Mediator");
+            return false;
         }
-
-        clientMutex.unlock();
 
         private_msgs::Response response;
         if (!Parser::decode(inMsg, response))
@@ -372,20 +367,16 @@ namespace mros
 
     std::string Node::callService(const URI &serviceURI, const std::string &request)
     {
-        clientMutex.lock();
-        client.sendTo(request, serviceURI);
+        UDPClient tmpClient(false);
+        tmpClient.sendTo(request, serviceURI);
 
         std::string inMsg;
         URI sender;
-        while (inMsg.size() == 0 && ok())
+        if (tmpClient.receiveFrom(inMsg, MAX_MSG_SIZE, sender) < 0)
         {
-            if (client.receiveFrom(inMsg, MAX_MSG_SIZE, sender) < 0)
-            {
-                Console::log(LogLevel::ERROR, "Failed to receive message from Mediator");
-                return "";
-            }
+            Console::log(LogLevel::ERROR, "Failed to receive message from Mediator");
+            return "";
         }
-        clientMutex.unlock();
 
         return inMsg;
     }

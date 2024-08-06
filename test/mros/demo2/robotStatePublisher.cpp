@@ -10,6 +10,7 @@
 #include "mros/utils/argParser.hpp"
 #include "utils.hpp"
 
+#include "messages/std_msgs/void.hpp"
 #include "messages/sensor_msgs/jointState.hpp"
 #include "messages/geometry_msgs/transform.hpp"
 
@@ -59,17 +60,6 @@ sensor_msgs::JointState interpolate(const sensor_msgs::JointState &js1, const se
     return result;
 }
 
-void updateJointStates(kineval::KinematicTree &kt, const sensor_msgs::JointState &js)
-{
-    for (int i = 0; i < js.name.size(); i++)
-    {
-        std::string name = js.name[i].data;
-        mros::Console::log(mros::LogLevel::DEBUG, "Updating joint [" + name + "] to position: " + std::to_string(js.position[i].data));
-        double position = js.position[i].data;
-        kt.setJointState(name, position);
-    }
-}
-
 class RobotStatePublisher
 {
 public:
@@ -79,16 +69,19 @@ public:
 
 private:
     void jointStateCallback(const sensor_msgs::JointState &msg);
+    void globalTFCallback(const std_msgs::Void &req, geometry_msgs::TF &res);
 
     int hz;
     float timeThreshold;
     mros::Node node;
     std::shared_ptr<mros::Subscriber> jointStateSub;
     std::shared_ptr<mros::Publisher> tfPub;
+    std::shared_ptr<mros::Service> globalTFService;
 
     sensor_msgs::JointState currJointState;
     sensor_msgs::JointState prevJointState;
 
+    std::mutex ktLock;
     kineval::KinematicTree kt;
 };
 
@@ -98,12 +91,19 @@ void RobotStatePublisher::jointStateCallback(const sensor_msgs::JointState &msg)
     currJointState = msg;
 }
 
+void RobotStatePublisher::globalTFCallback(const std_msgs::Void &req, geometry_msgs::TF &res)
+{
+    this->ktLock.lock();
+    res = this->kt.globalTF();
+    this->ktLock.unlock();
+}
+
 RobotStatePublisher::RobotStatePublisher(const URI &uri, const std::string &jrdfPath, int hz, float timeThreshold)
     : node("robot_state_publisher", uri), hz(hz), timeThreshold(timeThreshold)
 {
     tfPub = node.advertise<geometry_msgs::TF>("tf", 10);
     jointStateSub = node.subscribe<sensor_msgs::JointState>("joint_states", 10, std::bind(&RobotStatePublisher::jointStateCallback, this, std::placeholders::_1));
-
+    globalTFService = node.advertiseService<std_msgs::Void, geometry_msgs::TF>("global_tf", std::bind(&RobotStatePublisher::globalTFCallback, this, std::placeholders::_1, std::placeholders::_2));
     std::ifstream file(jrdfPath);
     auto json = kineval::JsonParser::parse(file);
     kt = kineval::KinematicTree::fromJson(json->as_object());
@@ -111,8 +111,10 @@ RobotStatePublisher::RobotStatePublisher(const URI &uri, const std::string &jrdf
 
 void RobotStatePublisher::run()
 {
-    TCPClient client(URI("0.0.0.0", 9000), false);
-    client.connect();
+    // TCPClient client(URI("0.0.0.0", 9000), false);
+    // client.connect();
+
+    node.spin(true);
 
     const int periodNs = (1 / (float)hz) * 1000000000;
 
@@ -133,12 +135,13 @@ void RobotStatePublisher::run()
 
             sensor_msgs::JointState interpolatedState = interpolate(prevJointState, currJointState, targetTime, timeThreshold);
 
-            updateJointStates(kt, interpolatedState);
-
+            ktLock.lock();
+            kt.setJointStates(interpolatedState);
             tfPub->publish(kt.TF());
+            ktLock.unlock();
+
             start_time = getTimeNano();
         }
-        node.spinOnce();
     }
 }
 
@@ -166,6 +169,7 @@ int main(int argc, char **argv)
 
 
     RobotStatePublisher RSP(uri, jrdfPath, freq, timeThreshold);
+    mros::Console::setLevel(mros::LogLevel::DEBUG);
     RSP.run();
 
     return 0;

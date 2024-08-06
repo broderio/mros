@@ -7,7 +7,7 @@ namespace kineval
     }
 
     Joint::Joint(const linalg::Vector &axis, const linalg::Vector &origin, const JointType &type)
-        : axis(axis), origin(origin), type(type)
+        : axis(axis), origin(origin), type(type), limited(false)
     {
     }
 
@@ -16,6 +16,10 @@ namespace kineval
         axis = j.axis;
         origin = j.origin;
         type = j.type;
+        limited = j.limited;
+        upperBound = j.upperBound;
+        lowerBound = j.lowerBound;
+        q = j.q;
     }
 
     Joint &Joint::operator=(const Joint &j)
@@ -28,6 +32,10 @@ namespace kineval
         axis = j.axis;
         origin = j.origin;
         type = j.type;
+        limited = j.limited;
+        upperBound = j.upperBound;
+        lowerBound = j.lowerBound;
+        q = j.q;
 
         return *this;
     }
@@ -41,14 +49,13 @@ namespace kineval
 
         linalg::Quaternion r = linalg::Quaternion::fromRPY(origin.get(3), origin.get(4), origin.get(5));
 
-        switch (type)
+        if (type == REVOLUTE || type == CONTINUOUS)
         {
-        case REVOLUTE:
             r = linalg::Quaternion::multiply(r, linalg::Quaternion(axis, q));
-            break;
-        case PRISMATIC:
+        }
+        else if (type == PRISMATIC)
+        {
             t += q * axis;
-            break;
         }
 
         return Transform(t, r);
@@ -69,4 +76,56 @@ namespace kineval
         return type;
     }
 
+    void Joint::setLimits(double lowerBound, double upperBound)
+    {
+        this->limited = true;
+        this->lowerBound = lowerBound;
+        this->upperBound = upperBound;
+    }
+
+    bool Joint::getLimits(double &lowerBound, double &upperBound) const
+    {
+        if (this->limited)
+        {
+            lowerBound = this->lowerBound;
+            upperBound = this->upperBound;
+        }
+        return this->limited;
+    }
+
+    bool Joint::hasLimits() const
+    {
+        return this->limited;
+    }
+
+    bool Joint::inLimits(double q) const
+    {
+        if (!limited)
+        {
+            return true;
+        }
+        return (q < upperBound) && (q > lowerBound);
+    }
+
+    void Joint::removeLimits()
+    {
+        this->limited = false;
+    }
+
+    void Joint::setState(double q)
+    {
+        if (hasLimits())
+        {
+            this->q = std::max(lowerBound, std::min(q, upperBound));
+        }
+        else
+        {
+            this->q = q;
+        }
+    }
+
+    double Joint::getState() const
+    {
+        return q;
+    }
 }

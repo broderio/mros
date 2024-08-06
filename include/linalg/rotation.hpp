@@ -19,13 +19,13 @@ public:
     Rotation(const Matrix& m);
 
     static Rotation identity();
-    static Rotation X(const float& angle);
-    static Rotation Y(const float& angle);
-    static Rotation Z(const float& angle);
+    static Rotation X(const double& angle);
+    static Rotation Y(const double& angle);
+    static Rotation Z(const double& angle);
 
     static Rotation fromQuaternion(const Quaternion& q);
     static Rotation fromRPY(const Vector& rpy);
-    static Rotation fromAxisAngle(const Vector& axis, const float& angle);
+    static Rotation fromAxisAngle(const Vector& axis, const double& angle);
     static Rotation fromEulerZYZ(const Vector& euler);
     static Rotation fromEulerZYX(const Vector& euler);
 
@@ -37,7 +37,7 @@ public:
 
     Quaternion getQuaternion() const;
     Vector getRPY() const;
-    void getAxisAngle(Vector &axis, float &angle) const;
+    void getAxisAngle(Vector &axis, double &angle) const;
     Vector getEulerZYZ() const;
     Vector getEulerZYX() const;
 };

@@ -6,19 +6,19 @@ Matrix::Matrix()
 : rows(), cols(), data() {}
 
 Matrix::Matrix(size_t rows, size_t cols)
-: rows(rows), cols(cols), data(rows, std::vector<float>(cols)) {}
+: rows(rows), cols(cols), data(rows, std::vector<double>(cols)) {}
 
-Matrix::Matrix(size_t rows, size_t cols, float val)
-: rows(rows), cols(cols), data(rows, std::vector<float>(cols, val)) {}
+Matrix::Matrix(size_t rows, size_t cols, double val)
+: rows(rows), cols(cols), data(rows, std::vector<double>(cols, val)) {}
 
-Matrix::Matrix(const std::vector<std::vector<float>>& data)
+Matrix::Matrix(const std::vector<std::vector<double>>& data)
 : rows(data.size()), cols(data[0].size()), data(data) {}
 
 Matrix::Matrix(const Vector& v, bool column)
-: rows(column ? v.getSize() : 1), cols(column ? 1 : v.getSize()), data(rows, std::vector<float>(cols)) {
+: rows(column ? v.getSize() : 1), cols(column ? 1 : v.getSize()), data(rows, std::vector<double>(cols)) {
     if (column) {
-        std::vector<float> vData = v.getData();
-        std::for_each(vData.begin(), vData.end(), [this](float f) {
+        std::vector<double> vData = v.getData();
+        std::for_each(vData.begin(), vData.end(), [this](double f) {
             data.push_back({f});
         });
     } 
@@ -41,11 +41,11 @@ Matrix &Matrix::operator=(const Matrix& rhs) {
 }
 
 
-std::vector<std::vector<float>> Matrix::getData() const {
+std::vector<std::vector<double>> Matrix::getData() const {
     return data;
 }
 
-float Matrix::get(size_t row, size_t col) const {
+double Matrix::get(size_t row, size_t col) const {
     if (row >= rows || col >= cols) {
         throw std::out_of_range("Index out of bounds.");
     }
@@ -53,7 +53,7 @@ float Matrix::get(size_t row, size_t col) const {
     return data[row][col];
 }
 
-float &Matrix::at(size_t row, size_t col) {
+double &Matrix::at(size_t row, size_t col) {
     if (row >= rows || col >= cols) {
         throw std::out_of_range("Index out of bounds.");
     }
@@ -61,12 +61,36 @@ float &Matrix::at(size_t row, size_t col) {
     return data[row][col];
 }
 
-void Matrix::set(size_t row, size_t col, float val) {
+void Matrix::set(size_t row, size_t col, double val) {
     if (row >= rows || col >= cols) {
         throw std::out_of_range("Index out of bounds.");
     }
 
     data[row][col] = val;
+}
+
+void Matrix::pushRow(const Vector &row)
+{
+    if (row.getSize() != getCols())
+    {
+        throw std::invalid_argument("Cannot push row of unequal size to matrix.");
+    }
+    data.push_back(row.getData());
+    rows++;
+}
+
+void Matrix::pushCol(const Vector &col)
+{
+    if (col.getSize() != getRows())
+    {
+        throw std::invalid_argument("Cannot push column of unequal size to matrix.");
+    }
+    int i = 0;
+    for (auto &row : data)
+    {
+        row.push_back(col.get(i++));
+    }
+    cols++;
 }
 
 Vector Matrix::getRow(size_t row) const {
@@ -82,7 +106,7 @@ Vector Matrix::getCol(size_t col) const {
         throw std::out_of_range("Index out of bounds.");
     }
 
-    std::vector<float> v(rows);
+    std::vector<double> v(rows);
     for (size_t i = 0; i < rows; ++i) {
         v[i] = data[i][col];
     }
@@ -156,7 +180,7 @@ Matrix Matrix::operator+(const Matrix& rhs) const {
     return m;
 }
 
-Matrix Matrix::operator+(const float& rhs) const {
+Matrix Matrix::operator+(const double& rhs) const {
     Matrix m(rows, cols);
     for (size_t i = 0; i < rows; ++i) {
         for (size_t j = 0; j < cols; ++j) {
@@ -181,7 +205,7 @@ Matrix Matrix::operator-(const Matrix& rhs) const {
     return m;
 }
 
-Matrix Matrix::operator-(const float& rhs) const {
+Matrix Matrix::operator-(const double& rhs) const {
     Matrix m(rows, cols);
     for (size_t i = 0; i < rows; ++i) {
         for (size_t j = 0; j < cols; ++j) {
@@ -206,7 +230,7 @@ Matrix Matrix::operator*(const Matrix& rhs) const {
     return m;
 }
 
-Matrix Matrix::operator*(const float& rhs) const {
+Matrix Matrix::operator*(const double& rhs) const {
     Matrix m(rows, cols);
     for (size_t i = 0; i < rows; ++i) {
         for (size_t j = 0; j < cols; ++j) {
@@ -231,7 +255,7 @@ Matrix Matrix::operator/(const Matrix& rhs) const {
     return m;
 }
 
-Matrix Matrix::operator/(const float& rhs) const {
+Matrix Matrix::operator/(const double& rhs) const {
     Matrix m(rows, cols);
     for (size_t i = 0; i < rows; ++i) {
         for (size_t j = 0; j < cols; ++j) {
@@ -255,7 +279,7 @@ Matrix Matrix::operator+=(const Matrix& rhs) {
     return *this;
 }
 
-Matrix Matrix::operator+=(const float& rhs) {
+Matrix Matrix::operator+=(const double& rhs) {
     for (size_t i = 0; i < rows; ++i) {
         for (size_t j = 0; j < cols; ++j) {
             data[i][j] += rhs;
@@ -278,7 +302,7 @@ Matrix Matrix::operator-=(const Matrix& rhs) {
     return *this;
 }
 
-Matrix Matrix::operator-=(const float& rhs) {
+Matrix Matrix::operator-=(const double& rhs) {
     for (size_t i = 0; i < rows; ++i) {
         for (size_t j = 0; j < cols; ++j) {
             data[i][j] -= rhs;
@@ -301,7 +325,7 @@ Matrix Matrix::operator*=(const Matrix& rhs) {
     return *this;
 }
 
-Matrix Matrix::operator*=(const float& rhs) {
+Matrix Matrix::operator*=(const double& rhs) {
     for (size_t i = 0; i < rows; ++i) {
         for (size_t j = 0; j < cols; ++j) {
             data[i][j] *= rhs;
@@ -324,7 +348,7 @@ Matrix Matrix::operator/=(const Matrix& rhs) {
     return *this;
 }
 
-Matrix Matrix::operator/=(const float& rhs) {
+Matrix Matrix::operator/=(const double& rhs) {
     for (size_t i = 0; i < rows; ++i) {
         for (size_t j = 0; j < cols; ++j) {
             data[i][j] /= rhs;
@@ -334,7 +358,7 @@ Matrix Matrix::operator/=(const float& rhs) {
 }
 
 
-Matrix operator+(const float& lhs, const Matrix& rhs) {
+Matrix operator+(const double& lhs, const Matrix& rhs) {
     Matrix m(rhs.getRows(), rhs.getCols());
     for (size_t i = 0; i < rhs.getRows(); ++i) {
         for (size_t j = 0; j < rhs.getCols(); ++j) {
@@ -344,7 +368,7 @@ Matrix operator+(const float& lhs, const Matrix& rhs) {
     return m;
 }
 
-Matrix operator-(const float& lhs, const Matrix& rhs) {
+Matrix operator-(const double& lhs, const Matrix& rhs) {
     Matrix m(rhs.getRows(), rhs.getCols());
     for (size_t i = 0; i < rhs.getRows(); ++i) {
         for (size_t j = 0; j < rhs.getCols(); ++j) {
@@ -427,7 +451,7 @@ bool Matrix::LU(const Matrix& A, Matrix& L, Matrix& U) {
 
         Vector c = temp.getCol(i);
         Vector r = temp.getRow(i);
-        float pivot = c.get(i);
+        double pivot = c.get(i);
 
         if (!approx(pivot, 0)) 
         {
@@ -511,7 +535,7 @@ Matrix Matrix::invertUpperTriangular(const Matrix& U) {
     for (size_t i = 0; i < U.rows; ++i) {
         inv.data[i][i] = 1 / U.data[i][i];
         for (size_t j = i + 1; j < U.cols; ++j) {
-            float sum = 0;
+            double sum = 0;
             for (size_t k = i; k < j; ++k) {
                 sum += U.data[k][j] * inv.data[i][k];
             }
@@ -530,7 +554,7 @@ Matrix Matrix::invertLowerTriangular(const Matrix& L) {
     for (size_t i = 0; i < L.rows; ++i) {
         inv.data[i][i] = 1 / L.data[i][i];
         for (size_t j = 0; j < i; ++j) {
-            float sum = 0;
+            double sum = 0;
             for (size_t k = j; k < i; ++k) {
                 sum += L.data[i][k] * inv.data[k][j];
             }
@@ -547,7 +571,7 @@ Vector Matrix::backwardSub(const Matrix& U, const Vector& b) {
 
     Vector x(U.rows);
     for (int i = U.rows - 1; i >= 0; --i) {
-        float sum = 0;
+        double sum = 0;
         for (size_t j = i + 1; j < U.cols; ++j) {
             sum += U.data[i][j] * x.get(j);
         }
@@ -563,7 +587,7 @@ Vector Matrix::forwardSub(const Matrix& L, const Vector& b) {
 
     Vector x(L.rows);
     for (size_t i = 0; i < L.rows; ++i) {
-        float sum = 0;
+        double sum = 0;
         for (size_t j = 0; j < i; ++j) {
             sum += L.data[i][j] * x.get(j);
         }
@@ -572,7 +596,7 @@ Vector Matrix::forwardSub(const Matrix& L, const Vector& b) {
     return x;
 }
 
-Matrix linalg::operator+(const float& lhs, const Matrix& rhs) {
+Matrix linalg::operator+(const double& lhs, const Matrix& rhs) {
     Matrix m(rhs.getRows(), rhs.getCols());
     for (size_t i = 0; i < rhs.getRows(); ++i) {
         for (size_t j = 0; j < rhs.getCols(); ++j) {
@@ -582,7 +606,7 @@ Matrix linalg::operator+(const float& lhs, const Matrix& rhs) {
     return m;
 }
 
-Matrix linalg::operator-(const float& lhs, const Matrix& rhs) {
+Matrix linalg::operator-(const double& lhs, const Matrix& rhs) {
     Matrix m(rhs.getRows(), rhs.getCols());
     for (size_t i = 0; i < rhs.getRows(); ++i) {
         for (size_t j = 0; j < rhs.getCols(); ++j) {
@@ -592,7 +616,7 @@ Matrix linalg::operator-(const float& lhs, const Matrix& rhs) {
     return m;
 }
 
-Matrix linalg::operator*(const float& lhs, const Matrix& rhs) {
+Matrix linalg::operator*(const double& lhs, const Matrix& rhs) {
     Matrix m(rhs.getRows(), rhs.getCols());
     for (size_t i = 0; i < rhs.getRows(); ++i) {
         for (size_t j = 0; j < rhs.getCols(); ++j) {
@@ -621,19 +645,19 @@ std::ostream &linalg::operator<<(std::ostream& os, const Matrix& m) {
     return os;
 }
 
-bool linalg::approx(const float& lhs, const float& rhs, const float& eps) {
+bool linalg::approx(const double& lhs, const double& rhs, const double& eps) {
     return std::abs(lhs - rhs) < eps;
 }
 
-Vector linalg::linearSolve(const Matrix& A, const Vector& b, const bool& useLU) {
-    Matrix A2 = A, At = Matrix::transpose(A);
+Vector linalg::linearSolve(Matrix A, const Vector& b, const bool& useLU) {
+    Matrix At = Matrix::transpose(A);
     if (A.getRows() != A.getCols()) {
-        A2 = Matrix::multiply(At, A);
+        A = Matrix::multiply(At, A);
     }
 
     if (useLU) {
         Matrix L, U;
-        if (!Matrix::LU(A2, L, U)) {
+        if (!Matrix::LU(A, L, U)) {
             return Vector();
         }
 
@@ -643,7 +667,7 @@ Vector linalg::linearSolve(const Matrix& A, const Vector& b, const bool& useLU) 
     else {
         // Use QR (this is less numerically stable than LU, but more robust to singular matrices)
         Matrix Q, R;
-        if (!Matrix::QR(A2, Q, R)) {
+        if (!Matrix::QR(A, Q, R)) {
             return Vector();
         }
 

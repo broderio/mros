@@ -19,16 +19,17 @@ int main() {
 
     node.spin(true);
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = -1; i < 11; i++) {
         if (!node.ok()) {
             break;
         }
 
-        std_msgs::Int32 request = std_msgs::Int32(i);
+        std_msgs::Int32 request(i);
         std_msgs::String response;
+        mros::Console::log(mros::LogLevel::DEBUG, "Sending request: " + std::to_string(request.data));
         if (node.callService("test_service", request, response))
         {
-            mros::Console::log(mros::LogLevel::DEBUG, response.data);
+            mros::Console::log(mros::LogLevel::DEBUG, "Received response: " + response.data);
         }
 
         sleep(1000);

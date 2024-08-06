@@ -1,5 +1,4 @@
-#ifndef UDP_CLIENT_HPP
-#define UDP_CLIENT_HPP
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -40,5 +39,3 @@ private:
 
     bool nonblocking;
 };
-
-#endif // UDP_CLIENT_HPP

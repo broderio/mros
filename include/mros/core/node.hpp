@@ -96,7 +96,7 @@ namespace mros
 
             std::shared_ptr<Service> srvPtr = Service::create<InMsgType, OutMsgType>(service, callback);
 
-            Console::log(LogLevel::INFO, "Advertising service: " + service);
+            Console::log(LogLevel::INFO, "Advertising service: \"" + service + "\"");
             registerService(srvPtr);
 
             services[service].insert(srvPtr);

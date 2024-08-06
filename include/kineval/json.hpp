@@ -29,7 +29,7 @@ public:
 
     JsonValue() : type_(Type::Null) {}
     JsonValue(const std::string& value) : type_(Type::String), string_value_(value) {}
-    JsonValue(float value) : type_(Type::Float), float_value_(value) {}
+    JsonValue(double value) : type_(Type::Float), double_value_(value) {}
     JsonValue(bool value) : type_(Type::Boolean), boolean_value_(value) {}
     JsonValue(const JsonArray& value) : type_(Type::Array), array_value_(value) {}
     JsonValue(const JsonObject& value) : type_(Type::Object), object_value_(value) {}
@@ -37,7 +37,7 @@ public:
     Type type() const { return type_; }
 
     std::string as_string() const { return string_value_; }
-    double as_float() const { return float_value_; }
+    double as_double() const { return double_value_; }
     bool as_boolean() const { return boolean_value_; }
     const JsonArray& as_array() const { return array_value_; }
     const JsonObject& as_object() const { return object_value_; }
@@ -45,7 +45,7 @@ public:
 private:
     Type type_;
     std::string string_value_;
-    float float_value_;
+    double double_value_;
     bool boolean_value_;
     JsonArray array_value_;
     JsonObject object_value_;

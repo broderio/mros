@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 11)
 
 find_library(PTHREAD pthread)
 
+find_package(websocketpp REQUIRED)
+
 ### UTILS LIBRARY ###
 
 add_library(utils STATIC src/utils.cpp)
@@ -29,6 +31,7 @@ add_library(msgs STATIC src/messages/message.cpp
                             src/messages/mbot_msgs/twist2D.cpp
                             src/messages/sensor_msgs/jointState.cpp
                             src/messages/std_msgs/string.cpp
+                            src/messages/std_msgs/void.cpp
                             src/messages/std_msgs/time.cpp
                             src/messages/std_msgs/header.cpp
                             src/messages/std_msgs/integer.cpp
@@ -50,9 +53,11 @@ target_link_libraries(smem pthread utils)
 add_library(socket STATIC src/socket/tcp/client.cpp
                              src/socket/tcp/server.cpp
                              src/socket/udp/client.cpp
-                             src/socket/udp/server.cpp)
+                             src/socket/udp/server.cpp
+                             src/socket/websocket/client.cpp
+                             src/socket/websocket/server.cpp)
 target_include_directories(socket PRIVATE include)
-target_link_libraries(socket utils)
+target_link_libraries(socket utils websocketpp::websocketpp)
 
 ### LINALG LIBRARY ###
 
@@ -167,6 +172,21 @@ add_executable(robot_state_publisher test/mros/demo2/robotStatePublisher.cpp)
 target_link_libraries(robot_state_publisher mros kineval)
 target_include_directories(robot_state_publisher PRIVATE include)
 
+# Add global TF caller test
+add_executable(global_tf_caller test/mros/demo3/globalTFCaller.cpp)
+target_link_libraries(global_tf_caller mros kineval)
+target_include_directories(global_tf_caller PRIVATE include)
+
+# Add IK service test
+add_executable(ik_service test/mros/demo3/ikService.cpp)
+target_link_libraries(ik_service mros kineval)
+target_include_directories(ik_service PRIVATE include)
+
+# Add IK caller test
+add_executable(ik_caller test/mros/demo3/ikCaller.cpp)
+target_link_libraries(ik_caller mros kineval)
+target_include_directories(ik_caller PRIVATE include)
+
 # Add robot state listener test
 add_executable(robot_state_listener test/mros/demo2/robotStateListener.cpp)
 target_link_libraries(robot_state_listener mros kineval)
@@ -219,6 +239,16 @@ add_executable(udp_peer_test test/socket/udp/peerTest.cpp)
 target_link_libraries(udp_peer_test socket)
 target_include_directories(udp_peer_test PRIVATE include)
 
+# Add Websocket server test
+add_executable(websocket_server_test test/socket/websocket/serverTest.cpp)
+target_link_libraries(websocket_server_test socket)
+target_include_directories(websocket_server_test PRIVATE include)
+
+# Add Websocket client test
+add_executable(websocket_client_test test/socket/websocket/clientTest.cpp)
+target_link_libraries(websocket_client_test socket)
+target_include_directories(websocket_client_test PRIVATE include)
+
 ### SHARED MEMORY TESTS ###
 
 # Add smem read test
@@ -267,11 +297,15 @@ target_include_directories(quaternion_test PUBLIC include)
 
 ### KINEVAL TESTS ###
 
-# Add kineval test
+# Add tree test
 add_executable(tree_test test/kineval/treeTest.cpp)
 target_link_libraries(tree_test kineval linalg)
 target_include_directories(tree_test PUBLIC include)
 
+# Add IK test
+add_executable(ik_test test/kineval/ikTest.cpp)
+target_link_libraries(ik_test kineval linalg)
+target_include_directories(ik_test PUBLIC include)
 
 ### INSTALL ###
 

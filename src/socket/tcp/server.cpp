@@ -189,10 +189,7 @@ int TCPServer::accept(TCPConnection &connection)
         }
     }
 
-    connection.fd = client_fd;
-    connection.opened = true;
-    connection.nonblocking = nonblocking;
-    connection.client = client;
+    connection = TCPConnection(client_fd, client, nonblocking);
     numConnections++;
     return 0;
 }
@@ -235,6 +232,9 @@ TCPConnection::TCPConnection()
     fd = -1;
     opened = false;
 }
+
+TCPConnection::TCPConnection(int fd, sockaddr_in client, bool nonblocking)
+    : fd(fd), client(client), nonblocking(nonblocking), opened(true) {}
 
 TCPConnection::~TCPConnection()
 {

@@ -59,22 +59,34 @@ namespace mros
         int64_t ms = (ns_total / 1000000) % 1000;
         int64_t ns = ns_total % 1000000;
 
-        std::string time = "[" + std::to_string(s) + ":" + std::to_string(ms) + ":" + std::to_string(ns) + "]";
-        std::string levelString = getLevelString(level);
-        std::string color = getLevelColor(level);
+        std::string time = "[" + std::to_string(s) + ":" + std::to_string(ms) + ":" + std::to_string(ns) + "] ";
+        std::string levelString = "[" + getLevelColor(level) + getLevelString(level) + Console::defaultColor + "] ";
+        std::string nameStr = "[" + name + "] ";
 
         std::lock_guard<std::mutex> lock(mutex);
         if (level > LogLevel::INFO)
         {
-            std::cerr << time << "\t[" << color << levelString << Console::defaultColor << "]\t[" << name << "]\t" << msg << '\n';
+            std::cerr << std::left << std::setw(20) << time
+                      << std::left << std::setw(8) << levelString
+                      << std::left << std::setw(26) << nameStr
+                      << msg
+                      << std::endl;
         }
         else {
-            std::cout << time << "\t[" << color << levelString << Console::defaultColor << "]\t[" << name << "]\t" << msg << '\n';
+            std::cout << std::left << std::setw(20) << time
+                      << std::left << std::setw(8) << levelString
+                      << std::left << std::setw(26) << nameStr
+                      << msg
+                      << std::endl;
         }
 
         if (Console::logToFile)
         {
-            logFile << time << "\t[" << levelString << "]\t[" << name << "]\t" << msg << '\n';
+            logFile << std::left << std::setw(20) << time
+                    << std::left << std::setw(8) << levelString
+                    << std::left << std::setw(26) << nameStr
+                    << msg
+                    << std::endl;
         }
     }
 

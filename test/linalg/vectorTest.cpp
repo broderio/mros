@@ -7,7 +7,7 @@
 using namespace linalg;
 
 int main() {
-    std::vector<float> data = {0, 0, 1};
+    std::vector<double> data = {0, 0, 1};
     Vector v1(data);
     data[0] = 1;
     data[2] = 0;
@@ -16,10 +16,10 @@ int main() {
     Vector v3 = v1 + v2;
     Vector v4 = v1 - v2;
     Vector v5 = v1 * v2;
-    float dot = Vector::dot(v1, v2);
+    double dot = Vector::dot(v1, v2);
     Vector cross = Vector::cross(v1, v2);
-    float norm = Vector::norm(cross);
-    float angle = Vector::angle(v1, v2);
+    double norm = Vector::norm(cross);
+    double angle = Vector::angle(v1, v2);
 
     std::cout << "v1: " << v1 << std::endl;
     std::cout << "v2 " << v2 << std::endl;

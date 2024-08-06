@@ -7,7 +7,7 @@ Quaternion::Quaternion() : x(0), y(0), z(0), w(1) {}
 
 Quaternion::Quaternion(const geometry_msgs::Quaternion &q) : x(q.x.data), y(q.y.data), z(q.z.data), w(q.w.data) {}
 
-Quaternion::Quaternion(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
+Quaternion::Quaternion(double x, double y, double z, double w) : x(x), y(y), z(z), w(w) {}
 
 Quaternion::Quaternion(const Quaternion &q) : x(q.x), y(q.y), z(q.z), w(q.w) {}
 
@@ -24,11 +24,11 @@ Quaternion &Quaternion::operator=(const Quaternion &rhs)
     return *this;
 }
 
-Quaternion::Quaternion(const Vector &axis, const float &angle)
+Quaternion::Quaternion(const Vector &axis, const double &angle)
 {
-    float halfAngle = angle / 2;
+    double halfAngle = angle / 2;
     Vector axNorm = Vector::normalize(axis);
-    
+
     x = axNorm.get(0) * std::sin(halfAngle);
     y = axNorm.get(1) * std::sin(halfAngle);
     z = axNorm.get(2) * std::sin(halfAngle);
@@ -40,10 +40,10 @@ geometry_msgs::Quaternion Quaternion::toMsg() const
     return geometry_msgs::Quaternion(x, y, z, w);
 }
 
-void Quaternion::toAxisAngle(Vector &axis, float &angle) const
+void Quaternion::toAxisAngle(Vector &axis, double &angle) const
 {
     axis = Vector(3);
-    float halfAngle = std::acos(w);
+    double halfAngle = std::acos(w);
     angle = 2 * halfAngle;
     if (halfAngle < 1e-6)
     {
@@ -62,27 +62,27 @@ Quaternion Quaternion::operator-(const Quaternion &rhs) const
     return Quaternion(x - rhs.x, y - rhs.y, z - rhs.z, w - rhs.w);
 }
 
-Quaternion Quaternion::operator+(const float &rhs) const
+Quaternion Quaternion::operator+(const double &rhs) const
 {
     return Quaternion(x + rhs, y + rhs, z + rhs, w + rhs);
 }
 
-Quaternion Quaternion::operator-(const float &rhs) const
+Quaternion Quaternion::operator-(const double &rhs) const
 {
     return Quaternion(x - rhs, y - rhs, z - rhs, w - rhs);
 }
 
-Quaternion Quaternion::operator*(const float &rhs) const
+Quaternion Quaternion::operator*(const double &rhs) const
 {
     return Quaternion(x * rhs, y * rhs, z * rhs, w * rhs);
 }
 
-Quaternion Quaternion::operator/(const float &rhs) const
+Quaternion Quaternion::operator/(const double &rhs) const
 {
     return Quaternion(z / rhs, y / rhs, z / rhs, w / rhs);
 }
 
-float Quaternion::norm() const
+double Quaternion::norm() const
 {
     return std::sqrt(x * x + y * y + z * z + w * w);
 }
@@ -92,40 +92,45 @@ Quaternion Quaternion::inverse() const
     return Quaternion(-x, -y, -z, w);
 }
 
-Quaternion Quaternion::fromRPY(const float &roll, const float &pitch, const float &yaw)
+Quaternion Quaternion::identity()
 {
-    float cy = std::cos(yaw * 0.5);
-    float sy = std::sin(yaw * 0.5);
-    float cp = std::cos(pitch * 0.5);
-    float sp = std::sin(pitch * 0.5);
-    float cr = std::cos(roll * 0.5);
-    float sr = std::sin(roll * 0.5);
+    return Quaternion(0, 0, 0, 1);
+}
 
-    float w = cr * cp * cy + sr * sp * sy;
-    float x = sr * cp * cy - cr * sp * sy;
-    float y = cr * sp * cy + sr * cp * sy;
-    float z = cr * cp * sy - sr * sp * cy;
+Quaternion Quaternion::fromRPY(const double &roll, const double &pitch, const double &yaw)
+{
+    double cy = std::cos(yaw * 0.5);
+    double sy = std::sin(yaw * 0.5);
+    double cp = std::cos(pitch * 0.5);
+    double sp = std::sin(pitch * 0.5);
+    double cr = std::cos(roll * 0.5);
+    double sr = std::sin(roll * 0.5);
+
+    double w = cr * cp * cy + sr * sp * sy;
+    double x = sr * cp * cy - cr * sp * sy;
+    double y = cr * sp * cy + sr * cp * sy;
+    double z = cr * cp * sy - sr * sp * cy;
 
     return Quaternion(x, y, z, w);
 }
 
 Quaternion Quaternion::normalize(const Quaternion &q)
 {
-    float n = q.norm();
+    double n = q.norm();
     return Quaternion(q.x / n, q.y / n, q.z / n, q.w / n);
 }
 
-float Quaternion::dot(const Quaternion& q1, const Quaternion& q2)
+double Quaternion::dot(const Quaternion& q1, const Quaternion& q2)
 {
     return q1.x * q2.x + q1.y * q2.y + q1.z * q2.z + q1.w * q2.w;
 }
 
 Quaternion Quaternion::multiply(const Quaternion &q1, const Quaternion &q2)
 {
-    float x = q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y;
-    float y = q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x;
-    float z = q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w;
-    float w = q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z;
+    double x = q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y;
+    double y = q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x;
+    double z = q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w;
+    double w = q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z;
     return Quaternion(x, y, z, w);
 }
 
@@ -148,43 +153,43 @@ Vector Quaternion::rotate(const Vector &v, const Quaternion &q)
 
 Matrix Quaternion::toRotationMatrix(const Quaternion &q)
 {
-    float xx = q.x * q.x;
-    float xy = q.x * q.y;
-    float xz = q.x * q.z;
-    float xw = q.x * q.w;
-    float yy = q.y * q.y;
-    float yz = q.y * q.z;
-    float yw = q.y * q.w;
-    float zz = q.z * q.z;
-    float zw = q.z * q.w;
+    double xx = q.x * q.x;
+    double xy = q.x * q.y;
+    double xz = q.x * q.z;
+    double xw = q.x * q.w;
+    double yy = q.y * q.y;
+    double yz = q.y * q.z;
+    double yw = q.y * q.w;
+    double zz = q.z * q.z;
+    double zw = q.z * q.w;
     return Matrix({{1 - 2 * (yy + zz), 2 * (xy - zw), 2 * (xz + yw)},
                    {2 * (xy + zw), 1 - 2 * (xx + zz), 2 * (yz - xw)},
                    {2 * (xz - yw), 2 * (yz + xw), 1 - 2 * (xx + yy)}});
 }
 
-Quaternion Quaternion::SLERP(const Quaternion &q1, const Quaternion &q2, float t)
+Quaternion Quaternion::SLERP(const Quaternion &q1, const Quaternion &q2, double t)
 {
-    float dot = Quaternion::dot(q1, q2);
-    float theta = std::acos(dot);
-    float s_theta = std::sqrt(1 - dot * dot); // sin(theta) == sin(acos(dot)) == sqrt(1 - dot^2)
+    double dot = Quaternion::dot(q1, q2);
+    double theta = std::acos(dot);
+    double s_theta = std::sqrt(1 - dot * dot); // sin(theta) == sin(acos(dot)) == sqrt(1 - dot^2)
 
-    float s1 = std::sin(1 - t) * theta / s_theta;
-    float s2 = std::sin(t * theta) / s_theta;
+    double s1 = std::sin(1 - t) * theta / s_theta;
+    double s2 = std::sin(t * theta) / s_theta;
 
     return s1 * q1 + s2 * q2;
 }
 
-Quaternion operator+(const float &lhs, const Quaternion &rhs)
+Quaternion operator+(const double &lhs, const Quaternion &rhs)
 {
     return rhs + lhs;
 }
 
-Quaternion operator-(const float &lhs, const Quaternion &rhs)
+Quaternion operator-(const double &lhs, const Quaternion &rhs)
 {
     return (rhs * -1) + lhs;
 }
 
-Quaternion operator*(const float &lhs, const Quaternion &rhs)
+Quaternion operator*(const double &lhs, const Quaternion &rhs)
 {  
     return rhs * lhs;
 }

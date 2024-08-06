@@ -41,14 +41,16 @@ int main() {
     int64_t start_time = getTimeNano();
     double state = 0.0;
     double dstate = M_PI / 180;
+    std::string jointName = kt.getJointNames()[0];
+
+    double lowerBound = 0.0, upperBound = M_2_PI;
+    bool hasLimits = kt.getJoint(jointName).getLimits(lowerBound, upperBound);
     while (node.ok())
     {
         if (getTimeNano() - start_time >= periodNs)
         {
             sensor_msgs::JointState msg;
             msg.header.stamp = std_msgs::Time::getTimeNow();
-            auto it = kt.getJointNames().begin();
-            std::string jointName = *(++it);
             msg.name.push_back(jointName);
             msg.position.push_back(state);
             msg.velocity.push_back(0.0);
@@ -57,11 +59,11 @@ int main() {
             pub->publish(msg);
 
             state += dstate;
-            if (state >= M_PI / 2 || state <= 0)
+            if (hasLimits && (state >= upperBound || state <= lowerBound))
             {
                 dstate *= -1;
             }
-            state = std::max(0.0, std::min(M_PI / 2, state));
+            state = std::max(lowerBound, std::min(upperBound, state));
 
             mros::Console::log(mros::LogLevel::DEBUG, "Published [" + jointName + "] state: " + std::to_string(state));
             
