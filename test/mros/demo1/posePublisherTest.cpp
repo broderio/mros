@@ -1,5 +1,6 @@
-#include "mros/core/node.hpp"
-#include "mros/core/subscriber.hpp"
+#include <iostream>
+#include <string>
+
 #include "utils.hpp"
 
 #include "messages/geometry_msgs/twist.hpp"
@@ -9,35 +10,39 @@
 #include "linalg/matrix.hpp"
 #include "linalg/quaternion.hpp"
 
-#include <iostream>
-#include <string>
+#include "mros/common.hpp"
+#include "mros/utils/console.hpp"
+#include "mros/core/node.hpp"
+#include "mros/core/subscriber.hpp"
 
-class PosePublisher {
+using namespace mros;
+using std::placeholders::_1;
+
+class PosePublisher
+{
 public:
     PosePublisher(URI uri);
 
     void run();
 
 private:
-
     void twistCallback(const geometry_msgs::TwistStamped &msg);
 
-    mros::Node node;
-    std::shared_ptr<mros::Publisher> posePub;
-    std::shared_ptr<mros::Subscriber> twistSub;
+    std::shared_ptr<Publisher> posePub;
+    std::shared_ptr<Subscriber> twistSub;
 
     geometry_msgs::PoseStamped currPose;
     linalg::Vector rpy;
 };
 
-void PosePublisher::twistCallback(const geometry_msgs::TwistStamped &msg) {
+void PosePublisher::twistCallback(const geometry_msgs::TwistStamped &msg)
+{
     // Rotate velocity vector by current orientation
     linalg::Matrix rotMat = linalg::Quaternion::toRotationMatrix(linalg::Quaternion(currPose.pose.orientation));
-    linalg::Vector vel(4, 0);
+    linalg::Vector vel(3, 0);
     vel.at(0) = msg.twist.linear.x.data;
     vel.at(1) = msg.twist.linear.y.data;
     vel.at(2) = msg.twist.linear.z.data;
-    vel.at(3) = 1;
     linalg::Vector velGlobalFrame = linalg::Matrix::multiply(rotMat, vel);
 
     const float dt = 0.1;
@@ -54,14 +59,19 @@ void PosePublisher::twistCallback(const geometry_msgs::TwistStamped &msg) {
     posePub->publish(currPose);
 }
 
-PosePublisher::PosePublisher(URI uri) 
-: node("pose_publisher", uri) {
+PosePublisher::PosePublisher(URI uri)
+{
+    Node &node = Node::getInstance();
+    node.init("pose_publisher", uri);
+    Console::setLevel(LogLevel::DEBUG);
     posePub = node.advertise<geometry_msgs::PoseStamped>("pose_topic", 10);
-    twistSub = node.subscribe<geometry_msgs::TwistStamped>("twist_topic", 10, std::bind(&PosePublisher::twistCallback, this, std::placeholders::_1));
+    twistSub = node.subscribe<geometry_msgs::TwistStamped>("twist_topic", 10, std::bind(&PosePublisher::twistCallback, this, _1));
 }
 
-void PosePublisher::run() {
-    if (posePub == nullptr || twistSub == nullptr) {
+void PosePublisher::run()
+{
+    if (posePub == nullptr || twistSub == nullptr)
+    {
         std::cout << "Failed to advertise topic or subscribe to topic" << std::endl;
         return;
     }
@@ -74,15 +84,13 @@ void PosePublisher::run() {
 
     rpy = linalg::Vector(3, 0);
 
+    Node &node = Node::getInstance();
     node.spin();
 }
 
-int main() {
-    URI uri;
-    uri.ip = "0.0.0.0";
-    uri.port = MEDIATOR_PORT_NUM;
-
-    PosePublisher posePub(uri);
+int main()
+{
+    PosePublisher posePub(URI(getLocalIP(), MEDIATOR_PORT_NUM));
     posePub.run();
 
     return 0;

@@ -4,30 +4,47 @@
 #include "utils.hpp"
 #include "socket/websocket/server.hpp"
 
-int main() {
+int main()
+{
     WSServer server(URI(getLocalIP(), 8080));
-    std::cout << server.getURI() << std::endl;
     std::shared_ptr<WSConnection> connection;
-    int res = -1;
-    while (res != 0)
+
+    int status;
+    do
     {
-        res = server.accept(connection);
-        sleep(500);
-    }
+        status = server.accept(connection);
+        if (SOCKET_STATUS_IS_ERROR(status))
+        {
+            return 1;
+        }
+    } while (!SOCKET_STATUS_IS_OK(status));
 
     std::string message;
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++)
+    {
         sleep(1000);
-        while (message.empty()) {
-            res = connection->receive(message);
-            if (res < 0) {
+
+        do
+        {
+            status = connection->receive(message);
+            if (SOCKET_STATUS_IS_ERROR(status))
+            {
                 return 1;
             }
+        } while (!SOCKET_STATUS_IS_OK(status));
+
+        URI clientURI;
+        status = connection->getClientURI(clientURI);
+        if (SOCKET_STATUS_IS_ERROR(status))
+        {
+            return 1;
         }
-        std::cout << "Received: \"" << message << "\" from " << connection->getClientURI() << std::endl;
+
+        std::cout << "Received: \"" << message << "\" from " << clientURI << std::endl;
         connection->send("Response #" + std::to_string(i));
         message.clear();
     }
 
+    // std::cout << "Returning from main" << std::endl;
     return 0;
 }

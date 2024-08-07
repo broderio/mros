@@ -2,13 +2,8 @@
 #include <string>
 #include <mutex>
 
-#include "socket/tcp/client.hpp"
-
-#include "mros/core/node.hpp"
-#include "mros/core/subscriber.hpp"
-#include "mros/utils/console.hpp"
-#include "mros/utils/argParser.hpp"
 #include "utils.hpp"
+#include "socket/tcp/client.hpp"
 
 #include "messages/std_msgs/void.hpp"
 #include "messages/sensor_msgs/jointState.hpp"
@@ -18,7 +13,16 @@
 #include "linalg/matrix.hpp"
 #include "linalg/quaternion.hpp"
 
+#include "mros/utils/console.hpp"
+#include "mros/utils/argParser.hpp"
+#include "mros/core/node.hpp"
+#include "mros/core/subscriber.hpp"
+#include "mros/core/publisher.hpp"
+#include "mros/core/service.hpp"
+
 #include "kineval/tree.hpp"
+
+using namespace mros;
 
 sensor_msgs::JointState interpolate(const sensor_msgs::JointState &js1, const sensor_msgs::JointState &js2, double targetTime, float timeThreshold)
 {
@@ -73,10 +77,9 @@ private:
 
     int hz;
     float timeThreshold;
-    mros::Node node;
-    std::shared_ptr<mros::Subscriber> jointStateSub;
-    std::shared_ptr<mros::Publisher> tfPub;
-    std::shared_ptr<mros::Service> globalTFService;
+    std::shared_ptr<Subscriber> jointStateSub;
+    std::shared_ptr<Publisher> tfPub;
+    std::shared_ptr<Service> globalTFService;
 
     sensor_msgs::JointState currJointState;
     sensor_msgs::JointState prevJointState;
@@ -99,11 +102,34 @@ void RobotStatePublisher::globalTFCallback(const std_msgs::Void &req, geometry_m
 }
 
 RobotStatePublisher::RobotStatePublisher(const URI &uri, const std::string &jrdfPath, int hz, float timeThreshold)
-    : node("robot_state_publisher", uri), hz(hz), timeThreshold(timeThreshold)
+    : hz(hz), timeThreshold(timeThreshold)
 {
+    Node &node = Node::getInstance();
+    node.init("robot_state_publisher", uri);
+
     tfPub = node.advertise<geometry_msgs::TF>("tf", 10);
-    jointStateSub = node.subscribe<sensor_msgs::JointState>("joint_states", 10, std::bind(&RobotStatePublisher::jointStateCallback, this, std::placeholders::_1));
-    globalTFService = node.advertiseService<std_msgs::Void, geometry_msgs::TF>("global_tf", std::bind(&RobotStatePublisher::globalTFCallback, this, std::placeholders::_1, std::placeholders::_2));
+    if (tfPub == nullptr)
+    {
+        Console::log(LogLevel::ERROR, "Failed to advertise tf topic");
+        return;
+    }
+
+    using namespace std::placeholders;
+    
+    jointStateSub = node.subscribe<sensor_msgs::JointState>("joint_states", 10, std::bind(&RobotStatePublisher::jointStateCallback, this, _1));
+    if (jointStateSub == nullptr)
+    {
+        Console::log(LogLevel::ERROR, "Failed to subscribe to joint_states topic");
+        return;
+    }
+
+    globalTFService = node.advertiseService<std_msgs::Void, geometry_msgs::TF>("global_tf", std::bind(&RobotStatePublisher::globalTFCallback, this, _1, _2));
+    if (globalTFService == nullptr)
+    {
+        Console::log(LogLevel::ERROR, "Failed to advertise global_tf service");
+        return;
+    }
+
     std::ifstream file(jrdfPath);
     auto json = kineval::JsonParser::parse(file);
     kt = kineval::KinematicTree::fromJson(json->as_object());
@@ -111,10 +137,8 @@ RobotStatePublisher::RobotStatePublisher(const URI &uri, const std::string &jrdf
 
 void RobotStatePublisher::run()
 {
-    // TCPClient client(URI("0.0.0.0", 9000), false);
-    // client.connect();
-
-    node.spin(true);
+    Node &node = Node::getInstance();
+    node.spin(false);
 
     const int periodNs = (1 / (float)hz) * 1000000000;
 
@@ -125,7 +149,7 @@ void RobotStatePublisher::run()
         {
             if (jointStateSub->getNumPublishers() == 0)
             {
-                mros::Console::log(mros::LogLevel::DEBUG, "No publishers for joint_states. Stopping interpolation.");
+                Console::log(LogLevel::DEBUG, "No publishers for joint_states. Stopping interpolation.");
                 tfPub->publish(kt.TF());
                 start_time = getTimeNano();
                 continue;
@@ -147,29 +171,28 @@ void RobotStatePublisher::run()
 
 int main(int argc, char **argv)
 {
-    mros::ArgParser::init("robot_state_publisher", "Publishes interpolated transforms based on joint states");
+    ArgParser::init("robot_state_publisher", "Publishes interpolated transforms based on joint states");
 
-    mros::ArgParser::addArg({"jrdf", "Path to JRDF file", '1'});
+    ArgParser::addArg({"jrdf", "Path to JRDF file", '1'});
 
-    mros::ArgParser::addOpt({"ip", "i", "Core IP address", "0.0.0.0", "", '1'});
-    mros::ArgParser::addOpt({"freq", "f", "Publish rate in Hz", "25", "", '1'});
-    mros::ArgParser::addOpt({"delta-time", "d", "Time threshold to stop interpolation", "0.1", "", '1'});
+    ArgParser::addOpt({"ip", "i", "Core IP address", "0.0.0.0", "", '1'});
+    ArgParser::addOpt({"freq", "f", "Publish rate in Hz", "25", "", '1'});
+    ArgParser::addOpt({"delta-time", "d", "Time threshold to stop interpolation", "0.1", "", '1'});
 
-    mros::ArgParser::parse(argc, argv);
+    ArgParser::parse(argc, argv);
 
-    std::string jrdfPath = mros::ArgParser::getArg("jrdf")[0];
+    std::string jrdfPath = ArgParser::getArg("jrdf")[0];
 
     URI uri;
-    uri.ip = mros::ArgParser::getOpt("ip")[0];
+    uri.ip = ArgParser::getOpt("ip")[0];
     uri.port = MEDIATOR_PORT_NUM;
 
-    int freq = std::stoi(mros::ArgParser::getOpt("freq")[0]);
+    int freq = std::stoi(ArgParser::getOpt("freq")[0]);
 
-    float timeThreshold = std::stof(mros::ArgParser::getOpt("delta-time")[0]);
-
+    float timeThreshold = std::stof(ArgParser::getOpt("delta-time")[0]);
 
     RobotStatePublisher RSP(uri, jrdfPath, freq, timeThreshold);
-    mros::Console::setLevel(mros::LogLevel::DEBUG);
+    Console::setLevel(LogLevel::DEBUG);
     RSP.run();
 
     return 0;

@@ -1,32 +1,49 @@
 #include <iostream>
 #include <string>
+#include <memory>
 
 #include "utils.hpp"
+
+#include "socket/common.hpp"
 #include "socket/tcp/client.hpp"
 
-int main() {
+int main()
+{
     std::string ipAddr = getLocalIP();
     TCPClient client(URI(ipAddr, 0), 8081);
-    int res;
-    do {
-        res = client.connect();
-        if (res < 0) {
+    int status;
+    do
+    {
+        status = client.connect();
+        if (SOCKET_STATUS_IS_ERROR(status))
+        {
             return 1;
         }
-    } while (res != 0);
+    } while (!SOCKET_STATUS_IS_OK(status));
 
     std::string message;
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 10; i++)
+    {
         client.send("Message #" + std::to_string(i));
         sleep(1000);
         message.clear();
-        while (message.empty()) {
-            res = client.receive(message, 25);
-            if (res < 0) {
+        while (message.empty())
+        {
+            status = client.receive(message, 25);
+            if (SOCKET_STATUS_IS_ERROR(status))
+            {
                 return 1;
             }
         }
-        std::cout << "Received: \"" << message << "\" from " << client.getServerURI() << std::endl;
+
+        URI serverURI;
+        status = client.getServerURI(serverURI);
+        if (SOCKET_STATUS_IS_ERROR(status))
+        {
+            return 1;
+        }
+
+        std::cout << "Received: \"" << message << "\" from " << serverURI << std::endl;
     }
     return 0;
 }

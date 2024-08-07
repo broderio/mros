@@ -1,11 +1,13 @@
 #include "utils.hpp"
 #include "socket/udp/server.hpp"
 
-int main() {
+int main()
+{
     UDPServer server(URI(getLocalIP(), 8080));
 
-    int res = server.bind();
-    if (res < 0) {
+    int status = server.bind();
+    if (SOCKET_STATUS_IS_ERROR(status))
+    {
         return 1;
     }
 
@@ -13,22 +15,28 @@ int main() {
     URI serverURI(ipAddr, 8080);
 
     std::string message;
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 10; i++)
+    {
         message = "Message #" + std::to_string(i);
-        server.sendTo(message, serverURI);
+        status = server.sendTo(message, serverURI);
+        if (SOCKET_STATUS_IS_ERROR(status))
+        {
+            return 1;
+        }
+
         sleep(1000);
 
         URI sender;
-        int res = server.receiveFrom(message, 1024, sender);
-        if (res < 0) {
-            return 1;
-        }
-        if (message.size() == 0) {
-            i--;
-            continue;
-        }
+        do
+        {
+            status = server.receiveFrom(message, 1024, sender);
+            if (SOCKET_STATUS_IS_ERROR(status))
+            {
+                return 1;
+            }
+        } while (status == SOCKET_OP_WOULD_BLOCK);
 
-        std::cout << "Received: \"" << message << "\" from server at " << sender.toString() << std::endl;
+        std::cout << "Received: \"" << message << "\" from server at " << sender << std::endl;
     }
     return 0;
 }

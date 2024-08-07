@@ -202,6 +202,25 @@ add_executable(joint_group_2 test/mros/demo2/jointGroup2.cpp)
 target_link_libraries(joint_group_2 mros kineval)
 target_include_directories(joint_group_2 PRIVATE include)
 
+add_custom_target(mros_tests
+    DEPENDS core_test publisher_test subscriber_test service_test service_call_test pubsub_test
+            pose_publisher_test twist_publisher_test pose_listener_test twist_listener_test
+            console_test argparse_test joint_state_publisher robot_state_publisher global_tf_caller
+            ik_service ik_caller robot_state_listener joint_group_1 joint_group_2
+)
+
+add_custom_target(mros_demo1_tests
+    DEPENDS pose_publisher_test twist_publisher_test pose_listener_test twist_listener_test
+)
+
+add_custom_target(mros_demo2_tests
+    DEPENDS joint_state_publisher robot_state_publisher robot_state_listener joint_group_1 joint_group_2
+)
+
+add_custom_target(mros_demo3_tests
+    DEPENDS global_tf_caller ik_service ik_caller
+)
+
 ### SOCKET TESTS ###
 
 # Add socket client test
@@ -249,6 +268,11 @@ add_executable(websocket_client_test test/socket/websocket/clientTest.cpp)
 target_link_libraries(websocket_client_test socket)
 target_include_directories(websocket_client_test PRIVATE include)
 
+add_custom_target(socket_tests
+    DEPENDS tcp_client_test tcp_server_test tcp_client_noblock_test tcp_server_noblock_test
+            udp_client_test udp_server_test udp_peer_test websocket_server_test websocket_client_test
+)
+
 ### SHARED MEMORY TESTS ###
 
 # Add smem read test
@@ -266,6 +290,10 @@ add_executable(smem_mutex_test test/smem/smemMutexTest.cpp)
 target_link_libraries(smem_mutex_test smem)
 target_include_directories(smem_mutex_test PUBLIC include)
 
+add_custom_target(smem_tests
+    DEPENDS smem_read_test smem_write_test smem_mutex_test
+)
+
 ### MESSAGES TESTS ###
 
 # Add pose messages test
@@ -277,6 +305,10 @@ target_include_directories(pose_test PUBLIC include)
 add_executable(joint_state_test test/messages/jointStateTest.cpp)
 target_link_libraries(joint_state_test msgs)
 target_include_directories(joint_state_test PUBLIC include)
+
+add_custom_target(msgs_tests
+    DEPENDS pose_test joint_state_test
+)
 
 ### LINALG TESTS ###
 
@@ -295,6 +327,10 @@ add_executable(quaternion_test test/linalg/quaternionTest.cpp)
 target_link_libraries(quaternion_test linalg)
 target_include_directories(quaternion_test PUBLIC include)
 
+add_custom_target(linalg_tests
+    DEPENDS vector_test matrix_test quaternion_test
+)
+
 ### KINEVAL TESTS ###
 
 # Add tree test
@@ -306,6 +342,10 @@ target_include_directories(tree_test PUBLIC include)
 add_executable(ik_test test/kineval/ikTest.cpp)
 target_link_libraries(ik_test kineval linalg)
 target_include_directories(ik_test PUBLIC include)
+
+add_custom_target(kineval_tests
+    DEPENDS tree_test ik_test
+)
 
 ### INSTALL ###
 

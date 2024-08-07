@@ -30,8 +30,7 @@ int TCPServer::open(const URI &uri, bool nonblocking, int maxConnections)
 
     if (inet_pton(AF_INET, uri.ip.c_str(), &(server.sin_addr)) <= 0)
     {
-        //std::cerr << "TCPServer error: Invalid address/ Address not supported" << std::endl;
-        return -1;
+        return SOCKET_INVALID_URI;
     }
 
     // Create a socket
@@ -40,8 +39,7 @@ int TCPServer::open(const URI &uri, bool nonblocking, int maxConnections)
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0)
     {
-        //std::cerr << "TCPServer error: failed to create socket" << std::endl;
-        return -1;
+        return SOCKET_FD_ERROR;
     }
 
     // Make the socket non-blocking
@@ -50,45 +48,40 @@ int TCPServer::open(const URI &uri, bool nonblocking, int maxConnections)
         int flags = fcntl(fd, F_GETFL, 0);
         if (flags < 0)
         {
-            //std::cerr << "TCPServer error: failed to get flags" << std::endl;
-            ::close(fd);
-            return -1;
+            close();
+            return SOCKET_FCNTL_ERROR;
         }
         flags |= O_NONBLOCK;
         if (fcntl(fd, F_SETFL, flags) < 0)
         {
-            //std::cerr << "TCPServer error: failed to set flags" << std::endl;
-            ::close(fd);
-            return -1;
+            close();
+            return SOCKET_FCNTL_ERROR;
         }
     }
     this->nonblocking = nonblocking;
 
     maxConnections = maxConnections;
     opened = true;
-    return 0;
+    return SOCKET_OK;
 }
 
 int TCPServer::bind()
 {
     if (!opened)
     {
-        //std::cerr << "TCPServer error: not open" << std::endl;
-        return -1;
+        return SOCKET_NOT_OPENED;
     }
 
     if (bound)
     {
-        //std::cerr << "TCPServer error: already bound" << std::endl;
-        return 0;
+        return SOCKET_BOUND;
     }
 
     // Bind the socket to the address and port
     if (::bind(fd, (struct sockaddr *)&server, sizeof(server)) < 0)
     {
-        //std::cerr << "TCPServer error: bind failed" << std::endl;
-        ::close(fd);
-        return -1;
+        close();
+        return SOCKET_BIND_FAILED;
     }
     bound = true;
 
@@ -97,52 +90,47 @@ int TCPServer::bind()
     if (getsockname(fd, (struct sockaddr *)&server, &len) == -1)
     {
         //perror("getsockname");
-        ::close(fd);
-        return -1;
+        close();
+        return SOCKET_GETSOCKNAME_ERROR;
     }
 
-    return 0;
+    return SOCKET_OK;
 }
 
 int TCPServer::listen()
 {
     if (!bound)
     {
-        //std::cerr << "TCPServer error: not bound" << std::endl;
-        return -1;
+        return SOCKET_NOT_BOUND;
     }
 
     if (listening)
     {
-        //std::cerr << "TCPServer error: already listening" << std::endl;
-        return 0;
+        return SOCKET_LISTENING;
     }
 
     // Listen for incoming connections
     if (::listen(fd, maxConnections) < 0)
     {
-        //std::cerr << "TCPServer error: listen failed" << std::endl;
-        ::close(fd);
-        return -1;
+        close();
+        return SOCKET_LISTEN_FAILED;
     }
     listening = true;
 
-    return 0;
+    return SOCKET_OK;
 }
 
-int TCPServer::accept(TCPConnection &connection)
+int TCPServer::accept(std::shared_ptr<TCPConnection> &connection)
 {
     if (!listening)
     {
-        //std::cerr << "TCPServer error: not listening" << std::endl;
-        return -1;
+        return SOCKET_NOT_LISTENING;
     }
 
     // If maximum number of connections has been reached
     if (numConnections >= maxConnections)
     {
-        //std::cerr << "TCPServer error: maximum number of connections reached" << std::endl;
-        return -1;
+        return SOCKET_MAX_CONNECTIONS;
     }
 
     // Client information
@@ -155,18 +143,16 @@ int TCPServer::accept(TCPConnection &connection)
     // If the accept call fails
     if (client_fd < 0)
     {
-
         // If the error is EWOULDBLOCK or EAGAIN, there are no pending connections
-        if (errno == EWOULDBLOCK || errno == EAGAIN)
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
         {
-            return 1;
+            return SOCKET_OP_WOULD_BLOCK;
         }
         // Otherwise, there was an error
         else
         {
-            // //std::cerr << "TCPServer error: accept failed" << std::endl;
-            //perror("TCPServer accept");
-            return -1;
+            close();
+            return SOCKET_ACCEPT_FAILED;
         }
     }
 
@@ -176,22 +162,21 @@ int TCPServer::accept(TCPConnection &connection)
         int flags = fcntl(client_fd, F_GETFL, 0);
         if (flags < 0)
         {
-            //std::cerr << "TCPServer error: failed to get flags" << std::endl;
             ::close(client_fd);
-            return -1;
+            return SOCKET_FCNTL_ERROR;
         }
         flags |= O_NONBLOCK;
         if (fcntl(client_fd, F_SETFL, flags) < 0)
         {
-            //std::cerr << "TCPServer error: failed to set flags" << std::endl;
             ::close(client_fd);
-            return -1;
+            return SOCKET_FCNTL_ERROR;
         }
     }
 
-    connection = TCPConnection(client_fd, client, nonblocking);
+    std::shared_ptr<TCPConnection> ptr(new TCPConnection(client_fd, client, nonblocking));
+    connection = ptr;
     numConnections++;
-    return 0;
+    return SOCKET_OK;
 }
 
 void TCPServer::close()
@@ -222,9 +207,15 @@ bool TCPServer::isNonblocking() const
     return nonblocking;
 }
 
-URI TCPServer::getURI()
+int TCPServer::getURI(URI &uri)
 {
-    return URI(inet_ntoa(server.sin_addr), ntohs(server.sin_port));
+    if (!bound)
+    {
+        return SOCKET_NOT_BOUND;
+    }
+
+    uri = URI(inet_ntoa(server.sin_addr), ntohs(server.sin_port));
+    return SOCKET_OK;
 }
 
 TCPConnection::TCPConnection()
@@ -246,27 +237,26 @@ int TCPConnection::send(const std::string &message)
     // If the connection is closed (i.e. this object was not created by a server)
     if (!opened)
     {
-        //std::cerr << "TCPConnection error: connection is closed" << std::endl;
-        return -1;
+        return SOCKET_NOT_OPENED;
     }
 
     // Send the message
     if (::send(fd, message.c_str(), message.size(), 0) < 0)
     {
-        //std::cerr << "TCPConnection error: send failed" << std::endl;
-        return -1;
+        close();
+        return SOCKET_SEND_FAILED;
     }
-    return 0;
+    return SOCKET_OK;
 }
 
 int TCPConnection::receive(std::string &message, size_t bytes)
 {
+    message = "";
+
     // If the connection is closed (i.e. this object was not created by a server)
     if (!opened)
     {
-        //std::cerr << "TCPConnection error: connection is closed" << std::endl;
-        message = "";
-        return -1;
+        return SOCKET_NOT_OPENED;
     }
 
     // Receive the message, reading up to the specified number of bytes
@@ -274,21 +264,19 @@ int TCPConnection::receive(std::string &message, size_t bytes)
     int bytes_received = ::recv(fd, &buffer[0], bytes, 0);
     if (bytes_received < 0)
     {
-        message = "";
         if (errno == EAGAIN || errno == EWOULDBLOCK)
         {
             // No data available to read
-            return 0;
+            return SOCKET_OP_WOULD_BLOCK;
         }
         else
         {
-            //perror("TCPClient error: receive failed");
-            return -1;
+            return SOCKET_RECV_FAILED;
         }
     }
 
     message = buffer.substr(0, bytes_received);
-    return 0;
+    return SOCKET_OK;
 }
 
 void TCPConnection::close()
@@ -307,7 +295,13 @@ bool TCPConnection::isNonblocking() const
     return nonblocking;
 }
 
-URI TCPConnection::getClientURI()
+int TCPConnection::getClientURI(URI &uri)
 {
-    return URI(inet_ntoa(client.sin_addr), ntohs(client.sin_port));
+    if (!opened)
+    {
+        return SOCKET_NOT_OPENED;
+    }
+
+    uri = URI(inet_ntoa(client.sin_addr), ntohs(client.sin_port));
+    return SOCKET_OK;
 }

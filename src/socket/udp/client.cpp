@@ -11,28 +11,25 @@ UDPClient::~UDPClient()
     close();
 }
 
-int UDPClient::open(bool nonblocking) 
+int UDPClient::open(bool nonblocking)
 {
     if (opened)
     {
-        //std::cerr << "UDPClient error: already open" << std::endl;
-        return -1;
+        return SOCKET_OPENED;
     }
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0)
     {
-        //std::cerr << "UDPClient error: socket creation failed" << std::endl;
-        return -1;
+        return SOCKET_FD_ERROR;
     }
 
     if (nonblocking)
     {
         if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
         {
-            //std::cerr << "UDPClient error: failed to set non-blocking" << std::endl;
-            ::close(fd);
-            return -1;
+            close();
+            return SOCKET_FCNTL_ERROR;
         }
     }
     this->nonblocking = nonblocking;
@@ -44,8 +41,7 @@ int UDPClient::sendTo(const std::string &message, const URI &serverURI)
 {
     if (!opened)
     {
-        //std::cerr << "UDPClient error: not open" << std::endl;
-        return -1;
+        return SOCKET_NOT_OPENED;
     }
 
     struct sockaddr_in server;
@@ -54,16 +50,14 @@ int UDPClient::sendTo(const std::string &message, const URI &serverURI)
 
     if (inet_aton(serverURI.ip.c_str(), &server.sin_addr) == 0)
     {
-        //std::cerr << "UDPClient error: invalid server address" << std::endl;
-        return -1;
+        return SOCKET_INVALID_URI;
     }
 
     int bytesSent = sendto(fd, message.c_str(), message.size(), 0, (struct sockaddr *)&server, sizeof(server));
     if (bytesSent < 0)
     {
-        // //std::cerr << "UDPClient error: send failed" << std::endl;
-        //perror("sendto");
-        return -1;
+        close();
+        return SOCKET_SEND_FAILED;
     }
 
     return 0;
@@ -71,10 +65,11 @@ int UDPClient::sendTo(const std::string &message, const URI &serverURI)
 
 int UDPClient::receiveFrom(std::string &message, size_t bytes, URI &serverURI)
 {
+    message = "";
+
     if (!opened)
     {
-        //std::cerr << "UDPClient error: not open" << std::endl;
-        return -1;
+        return SOCKET_NOT_OPENED;
     }
 
     std::string buffer(bytes, 0);
@@ -84,14 +79,14 @@ int UDPClient::receiveFrom(std::string &message, size_t bytes, URI &serverURI)
     int bytes_received = recvfrom(fd, &buffer[0], bytes, 0, (struct sockaddr *)&server, &serverLen);
     if (bytes_received < 0)
     {
-        message = "";
         if (errno == EAGAIN | errno == EWOULDBLOCK)
         {
-            return 0;
+            return SOCKET_OP_WOULD_BLOCK;
         }
-        else {
-            //std::cerr << "UDPClient error: receive failed" << std::endl;
-            return -1;
+        else
+        {
+            close();
+            return SOCKET_RECV_FAILED;
         }
     }
 

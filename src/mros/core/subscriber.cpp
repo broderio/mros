@@ -34,6 +34,8 @@ namespace mros
 
     void Subscriber::runOnce()
     {
+        int status;
+        std::string inMsg, outMsg;
 
         // Send any outgoing requests
         if (outgoingRequests.size() > 0)
@@ -44,17 +46,18 @@ namespace mros
             private_msgs::Request request;
             request.topic = topic;
             request.protocol = "TCP";
-            URI subURI = publicServer.getURI();
+
+            URI subURI;
+            publicServer.getURI(subURI);
             request.uri.hostname = subURI.ip;
             request.uri.port = subURI.port;
 
-            std::string outMsg = Parser::encode(request, CORE_TOPICS::SUB_REQUEST);
+            outMsg = Parser::encode(request, CORE_TOPICS::SUB_REQUEST);
 
-            if (publicServer.sendTo(outMsg, uri) < 0)
+            status = publicServer.sendTo(outMsg, uri);
+            if (SOCKET_STATUS_IS_ERROR(status))
             {
-                // std::cerr << "Failed to send message to Publisher" << std::endl;
                 Console::log(LogLevel::ERROR, "Failed to send Request message to Publisher at " + uri.toString());
-                outgoingRequests.push(uri);
             }
             else
             {
@@ -65,11 +68,10 @@ namespace mros
         // Read any incoming responses
         if (awaitingResponses.size() > 0)
         {
-            std::string inMsg;
             URI sender;
-            if (publicServer.receiveFrom(inMsg, MAX_MSG_SIZE, sender) < 0)
+            status = publicServer.receiveFrom(inMsg, MAX_MSG_SIZE, sender);
+            if (SOCKET_STATUS_IS_ERROR(status))
             {
-                // std::cerr << "Failed to receive message from Publisher" << std::endl;
                 Console::log(LogLevel::ERROR, "Failed to receive Response message from Publisher at " + sender.toString());
             }
             else if (inMsg.size() > 0 && awaitingResponses.find(sender) != awaitingResponses.end())
@@ -80,14 +82,12 @@ namespace mros
                 private_msgs::Response response;
                 if (!Parser::decode(inMsg, response))
                 {
-                    // std::cerr << "Failed to decode message from Publisher" << std::endl;
                     Console::log(LogLevel::ERROR, "Failed to decode Response message from Publisher at " + sender.toString());
                 }
                 else if (response.topic.data == topic && response.error.data.size() == 0)
                 {
                     if (response.protocol.data != "TCP")
                     {
-                        // std::cerr << "Unsupported protocol" << std::endl;
                         Console::log(LogLevel::WARN, "Unsupported protocol in Response message from Publisher at " + sender.toString());
                     }
                     else
@@ -109,33 +109,38 @@ namespace mros
             if (pair.second->isConnected()) 
             {
                 private_msgs::URIStamped uri;
-                URI subURI = publicServer.getURI();
+                URI subURI;
+                publicServer.getURI(subURI);
                 uri.uri.hostname = subURI.ip;
                 uri.uri.port = subURI.port;
-                std::string outMsg = Parser::encode(uri, CORE_TOPICS::SUB_RESPONSE);
+
+                outMsg = Parser::encode(uri, CORE_TOPICS::SUB_RESPONSE);
                 pair.second->send(outMsg);
                 pubs.insert(pair);
             }
             else {
-                int ret = pair.second->connect();
-                if (ret < 0)
+                status = pair.second->connect();
+                if (SOCKET_STATUS_IS_ERROR(status))
                 {
-                    // std::cerr << "Failed to connect to Publisher" << std::endl;
-                    Console::log(LogLevel::ERROR, "Failed to connect to Publisher at " + pair.first.toString());
+                    Console::log(LogLevel::ERROR, "Failed to connect to Publisher at " + pair.first.toString() + " with status " + std::to_string(status));
+                }
+                else if (status == SOCKET_OP_IN_PROGRESS) {
                     awaitingConnect.push(pair);
                 }
-                else if (ret == 1) {
-                    Console::log(LogLevel::WARN, "Connection to Publisher at " + pair.first.toString() + " is pending");
-                    awaitingConnect.push(pair);
-                }
-                else if (ret == 0  || ret == 2)
+                else if (SOCKET_STATUS_IS_OK(status))
                 {
                     private_msgs::URIStamped uri;
-                    URI subURI = publicServer.getURI();
+                    URI subURI;
+                    publicServer.getURI(subURI);
                     uri.uri.hostname = subURI.ip;
                     uri.uri.port = subURI.port;
-                    std::string outMsg = Parser::encode(uri, CORE_TOPICS::SUB_RESPONSE);
-                    pair.second->send(outMsg);
+
+                    outMsg = Parser::encode(uri, CORE_TOPICS::SUB_RESPONSE);
+                    status = pair.second->send(outMsg);
+                    if (SOCKET_STATUS_IS_ERROR(status))
+                    {
+                        Console::log(LogLevel::ERROR, "Failed to send Response message to Publisher at " + pair.first.toString());
+                    }
                     pubs.insert(pair);
                 }
             }
@@ -144,10 +149,9 @@ namespace mros
         // Read from any connected Publishers
         for (auto &pub : pubs)
         {
-            std::string inMsg;
-            if (pub.second->receive(inMsg, MAX_MSG_SIZE) < 0)
+            status = pub.second->receive(inMsg, MAX_MSG_SIZE);
+            if (SOCKET_STATUS_IS_ERROR(status))
             {
-                // std::cerr << "Failed to receive message from Publisher" << std::endl;
                 Console::log(LogLevel::ERROR, "Failed to receive message from Publisher at " + pub.first.toString());
             }
             else if (inMsg.size() > 0)

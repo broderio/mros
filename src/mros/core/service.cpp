@@ -28,13 +28,13 @@ namespace mros
         // Check publicServer for incoming messages
         std::string inMsg;
         URI sender;
-        if (publicServer.receiveFrom(inMsg, MAX_MSG_SIZE, sender) < 0)
+        int status = publicServer.receiveFrom(inMsg, MAX_MSG_SIZE, sender);
+        if (SOCKET_STATUS_IS_ERROR(status))
         {
             Console::log(LogLevel::ERROR, "Service failed to receive message");
             return;
         }
-
-        if (inMsg.empty())
+        else if (SOCKET_STATUS_IS_WARNING(status))
         {
             return;
         }
@@ -44,7 +44,8 @@ namespace mros
         callbackHelper->invokeCallback(inMsg, outMsg);
 
         // Send response
-        if (publicServer.sendTo(outMsg, sender) < 0)
+        status = publicServer.sendTo(outMsg, sender);
+        if (SOCKET_STATUS_IS_ERROR(status))
         {
             Console::log(LogLevel::ERROR, "Service failed to send response");
         }

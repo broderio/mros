@@ -1,28 +1,41 @@
+#include <iostream>
+#include <string>
+
 #include "utils.hpp"
-#include "socket/udp/client.hpp"    
 
-int main() {
+#include "socket/common.hpp"
+#include "socket/udp/client.hpp"
+
+int main()
+{
+    URI serverURI(getLocalIP(), 8080);
     UDPClient client;
-    std::string ipAddr = getLocalIP();
-    URI serverURI(ipAddr, 8080);
 
+    int status;
     std::string message;
-    for (int i = 0; i < 10; i++) {
-        message = "Message #" + std::to_string(i);
-        client.sendTo(message, serverURI);
-        sleep(1000);
-
-        URI serverURI;
-        int res = client.receiveFrom(message, 1024, serverURI);
-        if (res < 0) {
+    for (int i = 0; i < 10; i++)
+    {
+        status = client.sendTo("Message #" + std::to_string(i), serverURI);
+        if (SOCKET_STATUS_IS_ERROR(status))
+        {
             return 1;
         }
-        if (message.size() == 0) {
-            i--;
-            continue;
-        }
 
-        std::cout << "Received: \"" << message << "\" from server at " << serverURI.toString() << std::endl;
+        sleep(1000);
+
+        URI sender;
+        do
+        {
+            status = client.receiveFrom(message, 1024, sender);
+            if (SOCKET_STATUS_IS_ERROR(status))
+            {
+                return 1;
+            }
+
+        } while (!SOCKET_STATUS_IS_OK(status));
+
+        std::cout << "Received: \"" << message << "\" from " << sender << std::endl;
+        message.clear();
     }
     return 0;
 }

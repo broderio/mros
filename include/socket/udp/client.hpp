@@ -11,12 +11,16 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
+#include "socket/common.hpp"
+
 #include "utils.hpp"
 
 class UDPClient
 {
 public:
     UDPClient(bool nonblocking = true);
+
+    UDPClient(const UDPClient &other) = delete;
 
     ~UDPClient();
 

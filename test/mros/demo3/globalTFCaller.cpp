@@ -1,31 +1,33 @@
-#include "mros/core/node.hpp"
-#include "mros/core/publisher.hpp"
+#include <iostream>
+#include <string>
+
 #include "utils.hpp"
 
 #include "messages/std_msgs/void.hpp"
 #include "messages/geometry_msgs/transform.hpp"
 
-#include <iostream>
-#include <string>
+#include "mros/utils/console.hpp"
+#include "mros/core/node.hpp"
+#include "mros/core/service.hpp"
 
-int main() {
-    URI uri;
-    uri.ip = "0.0.0.0";
-    uri.port = MEDIATOR_PORT_NUM;
+using namespace mros;
 
-    mros::Node node("service_node", uri);
+int main()
+{
+    Node &node = Node::getInstance();
+    node.init("service_node", URI(getLocalIP(), MEDIATOR_PORT_NUM));
 
-    mros::Console::setLevel(mros::LogLevel::DEBUG);
+    Console::setLevel(LogLevel::DEBUG);
 
-    node.spin(true);
+    node.spin(false);
 
     while (node.ok())
     {
         geometry_msgs::TF response;
-        mros::Console::log(mros::LogLevel::DEBUG, "Sending request ...");
+        Console::log(LogLevel::DEBUG, "Sending request ...");
         if (node.callService("global_tf", std_msgs::Void(), response))
         {
-            mros::Console::log(mros::LogLevel::DEBUG, response.toString());
+            Console::log(LogLevel::DEBUG, response.toString());
         }
 
         sleep(1000);

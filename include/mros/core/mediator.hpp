@@ -11,6 +11,7 @@
 
 #include "utils.hpp"
 
+#include "socket/common.hpp"
 #include "socket/tcp/server.hpp"
 #include "socket/udp/server.hpp"
 
@@ -35,15 +36,18 @@ namespace mros
     class Mediator
     {
     public:
-        Mediator();
-        ~Mediator();
+
+        static Mediator &getInstance();
+
+        void init();
+
+        void shutdown();
 
         void spin();
 
     private:
-        UDPServer server;
 
-        struct URIPair 
+        struct URIPair
         {
             URI clientURI; // Node client URI
             URI serverURI; // Publisher/Subscriber server URI
@@ -64,19 +68,29 @@ namespace mros
             std::string outMsgType;
         };
 
+        Mediator();
+
+        void run();
+
+        bool ok();
+
+        void registerPublisher(const private_msgs::Register &msg, const URI &clientURI);
+        void deregisterPublisher(const private_msgs::Register &msg, const URI &clientURI);
+
+        void registerSubscriber(const private_msgs::Register &msg, const URI &clientURI);
+        void deregisterSubscriber(const private_msgs::Register &msg, const URI &clientURI);
+
+        void registerService(const private_msgs::Register &msg, const URI &clientURI);
+        void deregisterService(const private_msgs::Register &msg, const URI &clientURI);
+        void handleServiceRequest(const std_msgs::String &msg, const URI &clientURI);
+
+        UDPServer server;
         std::map<std::string, Topic> topicMap;
         std::map<std::string, Service> serviceMap;
 
-        SignalHandler signalHandler;
-
-        void run();
-        void registerPublisher(const private_msgs::Register &msg, const URI &clientURI);
-        void registerSubscriber(const private_msgs::Register &msg, const URI &clientURI);
-        void registerService(const private_msgs::Register &msg, const URI &clientURI);
-        void deregisterPublisher(const private_msgs::Register &msg, const URI &clientURI);
-        void deregisterSubscriber(const private_msgs::Register &msg, const URI &clientURI);
-        void deregisterService(const private_msgs::Register &msg, const URI &clientURI);
-        void handleServiceRequest(const std_msgs::String &msg, const URI &clientURI);
+        bool initialized;
+        bool spinning;
+        bool shutdownFlag;
     };
 
 }

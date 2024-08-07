@@ -9,6 +9,8 @@
 #include <iostream>
 #include <string>
 
+#include "socket/common.hpp"
+
 #include "utils.hpp"
 
 class TCPClient {
@@ -16,13 +18,15 @@ public:
 
     TCPClient();
 
+    TCPClient(const TCPClient &other) = delete;
+
     TCPClient(const URI &uri, bool nonblocking = true);
 
     ~TCPClient();
 
     int open(const URI &uri, bool nonblocking = true);
 
-    int connect(int timeout = 0);
+    int connect();
 
     int send(const std::string& message);
 
@@ -36,7 +40,7 @@ public:
 
     bool isNonblocking() const;
 
-    URI getServerURI(); 
+    int getServerURI(URI &uri); 
 
 private:
 

@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
+#include "socket/common.hpp"
+
 #include "utils.hpp"
 
 class UDPServer
@@ -20,6 +22,8 @@ public:
     UDPServer();
 
     UDPServer(const URI &uri, bool nonBlocking = true);
+
+    UDPServer(const UDPServer &other) = delete;
 
     ~UDPServer();
 
@@ -39,7 +43,7 @@ public:
 
     bool isNonblocking() const;
 
-    URI getURI();
+    int getURI(URI &uri);
 
 private:
     int fd;

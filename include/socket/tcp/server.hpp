@@ -8,6 +8,9 @@
 
 #include <iostream>
 #include <string>
+#include <memory>
+
+#include "socket/common.hpp"
 
 #include "utils.hpp"
 
@@ -16,6 +19,8 @@ class TCPConnection;
 class TCPServer {
 public:
     TCPServer();
+
+    TCPServer(const TCPServer &other) = delete;
 
     TCPServer(const URI &uri, bool nonblocking = 1, int maxConnections = 10);
     
@@ -27,7 +32,7 @@ public:
 
     int listen();
 
-    int accept(TCPConnection& connection);
+    int accept(std::shared_ptr<TCPConnection> &connection);
     
     void close();
 
@@ -39,7 +44,7 @@ public:
 
     bool isNonblocking() const;
 
-    URI getURI();
+    int getURI(URI &uri);
 
 private:
     
@@ -77,7 +82,7 @@ public:
 
     bool isNonblocking() const;
 
-    URI getClientURI();
+    int getClientURI(URI &uri);
 
 private:
 

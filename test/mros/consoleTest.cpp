@@ -2,7 +2,8 @@
 
 using namespace mros;
 
-int main() {
+int main()
+{
     Console::init("test");
     Console::log(DEBUG, "This is a debug message");
     Console::log(INFO, "This is an info message");

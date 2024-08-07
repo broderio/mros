@@ -13,6 +13,7 @@
 
 #include "utils.hpp"
 
+#include "socket/common.hpp"
 #include "socket/tcp/server.hpp"
 #include "socket/udp/server.hpp"
 #include "socket/udp/client.hpp"

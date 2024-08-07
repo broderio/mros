@@ -13,15 +13,24 @@ WSServer::WSServer(const URI &uri, int maxConnections)
 
 WSServer::~WSServer()
 {
+    //std::cout << "WSServer::~WSServer()" << std::endl;
     close();
+    //std::cout << "WSServer::~WSServer() after close" << std::endl;
 }
 
 int WSServer::open(const URI &uri, int maxConnections)
 {
+    //std::cout << "WSServer::open()" << std::endl;
+    if (opened.load())
+    {
+        return SOCKET_OPENED;
+    }
+
     server = std::make_shared<wspp_server>();
     server->init_asio();
     server->set_reuse_addr(true);
     server->clear_access_channels(websocketpp::log::alevel::all);
+    server->set_error_channels(websocketpp::log::elevel::fatal);
 
     using websocketpp::lib::bind;
     using websocketpp::lib::placeholders::_1;
@@ -34,7 +43,10 @@ int WSServer::open(const URI &uri, int maxConnections)
     server->listen(websocketpp::lib::asio::ip::address::from_string(uri.ip), uri.port, ec);
     if (ec)
     {
-        return -1;
+        //std::cout << "WSServer::open() listen error" << std::endl;
+        close();
+        //std::cout << "WSServer::open() listen error after close" << std::endl;
+        return SOCKET_LISTEN_FAILED;
     }
 
     server->start_accept();
@@ -42,71 +54,93 @@ int WSServer::open(const URI &uri, int maxConnections)
 
     thread = std::thread(&WSServer::run, this);
 
-    return 0;
+    //std::cout << "WSServer::open() before return" << std::endl;
+    return SOCKET_OK;
 }
 
 int WSServer::accept(std::shared_ptr<WSConnection> &connection)
 {
-    scoped_lock lock(mutex);
-    if (pendingConnections.empty())
+    //std::cout << "WSServer::accept()" << std::endl;
+    if (!opened.load())
     {
-        return -1;
+        return SOCKET_NOT_OPENED;
     }
 
-    connection_hdl connectionHdl = pendingConnections.front();
-    pendingConnections.pop();
+    connection_hdl connectionHdl;
+    {
+        scoped_lock lock(pendingConnectionsMutex);
+        if (pendingConnections.empty())
+        {
+            return SOCKET_OP_WOULD_BLOCK;
+        }
+
+        connectionHdl = pendingConnections.front();
+        pendingConnections.pop();
+    }
     
+    scoped_lock lock(connectionsMutex);
     connection = connections[connectionHdl];
-    return 0;
+
+    //std::cout << "WSServer::accept() before return" << std::endl;
+    return SOCKET_OK;
 }
 
 void WSServer::close()
 {
-    scoped_lock guard(mutex);
-    opened = false;
+    //std::cout << "WSServer::close()" << std::endl;
+    if (!opened.load())
+    {
+        //std::cout << "WSServer::close() not opened" << std::endl;
+        return;
+    }
+
+    opened.store(false);
+
+    {
+        scoped_lock guard(pendingConnectionsMutex);
+        while (!pendingConnections.empty())
+        {
+            pendingConnections.pop();
+        }
+    }
 
     server->stop_listening();
-    for (auto &connection : connections)
+    //std::cout << "WSServer::close() before join" << std::endl;
+    if (thread.joinable())
     {
-        connection.second->close();
+        thread.join();
     }
-    connections.clear();
-
-    while (!pendingConnections.empty())
-    {
-        pendingConnections.pop();
-    }
+    //std::cout << "WSServer::close() after join" << std::endl;
 
 }
 
 bool WSServer::isOpen() const
 {
-    scoped_lock guard(mutex);
-    return opened;
+    return opened.load();
 }
 
 int WSServer::pending() const
 {
-    scoped_lock guard(mutex);
+    scoped_lock guard(pendingConnectionsMutex);
     return pendingConnections.size();
 }
 
-URI WSServer::getURI()
+int WSServer::getURI(URI &uri)
 {
-    scoped_lock guard(mutex);
-    if (!opened)
+    if (!opened.load())
     {
-        return URI();
+        return SOCKET_NOT_OPENED;
     }
 
     websocketpp::lib::asio::error_code ec;
     websocketpp::lib::asio::ip::tcp::endpoint localEndpoint = server->get_local_endpoint(ec);
     if (ec)
     {
-        return URI();
+        return SOCKET_ENDPOINT_ERROR;
     }
 
-    return URI(localEndpoint.address().to_string(), localEndpoint.port());
+    uri = URI(localEndpoint.address().to_string(), localEndpoint.port());
+    return SOCKET_OK;
 }
 
 void WSServer::run()
@@ -123,43 +157,55 @@ void WSServer::run()
 
 void WSServer::onOpen(connection_hdl hdl)
 {
-    //std::cout << "Connection opened!" << std::endl;
-    scoped_lock guard(mutex);
-
     std::shared_ptr<WSConnection> conn(new WSConnection(hdl, server));
-    connections[hdl] = conn;
+
+    {
+        scoped_lock guard(connectionsMutex);
+        connections[hdl] = conn;
+    }
+
+    scoped_lock guard(pendingConnectionsMutex);
     pendingConnections.push(hdl);
 }
 
 void WSServer::onClose(connection_hdl hdl)
 {
-    //std::cout << "Connection closed!" << std::endl;
-    scoped_lock guard(mutex);
-    if (!opened)
+    //std::cout << "WSServer::onClose()" << std::endl;
+
+    scoped_lock guard(connectionsMutex);
+    if (connections.find(hdl) == connections.end())
     {
+        //std::cout << "WSServer::onClose() connection not found" << std::endl;
         return;
     }
+    if (!connections[hdl]->isOpen())
+    {
+        //std::cout << "WSServer::onClose() connection not open" << std::endl;
+        return;
+    }
+
+    connections[hdl]->opened.store(false);
     connections.erase(hdl);
-    opened = false;
+    //std::cout << "WSServer::onClose() after erase" << std::endl;
 }
 
 void WSServer::onMessage(connection_hdl hdl, wspp_server::message_ptr msg)
 {
-    std::cout << "Received message!" << std::endl;
+    //std::cout << "WSServer::onMessage()" << std::endl;
+    if (!opened.load())
     {
-        scoped_lock guard(mutex);
-        if (!opened || connections.find(hdl) == connections.end())
-        {
-            return;
-        }
+        //std::cout << "WSServer::onMessage() not opened" << std::endl;
+        return;
     }
-    std::cout << "Pushing message: " << msg->get_payload() << std::endl;
+
+    scoped_lock guard(connectionsMutex);
     if (connections.find(hdl) == connections.end())
     {
-        std::cout << "Connection not found" << std::endl;
+        //std::cout << "WSServer::onMessage() connection not found" << std::endl;
         return;
     }
     connections[hdl]->pushMessage(msg->get_payload());
+    //std::cout << "WSServer::onMessage() before return" << std::endl;
 }
 
 WSConnection::WSConnection()
@@ -169,54 +215,55 @@ WSConnection::WSConnection()
 
 WSConnection::~WSConnection()
 {
-    scoped_lock guard(mutex);
-    if (opened)
-    {
-        close();
-    }
+    //std::cout << "WSConnection::~WSConnection()" << std::endl;
+    close();
+    //std::cout << "WSConnection::~WSConnection() after closed" << std::endl;
 }
 
 int WSConnection::send(const std::string &message)
 {
+    //std::cout << "WSConnection::send()" << std::endl;
+    if (!opened.load())
     {
-        scoped_lock guard(mutex);
-        if (!opened)
-        {
-            return -1;
-        }
+        //std::cout << "WSConnection::send() not opened" << std::endl;
+        return SOCKET_SEND_FAILED;
     }
     
     std::shared_ptr<wspp_server> serverShared = server.lock();
     serverShared->send(connection, message, websocketpp::frame::opcode::text);
 
-    return 0;
+    //std::cout << "WSConnection::send() before return" << std::endl;
+    return SOCKET_OK;
 }
 
 int WSConnection::receive(std::string &message)
 {
-    scoped_lock guard(mutex);
-
-    if (!opened)
+    //std::cout << "WSConnection::receive()" << std::endl;
+    if (!opened.load())
     {
-        return -1;
+        //std::cout << "WSConnection::receive() not opened" << std::endl;
+        return SOCKET_NOT_OPENED;
     }
+
+    scoped_lock guard(messagesMutex);
     if (messages.empty())
     {
-        return 1;
+        return SOCKET_OP_WOULD_BLOCK;
     }
     message = messages.front();
     messages.pop();
-    return 0;
+
+    //std::cout << "WSConnection::receive() before return" << std::endl;
+    return SOCKET_OK;
 }
 
 void WSConnection::close()
 {
+    //std::cout << "WSConnection::close()" << std::endl;
+    if (!opened.load())
     {
-        scoped_lock guard(mutex);
-        if (!opened)
-        {
-            return;
-        }
+        //std::cout << "WSConnection::close() not opened" << std::endl;
+        return;
     }
 
     std::shared_ptr<wspp_server> serverShared = server.lock();
@@ -225,28 +272,26 @@ void WSConnection::close()
     {
         messages.pop();
     }
-    opened = false;
+
+    //std::cout << "WSConnection::close() after close" << std::endl;
 }
 
 bool WSConnection::isOpen() const
 {
-    scoped_lock guard(mutex);
-    return opened;
+    return opened.load();
 }
 
-URI WSConnection::getClientURI() const
+int WSConnection::getClientURI(URI &uri) const
 {
+    if (!opened.load())
     {
-        scoped_lock guard(mutex);
-        if (!opened)
-        {
-            return URI();
-        }
+        return SOCKET_NOT_OPENED;
     }
 
     std::shared_ptr<wspp_server> serverShared = server.lock();
     wspp_server::connection_ptr connection = serverShared->get_con_from_hdl(this->connection);
-    return URI(connection->get_host(), connection->get_port());
+    uri = URI(connection->get_host(), connection->get_port());
+    return SOCKET_OK;
 }
 
 WSConnection::WSConnection(connection_hdl connection, std::weak_ptr<wspp_server> server)
@@ -256,7 +301,14 @@ WSConnection::WSConnection(connection_hdl connection, std::weak_ptr<wspp_server>
 
 void WSConnection::pushMessage(const std::string &message)
 {
-    scoped_lock guard(mutex);
+    //std::cout << "WSConnection::pushMessage()" << std::endl;
+    if (!opened.load())
+    {
+        //std::cout << "WSConnection::pushMessage() not opened" << std::endl;
+        return;
+    }
+
+    scoped_lock guard(messagesMutex);
     messages.push(message);
-    std::cout << "Message pushed" << std::endl;
+    //std::cout << "WSConnection::pushMessage() before return" << std::endl;
 }

@@ -10,12 +10,15 @@
 #include <string>
 #include <functional>
 #include <memory>
-
-#include "utils.hpp"
+#include <atomic>
 
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 #include <websocketpp/common/thread.hpp>
+
+#include "utils.hpp"
+
+#include "socket/common.hpp"
 
 typedef websocketpp::server<websocketpp::config::asio> wspp_server;
 typedef websocketpp::connection_hdl connection_hdl;
@@ -33,6 +36,8 @@ public:
 
     WSServer(const URI &uri, int maxConnections = 10); // calls open
 
+    WSServer(const WSServer &other) = delete;
+
     ~WSServer();
 
     int open(const URI &uri, int maxConnections = 10); // listens, starts accepting connections, and runs the server
@@ -45,7 +50,7 @@ public:
 
     int pending() const;
     
-    URI getURI();
+    int getURI(URI &uri);
 
 private:
     void run();
@@ -56,17 +61,17 @@ private:
 
     void onMessage(connection_hdl connection, wspp_server::message_ptr msg);
 
-    std::map<connection_hdl, std::shared_ptr<WSConnection>, std::owner_less<connection_hdl>> connections;
-
-    std::shared_ptr<wspp_server> server;
-
+    mutable websocketpp::lib::mutex pendingConnectionsMutex;
     std::queue<connection_hdl> pendingConnections;
 
-    mutable websocketpp::lib::mutex mutex;
+    mutable websocketpp::lib::mutex connectionsMutex;
+    std::map<connection_hdl, std::shared_ptr<WSConnection>, std::owner_less<connection_hdl>> connections;
 
     std::thread thread;
 
-    bool opened;
+    std::shared_ptr<wspp_server> server;
+
+    std::atomic<bool> opened;
 };
 
 class WSConnection
@@ -75,6 +80,8 @@ class WSConnection
 
 public:
     WSConnection();
+
+    WSConnection(const WSConnection &other) = delete;
 
     ~WSConnection();
 
@@ -86,7 +93,7 @@ public:
 
     bool isOpen() const;
 
-    URI getClientURI() const;
+    int getClientURI(URI &uri) const;
 
 private:
     WSConnection(connection_hdl connection, std::weak_ptr<wspp_server> server);
@@ -97,9 +104,8 @@ private:
 
     std::weak_ptr<wspp_server> server;
 
-    mutable websocketpp::lib::mutex mutex;
+    std::atomic<bool> opened;
 
-    bool opened;
-
+    mutable websocketpp::lib::mutex messagesMutex;
     std::queue<std::string> messages;
 };

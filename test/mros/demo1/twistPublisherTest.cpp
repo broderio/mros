@@ -1,21 +1,24 @@
-#include "mros/core/node.hpp"
-#include "mros/core/publisher.hpp"
+#include <iostream>
+#include <string>
+
 #include "utils.hpp"
 
 #include "messages/geometry_msgs/twist.hpp"
 
-#include <iostream>
-#include <string>
+#include "mros/common.hpp"
+#include "mros/utils/console.hpp"
+#include "mros/core/node.hpp"
+#include "mros/core/publisher.hpp"
+
+using namespace mros;
 
 int main()
 {
-    URI uri;
-    uri.ip = "0.0.0.0";
-    uri.port = MEDIATOR_PORT_NUM;
+    Node &node = Node::getInstance();
+    node.init("twist_publisher", URI(getLocalIP(), MEDIATOR_PORT_NUM));
+    Console::setLevel(LogLevel::DEBUG);
 
-    mros::Node node("twist_publisher", uri);
-
-    std::shared_ptr<mros::Publisher> pub = node.advertise<geometry_msgs::TwistStamped>("twist_topic", 10);
+    std::shared_ptr<Publisher> pub = node.advertise<geometry_msgs::TwistStamped>("twist_topic", 10);
 
     if (pub == nullptr)
     {
@@ -23,7 +26,7 @@ int main()
         return 1;
     }
 
-    node.spin(true);
+    node.spin(false);
 
     int i = 0;
     while (node.ok())

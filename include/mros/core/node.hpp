@@ -13,6 +13,7 @@
 
 #include "utils.hpp"
 
+#include "socket/common.hpp"
 #include "socket/tcp/server.hpp"
 #include "socket/udp/server.hpp"
 #include "socket/udp/client.hpp"
@@ -44,11 +45,18 @@ namespace mros
     class Node
     {
     public:
-        Node(const std::string &name, const URI &coreURI);
+
+        static Node &getInstance();
+
+        Node(const Node &) = delete;
+
+        Node &operator=(const Node &) = delete;
 
         ~Node();
 
-        void spin(bool detach=false);
+        void init(const std::string &name, const URI &coreURI);
+
+        void spin(bool block=true);
 
         void spinOnce();
 
@@ -119,10 +127,8 @@ namespace mros
             }
 
             std::string requestStr = Parser::encode(request, 0);
-
-            std::string responseStr = callService(serviceURI, requestStr);
-
-            if (responseStr.empty())
+            std::string responseStr;
+            if (!callService(serviceURI, requestStr, responseStr))
             {
                 return false;
             }
@@ -131,6 +137,9 @@ namespace mros
         }
 
     private:
+
+        Node();
+
         void run();
 
         void runOnce();
@@ -143,26 +152,27 @@ namespace mros
         void deregisterService(std::shared_ptr<Service> srvPtr);
 
         bool requestServiceAddress(const std::string &service, URI &serviceURI, const std::string &inMsgType, const std::string &outMsgType);
-        std::string callService(const URI &serviceURI, const std::string &request);
+        bool callService(const URI &serviceURI, const std::string &request, std::string &response);
 
         void handlePubNotify(const private_msgs::Notify &notify);
         void handleSubNotify(const private_msgs::Notify &notify);
         void handlePubDisconnect(const private_msgs::Disconnect &disconnect);
         void handleSubDisconnect(const private_msgs::Disconnect &disconnect);
 
-        SignalHandler signalHandler;
-
         std::string name;
         URI coreURI;
 
+        bool initialized;
         bool spinning;
         bool shutdownFlag;
+
+        std::thread spinThread;
+        std::thread::id spinThreadID;
 
         std::map<std::string, std::set<std::shared_ptr<Publisher>>> publishers;   // Map of topic names to Publisher objects
         std::map<std::string, std::set<std::shared_ptr<Subscriber>>> subscribers; // Map of topic names to Subscriber objects
         std::map<std::string, std::set<std::shared_ptr<Service>>> services;       // Map of service names to Service objects
 
-        std::mutex clientMutex;
         UDPClient client; // For talking to the Mediator
     };
 

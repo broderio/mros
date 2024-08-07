@@ -1,6 +1,6 @@
 #pragma once
 
-#define MEDIATOR_PORT_NUM 8000
+#define MEDIATOR_PORT_NUM 11311
 
 #define MAX_MSG_SIZE 2048
 

@@ -1,6 +1,7 @@
-#include "mros/core/node.hpp"
-#include "mros/core/subscriber.hpp"
-#include "mros/utils/argParser.hpp"
+#include <iostream>
+#include <string>
+#include <mutex>
+
 #include "utils.hpp"
 
 #include "messages/sensor_msgs/jointState.hpp"
@@ -9,9 +10,12 @@
 #include "linalg/matrix.hpp"
 #include "linalg/quaternion.hpp"
 
-#include <iostream>
-#include <string>
-#include <mutex>
+#include "mros/utils/argParser.hpp"
+#include "mros/core/node.hpp"
+#include "mros/core/subscriber.hpp"
+#include "mros/core/publisher.hpp"
+
+using namespace mros;
 
 struct JointStateObj
 {
@@ -49,9 +53,8 @@ private:
 
     int hz;
     float timeThreshold;
-    mros::Node node;
-    std::vector<std::shared_ptr<mros::Subscriber>> jointStateSubs;
-    std::shared_ptr<mros::Publisher> jointStatePub;
+    std::vector<std::shared_ptr<Subscriber>> jointStateSubs;
+    std::shared_ptr<Publisher> jointStatePub;
 
     std::map<std::string, std::pair<JointStateObj, JointStateObj>> jointStateMap;
     sensor_msgs::JointState currJointState;
@@ -86,9 +89,10 @@ void JointStatePublisher::jointStateCallback(const sensor_msgs::JointState &msg)
 }
 
 JointStatePublisher::JointStatePublisher(const URI &uri, const std::vector<std::string> &jointStateTopics, int hz, float timeThreshold)
-    : node("joint_state_publisher", uri), hz(hz), timeThreshold(timeThreshold)
+: hz(hz), timeThreshold(timeThreshold)
 {
-
+    Node &node = Node::getInstance();
+    node.init("joint_state_publisher", uri),
     jointStatePub = node.advertise<sensor_msgs::JointState>("joint_states", 10);
 
     auto callback = std::bind(&JointStatePublisher::jointStateCallback, this, std::placeholders::_1);
@@ -104,6 +108,8 @@ void JointStatePublisher::run()
     const int periodNs = (1 / (float)hz) * 1000000000;
 
     int64_t start_time = getTimeNano();
+
+    Node &node = Node::getInstance();
     while (node.ok())
     {
         if (getTimeNano() - start_time >= periodNs)
@@ -132,24 +138,27 @@ void JointStatePublisher::run()
 int main(int argc, char **argv)
 {
 
-    mros::ArgParser::init("joint_state_publisher", "Publishes interpolated joint states");
-    mros::ArgParser::addArg({"topics", "Joint state topics", '+'});
+    ArgParser::init("joint_state_publisher", "Publishes interpolated joint states");
+    ArgParser::addArg({"topics", "Joint state topics", '+'});
 
-    mros::ArgParser::addOpt({"ip", "i", "Core IP address", "0.0.0.0", "", '1'});
-    mros::ArgParser::addOpt({"freq", "f", "Publish rate in Hz", "25", "", '1'});
-    mros::ArgParser::addOpt({"delta-time", "d", "Time threshold to stop interpolation", "0.1", "", '1'});
+    ArgParser::addOpt({"ip", "i", "Core IP address", getLocalIP(), "", '1'});
+    ArgParser::addOpt({"freq", "f", "Publish rate in Hz", "25", "", '1'});
+    ArgParser::addOpt({"delta-time", "d", "Time threshold to stop interpolation", "0.1", "", '1'});
 
-    mros::ArgParser::parse(argc, argv);
+    ArgParser::parse(argc, argv);
 
     URI uri;
-    uri.ip = mros::ArgParser::getOpt("ip")[0];
+    uri.ip = ArgParser::getOpt("ip")[0];
     uri.port = MEDIATOR_PORT_NUM;
-    int freq = std::stoi(mros::ArgParser::getOpt("freq")[0]);
-    float timeThreshold = std::stof(mros::ArgParser::getOpt("delta-time")[0]);
-    std::vector<std::string> topics = mros::ArgParser::getArg("topics");
+
+    int freq = std::stoi(ArgParser::getOpt("freq")[0]);
+
+    float timeThreshold = std::stof(ArgParser::getOpt("delta-time")[0]);
+    
+    std::vector<std::string> topics = ArgParser::getArg("topics");
 
     JointStatePublisher JSP(uri, topics, freq, timeThreshold);
-    mros::Console::setLevel(mros::LogLevel::DEBUG);
+    Console::setLevel(LogLevel::DEBUG);
     JSP.run();
 
     return 0;

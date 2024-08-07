@@ -1,27 +1,28 @@
-#include "mros/core/node.hpp"
-#include "mros/core/publisher.hpp"
-#include "mros/utils/console.hpp"
+#include <iostream>
+#include <string>
+
 #include "utils.hpp"
 
 #include "messages/sensor_msgs/jointState.hpp"
+
+#include "mros/utils/console.hpp"
+#include "mros/core/node.hpp"
+#include "mros/core/publisher.hpp"
 
 #include "kineval/json.hpp"
 #include "kineval/joint.hpp"
 #include "kineval/link.hpp"
 #include "kineval/tree.hpp"
 
-#include <iostream>
-#include <string>
+using namespace mros;
 
 int main() {
-    URI uri;
-    uri.ip = "0.0.0.0";
-    uri.port = MEDIATOR_PORT_NUM;
+    Node &node = Node::getInstance();
+    node.init("publisher_node", URI(getLocalIP(), MEDIATOR_PORT_NUM));
 
-    mros::Node node("publisher_node", uri);
-    mros::Console::setLevel(mros::LogLevel::DEBUG);
+    Console::setLevel(LogLevel::DEBUG);
 
-    std::shared_ptr<mros::Publisher> pub = node.advertise<sensor_msgs::JointState>("joint_group_1", 10);
+    std::shared_ptr<Publisher> pub = node.advertise<sensor_msgs::JointState>("joint_group_1", 10);
 
     if (pub == nullptr) {
         std::cout << "Failed to advertise topic" << std::endl;
@@ -32,7 +33,7 @@ int main() {
     auto json = kineval::JsonParser::parse(file);
     kineval::KinematicTree kt = kineval::KinematicTree::fromJson(json->as_object());
 
-    node.spin(true);
+    node.spin(false);
 
     const int hz = 10;
     const int periodNs = (1 / (float)hz) * 1000000000;
@@ -64,7 +65,7 @@ int main() {
             }
             state = std::max(lowerBound, std::min(upperBound, state));
 
-            mros::Console::log(mros::LogLevel::DEBUG, "Published [" + jointName + "] state: " + std::to_string(state));
+            Console::log(LogLevel::DEBUG, "Published [" + jointName + "] state: " + std::to_string(state));
             
             start_time = getTimeNano();
         }

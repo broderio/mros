@@ -1,11 +1,16 @@
-#include "mros/core/mediator.hpp"
-
 #include <iostream>
 #include <string>
 
-int main() {
-    mros::Mediator mediator;
-    mros::Console::setLevel(mros::LogLevel::DEBUG);
+#include "mros/utils/console.hpp"
+#include "mros/core/mediator.hpp"
+
+using namespace mros;
+
+int main()
+{
+    Mediator &mediator = Mediator::getInstance();
+    mediator.init();
+    Console::setLevel(LogLevel::DEBUG);
     mediator.spin();
     return 0;
 }

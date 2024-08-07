@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 
     std::cout << "foo: " << ArgParser::getOpt("foo")[0] << std::endl;
     std::cout << "jab: " << ArgParser::getOpt("jab")[0] << std::endl;
-    std::cout << "bar: " <<  ArgParser::getOpt("bar")[0] << std::endl;
+    std::cout << "bar: " << ArgParser::getOpt("bar")[0] << std::endl;
 
     std::cout << "zap: ";
     for (const auto &option : ArgParser::getOpt("zap"))
@@ -45,7 +45,8 @@ int main(int argc, char **argv)
     }
     std::cout << std::endl;
 
-    std::cout << "\n\n" << ArgParser::getHelp() << std::endl;
+    std::cout << "\n\n"
+              << ArgParser::getHelp() << std::endl;
 
     return 0;
 }

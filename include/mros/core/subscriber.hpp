@@ -6,7 +6,6 @@
 #include <map>
 #include <set>
 #include <queue>
-
 #include <functional>
 #include <memory>
 #include <thread>
@@ -14,6 +13,7 @@
 
 #include "utils.hpp"
 
+#include "socket/common.hpp"
 #include "socket/tcp/client.hpp"
 #include "socket/udp/server.hpp"
 #include "socket/udp/client.hpp"

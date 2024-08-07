@@ -2,35 +2,131 @@
 
 namespace mros
 {
-    Node::Node(const std::string &name, const URI &coreURI)
-        : name(name), coreURI(coreURI), client(), signalHandler(), spinning(false), shutdownFlag(false)
+
+    Node &Node::getInstance()
     {
+        static Node instance;
+        return instance;
+    }
+
+    Node::~Node()
+    {
+        if (!shutdownFlag)
+        {
+            shutdown();
+        }
+        
+        if (spinThreadID != std::this_thread::get_id() && spinThread.joinable())
+        {
+            spinThread.join();
+        }
+    }
+
+    void Node::init(const std::string &name, const URI &coreURI)
+    {
+        if (initialized)
+        {
+            Console::log(LogLevel::WARN, "Node has already been initialized");
+            return;
+        }
+
+        this->name = name;
+        this->coreURI = coreURI;
+        this->spinning = false;
+        this->shutdownFlag = false;
+
         Console::init(name);
+        SignalHandler::init();
 
         std::string inMsg;
         URI sender;
+        int status;
         int attempts = 0;
         while (inMsg.size() == 0)
         {
-            if (client.sendTo(std::string(1, PING_MSG), coreURI) < 0) {
-                Console::log(LogLevel::ERROR, "Failed to connect to Mediator");
-                return;
+            status = client.sendTo(std::string(1, PING_MSG), coreURI);
+            if (SOCKET_STATUS_IS_ERROR(status))
+            {
+                Console::log(LogLevel::ERROR, "UDPClient::sendTo() failed");
+                goto error;
             }
+
             sleep(100);
-            client.receiveFrom(inMsg, MAX_MSG_SIZE, sender);
+
+            status = client.receiveFrom(inMsg, MAX_MSG_SIZE, sender);
+            if (SOCKET_STATUS_IS_ERROR(status))
+            {
+                Console::log(LogLevel::ERROR, "UDPClient::receiveFrom() failed");
+                goto error;
+            }
 
             if (attempts > 10)
             {
+            error:
                 Console::log(LogLevel::ERROR, "Failed to connect to Mediator");
                 throw std::runtime_error("Failed to connect to Mediator");
             }
             attempts++;
         }
+        this->initialized = true;
     }
 
-    Node::~Node()
+    void Node::spin(bool block)
     {
-        shutdown();
+        if (!initialized)
+        {
+            Console::log(LogLevel::ERROR, "Node has not been initialized");
+            throw std::runtime_error("Node has not been initialized");
+            return;
+        }
+
+        if (spinning)
+        {
+            Console::log(LogLevel::WARN, "Node is already spinning");
+            return;
+        }
+
+        spinThread = std::thread(&Node::run, this);
+        spinning = true;
+        if (block)
+        {
+            spinThread.join();
+        }
+    }
+
+    void Node::spinOnce()
+    {
+        if (!initialized)
+        {
+            Console::log(LogLevel::ERROR, "Node has not been initialized");
+            throw std::runtime_error("Node has not been initialized");
+            return;
+        }
+
+        if (spinning)
+        {
+            Console::log(LogLevel::WARN, "Node is already spinning");
+            return;
+        }
+        runOnce();
+    }
+
+    void Node::shutdown()
+    {
+        if (!initialized)
+        {
+            Console::log(LogLevel::ERROR, "Node has not been initialized");
+            throw std::runtime_error("Node has not been initialized");
+            return;
+        }
+
+        if (shutdownFlag)
+        {
+            Console::log(LogLevel::WARN, "Node is already shutting down");
+            return;
+        }
+
+        shutdownFlag = true;
 
         for (auto &topic : publishers)
         {
@@ -62,53 +158,33 @@ namespace mros
         client.close();
     }
 
-    void Node::spin(bool detach)
-    {
-        if (spinning)
-        {
-            return;
-        }
-
-        spinning = true;
-        std::thread t(&Node::run, this);
-        if (detach)
-        {
-            t.detach();
-        }
-        else
-        {
-            t.join();
-        }
-    }
-
-    void Node::spinOnce()
-    {
-        runOnce();
-    }
-
-    void Node::shutdown()
-    {
-        if (shutdownFlag)
-        {
-            return;
-        }
-
-        shutdownFlag = true;
-    }
-
     bool Node::ok()
     {
-        return signalHandler.ok() && !shutdownFlag;
+        if (!initialized)
+        {
+            Console::log(LogLevel::ERROR, "Node has not been initialized");
+            throw std::runtime_error("Node has not been initialized");
+        }
+
+        return SignalHandler::ok() && !shutdownFlag;
+    }
+
+    Node::Node()
+    {
+        initialized = false;
     }
 
     void Node::run()
     {
+        spinThreadID = std::this_thread::get_id();
         while (ok())
         {
-            try {
+            try
+            {
                 runOnce();
-            } catch (const std::exception &e) {
-                // std::cerr << "Error thrown in Node::run(): " << e.what() << std::endl;
+            }
+            catch (const std::exception &e)
+            {
                 Console::log(LogLevel::ERROR, "Error thrown in Node::run(): " + std::string(e.what()));
                 return;
             }
@@ -117,51 +193,53 @@ namespace mros
 
     void Node::runOnce()
     {
-        clientMutex.lock();
-         // Check if any messages have been sent to our UDP server
+        // Check if any messages have been sent to our UDP server
         std::string inMsg;
         URI sender;
-        if (client.receiveFrom(inMsg, MAX_MSG_SIZE, sender) < 0)
+        int status = client.receiveFrom(inMsg, MAX_MSG_SIZE, sender);
+        if (SOCKET_STATUS_IS_ERROR(status))
         {
-            // std::cerr << "Failed to receive message from Mediator" << std::endl;
-            Console::log(LogLevel::ERROR, "Failed to receive message from Mediator");
+            Console::log(LogLevel::ERROR, "Error receiving message from Mediator");
         }
 
         // If we have a message, parse it
-        if (inMsg.size() == 1) {
-            if ((uint8_t)inMsg[0] == PING_MSG) {
+        if (inMsg.size() == 1)
+        {
+            if ((uint8_t)inMsg[0] == PING_MSG)
+            {
                 client.sendTo(std::string(1, PONG_MSG), sender);
             }
-            else if ((uint8_t)inMsg[0] == PONG_MSG) {
+            else if ((uint8_t)inMsg[0] == PONG_MSG)
+            {
                 Console::log(LogLevel::DEBUG, "Received PONG from Mediator");
             }
         }
         else if (inMsg.size() > 0)
         {
             uint16_t topicId;
-            // Parse message based on topic
+            // Parse message based on topic field
             if (Parser::getTopicID(inMsg, topicId))
             {
                 private_msgs::Notify notify;
                 private_msgs::Disconnect disconnect;
-                if (topicId == CORE_TOPICS::PUB_NOTIFY || topicId == CORE_TOPICS::SUB_NOTIFY) {
+                if (topicId == CORE_TOPICS::PUB_NOTIFY || topicId == CORE_TOPICS::SUB_NOTIFY)
+                {
                     if (!Parser::decode(inMsg, notify))
                     {
-                        // std::cerr << "Error: Could not decode message" << std::endl;
                         Console::log(LogLevel::ERROR, "Could not decode message");
                         return;
                     }
                 }
-                else if (topicId == CORE_TOPICS::PUB_DISCONNECT || topicId == CORE_TOPICS::SUB_DISCONNECT) {
+                else if (topicId == CORE_TOPICS::PUB_DISCONNECT || topicId == CORE_TOPICS::SUB_DISCONNECT)
+                {
                     if (!Parser::decode(inMsg, disconnect))
                     {
-                        // std::cerr << "Error: Could not decode message" << std::endl;
                         Console::log(LogLevel::ERROR, "Could not decode message");
                         return;
                     }
                 }
-                else if (topicId == CORE_TOPICS::MED_TERMINATE) {
-                    // std::cout << "Received termination message from Mediator" << std::endl;
+                else if (topicId == CORE_TOPICS::MED_TERMINATE)
+                {
                     Console::log(LogLevel::INFO, "Received termination message from Mediator");
                     shutdown();
                     return;
@@ -184,7 +262,6 @@ namespace mros
                 }
             }
         }
-        clientMutex.unlock();
 
         // Run each publisher, subscriber, and service
         std::vector<std::shared_ptr<Publisher>> toDeletePub;
@@ -252,10 +329,16 @@ namespace mros
         msg.header.frame_id = name;
         msg.topic = pub->topic;
         msg.msgType = pub->msgType;
-        URI uri = pub->publicServer.getURI();
+
+        URI uri;
+        pub->publicServer.getURI(uri);
         msg.uri = private_msgs::URI(uri.ip, uri.port);
 
-        client.sendTo(Parser::encode(msg, CORE_TOPICS::PUB_REGISTER), coreURI);
+        int status = client.sendTo(Parser::encode(msg, CORE_TOPICS::PUB_REGISTER), coreURI);
+        if (SOCKET_STATUS_IS_ERROR(status))
+        {
+            Console::log(LogLevel::ERROR, "Failed to send message to Mediator");
+        }
     }
 
     void Node::registerSubscriber(std::shared_ptr<Subscriber> sub)
@@ -265,10 +348,16 @@ namespace mros
         msg.header.frame_id = name;
         msg.topic = sub->topic;
         msg.msgType = sub->msgType;
-        URI uri = sub->publicServer.getURI();
+
+        URI uri;
+        sub->publicServer.getURI(uri);
         msg.uri = private_msgs::URI(uri.ip, uri.port);
 
-        client.sendTo(Parser::encode(msg, CORE_TOPICS::SUB_REGISTER), coreURI);
+        int status = client.sendTo(Parser::encode(msg, CORE_TOPICS::SUB_REGISTER), coreURI);
+        if (SOCKET_STATUS_IS_ERROR(status))
+        {
+            Console::log(LogLevel::ERROR, "Failed to send message to Mediator");
+        }
     }
 
     void Node::registerService(std::shared_ptr<Service> srv)
@@ -278,10 +367,16 @@ namespace mros
         msg.header.frame_id = name;
         msg.topic = srv->service;
         msg.msgType = srv->inMsgType + "," + srv->outMsgType;
-        URI uri = srv->publicServer.getURI();
+
+        URI uri;
+        srv->publicServer.getURI(uri);
         msg.uri = private_msgs::URI(uri.ip, uri.port);
 
-        client.sendTo(Parser::encode(msg, CORE_TOPICS::SRV_REGISTER), coreURI);
+        int status = client.sendTo(Parser::encode(msg, CORE_TOPICS::SRV_REGISTER), coreURI);
+        if (SOCKET_STATUS_IS_ERROR(status))
+        {
+            Console::log(LogLevel::ERROR, "Failed to send message to Mediator");
+        }
     }
 
     void Node::deregisterPublisher(std::shared_ptr<Publisher> pub)
@@ -291,10 +386,16 @@ namespace mros
         msg.header.frame_id = name;
         msg.topic = pub->topic;
         msg.msgType = pub->msgType;
-        URI uri = pub->publicServer.getURI();
+
+        URI uri;
+        pub->publicServer.getURI(uri);
         msg.uri = private_msgs::URI(uri.ip, uri.port);
 
-        client.sendTo(Parser::encode(msg, CORE_TOPICS::PUB_DEREGISTER), coreURI);
+        int status = client.sendTo(Parser::encode(msg, CORE_TOPICS::PUB_DEREGISTER), coreURI);
+        if (SOCKET_STATUS_IS_ERROR(status))
+        {
+            Console::log(LogLevel::ERROR, "Failed to send message to Mediator");
+        }
     }
 
     void Node::deregisterSubscriber(std::shared_ptr<Subscriber> sub)
@@ -304,10 +405,16 @@ namespace mros
         msg.header.frame_id = name;
         msg.topic = sub->topic;
         msg.msgType = sub->msgType;
-        URI uri = sub->publicServer.getURI();
+
+        URI uri;
+        sub->publicServer.getURI(uri);
         msg.uri = private_msgs::URI(uri.ip, uri.port);
 
-        client.sendTo(Parser::encode(msg, CORE_TOPICS::SUB_DEREGISTER), coreURI);
+        int status = client.sendTo(Parser::encode(msg, CORE_TOPICS::SUB_DEREGISTER), coreURI);
+        if (SOCKET_STATUS_IS_ERROR(status))
+        {
+            Console::log(LogLevel::ERROR, "Failed to send message to Mediator");
+        }
     }
 
     void Node::deregisterService(std::shared_ptr<Service> srv)
@@ -317,10 +424,16 @@ namespace mros
         msg.header.frame_id = name;
         msg.topic = srv->service;
         msg.msgType = srv->inMsgType + "," + srv->outMsgType;
-        URI uri = srv->publicServer.getURI();
+
+        URI uri;
+        srv->publicServer.getURI(uri);
         msg.uri = private_msgs::URI(uri.ip, uri.port);
 
-        client.sendTo(Parser::encode(msg, CORE_TOPICS::SRV_DEREGISTER), coreURI);
+        int status = client.sendTo(Parser::encode(msg, CORE_TOPICS::SRV_DEREGISTER), coreURI);
+        if (SOCKET_STATUS_IS_ERROR(status))
+        {
+            Console::log(LogLevel::ERROR, "Failed to send message to Mediator");
+        }
     }
 
     bool Node::requestServiceAddress(const std::string &service, URI &serviceURI, const std::string &inMsgType, const std::string &outMsgType)
@@ -328,11 +441,17 @@ namespace mros
         UDPClient tmpClient(false);
         std_msgs::String msg = service;
 
-        tmpClient.sendTo(Parser::encode(msg, CORE_TOPICS::SRV_REQUEST), coreURI);
+        int status = tmpClient.sendTo(Parser::encode(msg, CORE_TOPICS::SRV_REQUEST), coreURI);
+        if (SOCKET_STATUS_IS_ERROR(status))
+        {
+            Console::log(LogLevel::ERROR, "Failed to send message to Mediator");
+            return false;
+        }
 
         std::string inMsg;
         URI sender;
-        if (tmpClient.receiveFrom(inMsg, MAX_MSG_SIZE, sender) < 0)
+        status = tmpClient.receiveFrom(inMsg, MAX_MSG_SIZE, sender);
+        if (SOCKET_STATUS_IS_ERROR(status))
         {
             Console::log(LogLevel::ERROR, "Failed to receive message from Mediator");
             return false;
@@ -365,20 +484,29 @@ namespace mros
         return true;
     }
 
-    std::string Node::callService(const URI &serviceURI, const std::string &request)
+    bool Node::callService(const URI &serviceURI, const std::string &request, std::string &response)
     {
+        response = "";
+
         UDPClient tmpClient(false);
-        tmpClient.sendTo(request, serviceURI);
+        int status = tmpClient.sendTo(request, serviceURI);
+        if (SOCKET_STATUS_IS_ERROR(status))
+        {
+            Console::log(LogLevel::ERROR, "Failed to send message to Service");
+            return false;
+        }
 
         std::string inMsg;
         URI sender;
-        if (tmpClient.receiveFrom(inMsg, MAX_MSG_SIZE, sender) < 0)
+        status = tmpClient.receiveFrom(inMsg, MAX_MSG_SIZE, sender);
+        if (SOCKET_STATUS_IS_ERROR(status))
         {
-            Console::log(LogLevel::ERROR, "Failed to receive message from Mediator");
-            return "";
+            Console::log(LogLevel::ERROR, "Failed to receive message from Service");
+            return false;
         }
 
-        return inMsg;
+        response = inMsg;
+        return true;
     }
 
     void Node::handlePubNotify(const private_msgs::Notify &notify)
@@ -386,7 +514,6 @@ namespace mros
         std::string error = notify.error.data;
         if (error.size() > 0)
         {
-            // std::cerr << "Error: " << error << std::endl;
             Console::log(LogLevel::ERROR, error);
             shutdown();
         }
@@ -406,7 +533,6 @@ namespace mros
         std::string error = notify.error.data;
         if (error.size() > 0)
         {
-            // std::cerr << "Error: " << error << std::endl;
             Console::log(LogLevel::ERROR, error);
             shutdown();
         }

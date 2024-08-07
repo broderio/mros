@@ -1,41 +1,45 @@
-#include "mros/core/node.hpp"
-#include "mros/core/publisher.hpp"
-#include "mros/core/subscriber.hpp"
+#include <iostream>
+#include <string>
+
 #include "utils.hpp"
 
 #include "messages/std_msgs/string.hpp"
 
-#include <iostream>
-#include <string>
+#include "mros/core/node.hpp"
+#include "mros/core/publisher.hpp"
+#include "mros/core/subscriber.hpp"
 
-int main() {
-    URI uri;
-    uri.ip = "35.3.187.113";
-    uri.port = MEDIATOR_PORT_NUM;
+using namespace mros;
 
-    mros::Node node("publisher_node", uri);
+int main()
+{
+    Node &node = node.getInstance();
+    node.init("publisher_node", URI(getLocalIP(), MEDIATOR_PORT_NUM));
 
-    std::shared_ptr<mros::Publisher> pub = node.advertise<String>("test_topic", 10);
-    if (pub == nullptr) {
+    std::shared_ptr<Publisher> pub = node.advertise<String>("test_topic", 10);
+    if (pub == nullptr)
+    {
         std::cout << "Failed to advertise topic" << std::endl;
         return 1;
     }
 
-    std::shared_ptr<mros::Subscriber> sub = node.subscribe<String>("test_topic", 10, [](const String &msg) {
-        std::cout << "Received message: " << msg.data << std::endl;
-    });
-    if (sub == nullptr) {
+    std::shared_ptr<Subscriber> sub = node.subscribe<String>("test_topic", 10, [](const String &msg)
+                                                              { std::cout << "Received message: " << msg.data << std::endl; });
+    if (sub == nullptr)
+    {
         std::cout << "Failed to subscribe to topic" << std::endl;
         return 1;
     }
 
-    while (sub->getNumPublishers() == 0) {
+    while (sub->getNumPublishers() == 0)
+    {
         node.spinOnce();
-        sleep(10);
     }
 
-    for (int i = 0; i < 10; i++) {
-        if (!node.ok()) {
+    for (int i = 0; i < 10; i++)
+    {
+        if (!node.ok())
+        {
             break;
         }
 

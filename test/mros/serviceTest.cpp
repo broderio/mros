@@ -3,13 +3,16 @@
 
 #include "utils.hpp"
 
-#include "mros/core/node.hpp"
-#include "mros/core/service.hpp"
-
 #include "messages/std_msgs/string.hpp"
 #include "messages/std_msgs/integer.hpp"
 
-void serviceCallback(const std_msgs::Int32 &req, std_msgs::String &res) {
+#include "mros/core/node.hpp"
+#include "mros/core/service.hpp"
+
+using namespace mros;
+
+void serviceCallback(const std_msgs::Int32 &req, std_msgs::String &res)
+{
     switch (req.data)
     {
     case 0:
@@ -48,18 +51,17 @@ void serviceCallback(const std_msgs::Int32 &req, std_msgs::String &res) {
     }
 }
 
-int main() {
-    URI uri;
-    uri.ip = "0.0.0.0";
-    uri.port = MEDIATOR_PORT_NUM;
+int main()
+{
+    Node &node = Node::getInstance();
+    node.init("service_node", URI(getLocalIP(), MEDIATOR_PORT_NUM));
 
-    mros::Node node("service_node", uri);
+    Console::setLevel(LogLevel::DEBUG);
 
-    mros::Console::setLevel(mros::LogLevel::DEBUG);
+    std::shared_ptr<Service> srv = node.advertiseService<std_msgs::Int32, std_msgs::String>("test_service", &serviceCallback);
 
-    std::shared_ptr<mros::Service> srv = node.advertiseService<std_msgs::Int32, std_msgs::String>("test_service", &serviceCallback);
-
-    if (srv == nullptr) {
+    if (srv == nullptr)
+    {
         std::cout << "Failed to advertise service" << std::endl;
         return 1;
     }

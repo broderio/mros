@@ -10,12 +10,15 @@
 #include <string>
 #include <functional>
 #include <memory>
-
-#include "utils.hpp"
+#include <atomic>
 
 #include <websocketpp/config/asio_no_tls_client.hpp>
 #include <websocketpp/client.hpp>
 #include <websocketpp/common/thread.hpp>
+
+#include "utils.hpp"
+
+#include "socket/common.hpp"
 
 typedef websocketpp::client<websocketpp::config::asio_client> wspp_client;
 typedef websocketpp::connection_hdl connection_hdl;
@@ -27,6 +30,8 @@ class WSClient
 {
 public:
     WSClient();
+
+    WSClient(const WSClient &other) = delete;
 
     WSClient(const URI &uri);
 
@@ -46,7 +51,9 @@ public:
 
     bool isConnected() const;
 
-    URI getServerURI();
+    bool isConnecting() const;
+
+    int getServerURI(URI &uri);
 
 private:
     void run();
@@ -63,15 +70,18 @@ private:
 
     connection_hdl connection;
 
-    mutable websocketpp::lib::mutex mutex;
-
     std::thread thread;
 
     URI serverURI;
 
-    bool connected;
+    std::atomic<bool> connected;
 
-    bool opened;
+    std::atomic<bool> opened;
 
+    std::atomic<bool> connecting;
+
+    int connectStartTime;
+
+    mutable websocketpp::lib::mutex messagesMutex;
     std::queue<std::string> messages;
 };
